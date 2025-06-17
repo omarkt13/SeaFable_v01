@@ -54,8 +54,7 @@ export default function LandingPage() {
     if (searchData.location) params.set("location", searchData.location)
     if (searchData.date) params.set("date", searchData.date)
 
-    // Simulate navigation - replace with actual router.push
-    console.log(`Navigating to: /search?${params.toString()}`)
+    router.push(`/search?${params.toString()}`)
     setIsSearching(false)
   }
 
@@ -276,42 +275,41 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {featuredExperiences.map((experience) => (
-                <Card
-                  key={experience.id}
-                  className="rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="aspect-video bg-gray-100 overflow-hidden">
-                    <img
-                      src={experience.image || "/placeholder.svg"}
-                      alt={experience.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-gray-900">{experience.title}</h3>
-                      <div className="flex items-center space-x-1">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm font-medium">{experience.rating}</span>
+                <Link href={`/experience/${experience.id}`} key={experience.id}>
+                  <Card className="rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
+                    <div className="aspect-video bg-gray-100 overflow-hidden">
+                      <img
+                        src={experience.image || "/placeholder.svg"}
+                        alt={experience.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-900">{experience.title}</h3>
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <span className="text-sm font-medium">{experience.rating}</span>
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-gray-600 mb-2 flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {experience.location}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                      <span>By {experience.host}</span>
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {experience.duration}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-gray-900">${experience.price}</span>
-                      <span className="text-sm text-gray-500">({experience.reviews} reviews)</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <p className="text-gray-600 mb-2 flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {experience.location}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span>By {experience.host}</span>
+                        <span className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {experience.duration}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-gray-900">${experience.price}</span>
+                        <span className="text-sm text-gray-500">({experience.reviews} reviews)</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 
@@ -319,9 +317,12 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition-colors font-semibold"
+                asChild
               >
-                View All Experiences
-                <ChevronRight className="ml-2 h-5 w-5" />
+                <Link href="/search">
+                  View All Experiences
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
             </div>
           </div>

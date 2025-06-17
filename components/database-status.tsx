@@ -1,130 +1,150 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Database, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react"
+import { CheckCircle, XCircle, AlertCircle, Database, Loader2 } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-
-interface DatabaseDetails {
-  connected?: boolean
-  tables?: string[]
-  lastBackup?: string
-  activeConnections?: number
-  responseTime?: string
-  error?: string
-}
+import { testDatabaseConnection, testTableAccess } from "@/lib/database"
 
 export function DatabaseStatus() {
-  const [dbStatus, setDbStatus] = useState<{
-    status: "checking" | "connected" | "error"
-    details: DatabaseDetails | null
-  }>({ status: "checking", details: null })
+  const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "error">("checking")
+  const [connectionError, setConnectionError] = useState<string>("")
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [tableStatus, setTableStatus] = useState<Record<string, any>>({})
+  const [isTestingTables, setIsTestingTables] = useState(false)
 
   useEffect(() => {
-    checkDatabaseConnection()
+    checkConnection()
   }, [])
 
-  const checkDatabaseConnection = async () => {
-    setDbStatus({ status: "checking", details: null })
+  const checkConnection = async () => {
+    setConnectionStatus("checking")
+    setConnectionError("")
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const result = await testDatabaseConnection()
 
-      const mockStatus = {
-        connected: true,
-        tables: ["users", "host_profiles", "experiences", "bookings", "reviews"],
-        lastBackup: "2025-01-17T10:30:00Z",
-        activeConnections: 15,
-        responseTime: "45ms",
+      if (result.success) {
+        setConnectionStatus("connected")
+      } else {
+        setConnectionStatus("error")
+        setConnectionError(result.error || "Unknown error")
       }
-
-      setDbStatus({
-        status: "connected",
-        details: mockStatus,
-      })
     } catch (error) {
-      setDbStatus({
-        status: "error",
-        details: { error: error instanceof Error ? error.message : "Unknown error" },
-      })
+      setConnectionStatus("error")
+      setConnectionError("Network error occurred")
     }
   }
 
-  const StatusIcon = () => {
-    switch (dbStatus.status) {
+  const testTables = async () => {
+    setIsTestingTables(true)
+    try {
+      const results = await testTableAccess()
+      setTableStatus(results)
+    } catch (error) {
+      console.error("Error testing tables:", error)
+    } finally {
+      setIsTestingTables(false)
+    }
+  }
+
+  const getStatusIcon = () => {
+    switch (connectionStatus) {
       case "checking":
-        return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
       case "connected":
         return <CheckCircle className="h-4 w-4 text-green-500" />
       case "error":
-        return <AlertTriangle className="h-4 w-4 text-red-500" />
-      default:
-        return <Database className="h-4 w-4 text-gray-500" />
+        return <XCircle className="h-4 w-4 text-red-500" />
+    }
+  }
+
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case "checking":
+        return "Checking connection..."
+      case "connected":
+        return "Database connected"
+      case "error":
+        return `Connection failed: ${connectionError}`
+    }
+  }
+
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case "checking":
+        return "bg-blue-50 border-blue-200"
+      case "connected":
+        return "bg-green-50 border-green-200"
+      case "error":
+        return "bg-red-50 border-red-200"
     }
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Database className="h-5 w-5" />
-          Database Connection
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className={`mb-8 ${getStatusColor()}`}>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StatusIcon />
-            <span className="font-medium capitalize">{dbStatus.status}</span>
+          <div className="flex items-center space-x-2">
+            <Database className="h-5 w-5 text-gray-600" />
+            <CardTitle className="text-lg">Database Status</CardTitle>
+            {getStatusIcon()}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={checkDatabaseConnection}
-            disabled={dbStatus.status === "checking"}
-          >
-            {dbStatus.status === "checking" ? "Checking..." : "Refresh"}
+          <Button variant="outline" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="text-xs">
+            {isExpanded ? "Hide Details" : "Show Details"}
           </Button>
         </div>
+        <CardDescription>{getStatusText()}</CardDescription>
+      </CardHeader>
 
-        {dbStatus.details && dbStatus.status === "connected" && (
-          <div className="mt-4 space-y-2 text-sm text-gray-600">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="font-medium">Tables:</span> {dbStatus.details.tables?.length}
-              </div>
-              <div>
-                <span className="font-medium">Response:</span> {dbStatus.details.responseTime}
-              </div>
-              <div>
-                <span className="font-medium">Connections:</span> {dbStatus.details.activeConnections}
-              </div>
-              <div>
-                <span className="font-medium">Last Backup:</span>{" "}
-                {dbStatus.details.lastBackup ? new Date(dbStatus.details.lastBackup).toLocaleDateString() : "N/A"}
-              </div>
+      {isExpanded && (
+        <CardContent className="pt-0">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Table Access Test</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testTables}
+                disabled={isTestingTables || connectionStatus !== "connected"}
+              >
+                {isTestingTables ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    Testing...
+                  </>
+                ) : (
+                  "Test Tables"
+                )}
+              </Button>
             </div>
-            <div className="mt-3">
-              <span className="font-medium">Available Tables:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {dbStatus.details.tables?.map((table) => (
-                  <span key={table} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                    {table}
-                  </span>
+
+            {Object.keys(tableStatus).length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {Object.entries(tableStatus).map(([table, status]: [string, any]) => (
+                  <div key={table} className="flex items-center space-x-2">
+                    {status.success ? (
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-500" />
+                    )}
+                    <span className="text-xs font-mono">{table}</span>
+                  </div>
                 ))}
               </div>
+            )}
+
+            <div className="flex items-center space-x-2 text-xs text-gray-600">
+              <AlertCircle className="h-3 w-3" />
+              <span>
+                {connectionStatus === "connected"
+                  ? "Supabase connection established. Ready for data operations."
+                  : "Database connection required for full functionality."}
+              </span>
             </div>
           </div>
-        )}
-
-        {dbStatus.details && dbStatus.status === "error" && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>Connection Error: {dbStatus.details.error}</AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   )
 }

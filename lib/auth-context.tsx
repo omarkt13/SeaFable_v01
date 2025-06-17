@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useState, useEffect } from "react"
+import { supabase } from "./supabase"
+import { signInUser, signOutUser } from "./database"
 
 interface User {
   id: string
@@ -47,65 +48,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// Mock API function
-const mockLoginAPI = async (email: string, password: string, userType: string) => {
-  await new Promise((resolve) => setTimeout(resolve, 1500))
-
-  const mockUsers: Record<string, User> = {
-    "customer@seafable.com": {
-      id: "user_1",
-      firstName: "Emma",
-      lastName: "Wilson",
-      email: "customer@seafable.com",
-      role: "user",
-      avatarUrl: "/placeholder.svg?height=150&width=150",
-      profileComplete: true,
-    },
-    "host@seafable.com": {
-      id: "host_1",
-      firstName: "Captain",
-      lastName: "Rodriguez",
-      email: "host@seafable.com",
-      role: "host",
-      avatarUrl: "/placeholder.svg?height=150&width=150",
-      profileComplete: true,
-      hostProfile: {
-        id: "host_prof_1",
-        name: "Captain Rodriguez",
-        bio: "Experienced sailing instructor with 15+ years on the water",
-        yearsExperience: 15,
-        certifications: ["USCG Master License", "ASA Instructor"],
-        specialties: ["Sailing", "Navigation", "Safety"],
-        rating: 4.9,
-        totalReviews: 247,
-        hostType: "captain",
-      },
-    },
-    "business@seafable.com": {
-      id: "biz_1",
-      firstName: "Ocean",
-      lastName: "Adventures",
-      email: "business@seafable.com",
-      role: "host",
-      avatarUrl: "/placeholder.svg?height=150&width=150",
-      profileComplete: true,
-      businessProfile: {
-        companyName: "Ocean Adventures LLC",
-        businessType: "Tour Operator",
-        yearsInBusiness: 8,
-        totalExperiences: 24,
-        averageRating: 4.8,
-      },
-    },
-  }
-
-  if (mockUsers[email] && password === "password123") {
-    return { success: true, user: mockUsers[email] }
-  } else {
-    return { success: false, error: "Invalid email or password" }
-  }
-}
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -113,20 +55,90 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     checkAuthStatus()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        await checkAuthStatus()
+      } else if (event === "SIGNED_OUT") {
+        setUser(null)
+        setIsAuthenticated(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const checkAuthStatus = async () => {
     try {
-      const storedAuth = localStorage.getItem("isAuthenticated")
-      const storedUser = localStorage.getItem("user")
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-      if (storedAuth === "true" && storedUser) {
-        const userData = JSON.parse(storedUser)
-        setUser(userData)
-        setIsAuthenticated(true)
+      if (session?.user) {
+        // Get user data from database
+        const { data: userData, error } = await supabase.from("users").select("*").eq("id", session.user.id).single()
+
+        if (!error && userData) {
+          // Get host profile if user is a host
+          let hostProfile = null
+          let businessProfile = null
+
+          if (userData.role === "host") {
+            const { data: hostData, error: hostError } = await supabase
+              .from("host_profiles")
+              .select("*")
+              .eq("user_id", userData.id)
+              .single()
+
+            if (!hostError && hostData) {
+              hostProfile = {
+                id: hostData.id,
+                name: hostData.name,
+                bio: hostData.bio || "",
+                yearsExperience: hostData.years_experience || 0,
+                certifications: hostData.certifications || [],
+                specialties: hostData.specialties || [],
+                rating: hostData.rating || 0,
+                totalReviews: hostData.total_reviews || 0,
+                hostType: hostData.host_type || "individual_operator",
+              }
+
+              businessProfile = {
+                companyName: hostData.business_name || hostData.name,
+                businessType: hostData.business_type || "Tour Operator",
+                yearsInBusiness: hostData.years_experience || 0,
+                totalExperiences: 0, // Will be calculated
+                averageRating: hostData.rating || 0,
+              }
+            }
+          }
+
+          const transformedUser: User = {
+            id: userData.id,
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            email: userData.email,
+            role: userData.role,
+            avatarUrl: userData.avatar_url,
+            profileComplete: true,
+            hostProfile,
+            businessProfile,
+          }
+
+          setUser(transformedUser)
+          setIsAuthenticated(true)
+        }
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
       }
     } catch (error) {
       console.error("Auth check failed:", error)
+      setUser(null)
+      setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
     }
@@ -135,15 +147,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string, userType = "customer") => {
     setIsLoading(true)
     try {
-      const response = await mockLoginAPI(email, password, userType)
+      const response = await signInUser(email, password)
 
       if (response.success && response.user) {
-        setUser(response.user)
+        const transformedUser: User = {
+          id: response.user.id,
+          firstName: response.user.first_name,
+          lastName: response.user.last_name,
+          email: response.user.email,
+          role: response.user.role,
+          avatarUrl: response.user.avatar_url,
+          profileComplete: true,
+          hostProfile: response.user.hostProfile
+            ? {
+                id: response.user.hostProfile.id,
+                name: response.user.hostProfile.name,
+                bio: response.user.hostProfile.bio || "",
+                yearsExperience: response.user.hostProfile.years_experience || 0,
+                certifications: response.user.hostProfile.certifications || [],
+                specialties: response.user.hostProfile.specialties || [],
+                rating: response.user.hostProfile.rating || 0,
+                totalReviews: response.user.hostProfile.total_reviews || 0,
+                hostType: response.user.hostProfile.host_type || "individual_operator",
+              }
+            : undefined,
+          businessProfile: response.user.businessProfile,
+        }
+
+        setUser(transformedUser)
         setIsAuthenticated(true)
-        localStorage.setItem("isAuthenticated", "true")
-        localStorage.setItem("user", JSON.stringify(response.user))
-        localStorage.setItem("userType", userType)
-        return { success: true, user: response.user }
+        return { success: true, user: transformedUser }
       } else {
         return { success: false, error: response.error }
       }
@@ -154,12 +187,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const logout = () => {
-    setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("user")
-    localStorage.removeItem("userType")
+  const logout = async () => {
+    try {
+      await signOutUser()
+      setUser(null)
+      setIsAuthenticated(false)
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   return (
