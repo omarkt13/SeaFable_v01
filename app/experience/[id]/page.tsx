@@ -111,7 +111,7 @@ export default function ExperienceDetailPage() {
 
       const result = await createBooking(booking)
       if (result.success) {
-        router.push(`/booking-confirmation/${result.data.id}`) // Changed redirect path
+        router.push(`/dashboard?booking=${result.data.id}`)
       } else {
         alert("Booking failed: " + result.error)
       }

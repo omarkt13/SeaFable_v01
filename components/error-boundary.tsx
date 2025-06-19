@@ -1,102 +1,62 @@
-"use client"
+"use client" // Error boundaries must be Client Components
 
 import { Component, type ErrorInfo, type ReactNode } from "react"
-import { AlertTriangle, RefreshCw, Home } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 
-interface Props {
+interface ErrorBoundaryProps {
+  // Fallback can now be a function that receives the error and a reset function
+  fallback?: (props: { error: Error | null; reset: () => void }) => ReactNode
   children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean
-  error?: Error
-  errorInfo?: ErrorInfo
+  error: Error | null // Store the actual error object
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false }
+    this.state = { hasError: false, error: null }
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Update state so the next render will show the fallback UI, and store the error
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ error, errorInfo })
-
-    // Log error to monitoring service
-    console.error("ErrorBoundary caught an error:", error, errorInfo)
-
-    // Send to error tracking service (Sentry, etc.)
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo)
-    }
+    // You can use your own error logging service here
+    console.error({ error, errorInfo })
   }
 
-  handleRetry = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
+  // Method to reset the error boundary state
+  resetErrorBoundary = () => {
+    this.setState({ hasError: false, error: null })
   }
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
+      // If a fallback function is provided, call it with the error and reset function
+      if (typeof this.props.fallback === "function") {
+        return this.props.fallback({ error: this.state.error, reset: this.resetErrorBoundary })
       }
-
+      // Default fallback UI if no fallback function is provided
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <Card className="max-w-md w-full">
-            <CardContent className="p-8 text-center">
-              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-              <p className="text-gray-600 mb-6">
-                We're sorry for the inconvenience. The application encountered an unexpected error.
-              </p>
-
-              {process.env.NODE_ENV === "development" && this.state.error && (
-                <details className="mb-6 text-left">
-                  <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-                    Error Details (Development Only)
-                  </summary>
-                  <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto">
-                    {this.state.error.toString()}
-                    {this.state.errorInfo?.componentStack}
-                  </pre>
-                </details>
-              )}
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={this.handleRetry} className="flex-1">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button variant="outline" onClick={() => (window.location.href = "/")} className="flex-1">
-                  <Home className="h-4 w-4 mr-2" />
-                  Go Home
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex min-h-screen items-center justify-center bg-red-100 text-red-800 p-4 flex-col">
+          <h2 className="text-xl font-semibold">Oops, something went wrong!</h2>
+          <p className="mt-2">{this.state.error?.message || "An unknown error occurred."}</p>
+          <button
+            type="button"
+            onClick={this.resetErrorBoundary}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Try again?
+          </button>
         </div>
       )
     }
 
+    // Return children components in case of no error
     return this.props.children
-  }
-}
-
-// Hook version for functional components
-export function useErrorHandler() {
-  return (error: Error, errorInfo?: ErrorInfo) => {
-    console.error("Error caught by useErrorHandler:", error)
-
-    // Send to error tracking service
-    // Example: Sentry.captureException(error, { extra: errorInfo });
   }
 }

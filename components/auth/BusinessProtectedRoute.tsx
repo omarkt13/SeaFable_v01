@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useAuth } from "@/lib/auth-context" // Use the Supabase-based useAuth
+import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
@@ -12,11 +12,11 @@ interface BusinessProtectedRouteProps {
 }
 
 export function BusinessProtectedRoute({ children, requireOnboarding = true }: BusinessProtectedRouteProps) {
-  const { user, userType, isLoading, businessProfile } = useAuth() // Get user, userType, isLoading, businessProfile from useAuth
+  const { user, userType, loading, businessProfile } = useAuth() // Get businessProfile directly from useAuth
   const router = useRouter()
 
   useEffect(() => {
-    if (isLoading) {
+    if (loading) {
       // Still loading auth state, do nothing yet
       return
     }
@@ -33,22 +33,22 @@ export function BusinessProtectedRoute({ children, requireOnboarding = true }: B
       return
     }
 
-    if (userType !== "business" && userType !== "admin") {
-      // User is not a business or admin type (e.g., null or undefined), redirect to business login
+    if (userType !== "business") {
+      // User is not a business type (e.g., null or undefined), redirect to business login
       router.push("/business/login")
       return
     }
 
     // If business user, check onboarding status
-    if (userType === "business" && requireOnboarding && !businessProfile?.onboarding_completed) {
+    if (requireOnboarding && !businessProfile?.onboarding_completed) {
       // Onboarding required and not completed, redirect to onboarding page
       router.push("/business/onboarding")
       return
     }
     // If all checks pass, allow access to the children
-  }, [user, userType, isLoading, businessProfile, requireOnboarding, router])
+  }, [user, userType, loading, businessProfile, requireOnboarding, router]) // Depend on businessProfile
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
@@ -56,14 +56,10 @@ export function BusinessProtectedRoute({ children, requireOnboarding = true }: B
     )
   }
 
-  // If user is not a business/admin or onboarding is not complete when required,
+  // If user is not a business or onboarding is not complete when required,
   // we return null here because the useEffect above will handle the redirect.
   // This prevents rendering protected content before redirect.
-  if (
-    !user ||
-    (userType !== "business" && userType !== "admin") ||
-    (userType === "business" && requireOnboarding && !businessProfile?.onboarding_completed)
-  ) {
+  if (!user || userType !== "business" || (requireOnboarding && !businessProfile?.onboarding_completed)) {
     return null
   }
 

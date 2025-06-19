@@ -1,8 +1,8 @@
 import type React from "react"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
-import ErrorBoundary from "@/components/error-boundary" // Import ErrorBoundary
-import AccessDenied from "@/components/ui/AccessDenied" // Use AccessDenied as a simple fallback
+import { ErrorBoundary } from "@/components/error-boundary"
+import ErrorFallback from "@/components/ui/ErrorFallback"
 import "./globals.css"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -11,7 +11,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <ErrorBoundary fallback={<AccessDenied message="Something went wrong. Please try again later." />}>
+            {/* Pass a function to the fallback prop to receive the error and reset function */}
+            <ErrorBoundary
+              fallback={({ error, reset }) => (
+                <ErrorFallback error={error} reset={reset} message="An application error occurred." />
+              )}
+            >
               {children}
             </ErrorBoundary>
           </AuthProvider>

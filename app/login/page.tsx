@@ -2,7 +2,7 @@
 import { useState } from "react"
 import type React from "react"
 
-import { supabase } from "@/lib/auth-utils"
+import { supabase } from "@/lib/supabase" // ✅ FIXED: Standardized Supabase import
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Anchor, Mail, Lock, ArrowRight } from "lucide-react"

@@ -1,8 +1,15 @@
 import { supabase } from "./supabase"
 import { getUserProfile } from "./auth-utils"
 import type { BusinessProfile } from "../types/auth"
-import { z } from "zod"
-import { LRUCache } from "lru-cache"
+
+// ✅ FIXED: Added input sanitization helper
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/[<>]/g, "") // Remove HTML tags
+    .replace(/['"`;]/g, "") // Remove SQL injection chars
+    .trim()
+    .substring(0, 200) // Limit length
+}
 
 // Authentication functions
 export interface Experience {
@@ -289,104 +296,13 @@ export async function signOutUser() {
   }
 }
 
-// Define validation schema
-const FiltersSchema = z.object({
-  location: z
-    .string()
-    .max(100)
-    .regex(/^[a-zA-Z0-9\s,.-]*$/)
-    .optional(),
-  activityTypes: z.array(z.enum(["sailing", "surfing", "diving", "kayaking", "fishing", "whale_watching"])).optional(),
-  priceRange: z.array(z.number().min(0).max(10000)).length(2).optional(),
-  search: z
-    .string()
-    .max(200)
-    .regex(/^[a-zA-Z0-9\s]*$/)
-    .optional(),
-  difficultyLevels: z.array(z.enum(["beginner", "intermediate", "advanced", "all_levels"])).optional(),
-  minGuests: z.number().min(1).optional(),
-  rating: z.number().min(0).max(5).optional(),
-  sortBy: z.enum(["recommended", "price_low", "price_high", "rating", "reviews", "popular", "newest"]).optional(),
-})
-
-// Sanitize input function
-function sanitizeInput(input: string): string {
-  return input
-    .replace(/[<>]/g, "") // Remove potential HTML tags
-    .replace(/['"`;]/g, "") // Remove SQL injection characters
-    .trim()
-    .substring(0, 200) // Limit length
-}
-
-// Create cache instance
-const experiencesCache = new LRUCache<string, any>({
-  max: 500, // Maximum 500 entries
-  ttl: 1000 * 60 * 5, // 5 minutes TTL
-})
-
-// Create cache key from filters
-function createCacheKey(filters: any): string {
-  return JSON.stringify(filters, Object.keys(filters).sort())
-}
-
-// Add retry mechanism for critical operations
-export async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3, delay = 1000): Promise<T> {
-  let lastError: Error
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error as Error
-
-      if (attempt === maxRetries) {
-        throw lastError
-      }
-
-      // Exponential backoff
-      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, attempt - 1)))
-    }
-  }
-
-  throw lastError!
-}
-
 // Experience functions
 export async function getExperiences(filters: any = {}) {
-  const cacheKey = createCacheKey(filters)
-  const cached = experiencesCache.get(cacheKey)
-
-  if (cached) {
-    return { success: true, data: cached, cached: true }
-  }
-
   try {
-    // Validate input with Zod
-    const validatedFilters = FiltersSchema.parse(filters)
-
     let query = supabase
       .from("experiences")
       .select(`
-        id,
-        title,
-        description,
-        short_description,
-        location,
-        activity_type,
-        duration_hours,
-        duration_display,
-        max_guests,
-        min_guests,
-        price_per_person,
-        difficulty_level,
-        rating,
-        total_reviews,
-        total_bookings,
-        primary_image_url,
-        tags,
-        category,
-        created_at,
-        updated_at,
+        *,
         host_profiles!experiences_host_id_fkey (
           id,
           name,
@@ -394,40 +310,44 @@ export async function getExperiences(filters: any = {}) {
           rating,
           total_reviews,
           host_type
+        ),
+        experience_images (
+          image_url,
+          alt_text,
+          display_order
         )
       `)
       .eq("is_active", true)
-      .limit(50) // Limit results for performance
 
     // Apply filters
-    if (validatedFilters.search) {
-      const sanitizedSearch = sanitizeInput(validatedFilters.search)
-      query = query.or(`title.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`)
+    if (filters.search) {
+      const sanitizedSearch = sanitizeInput(filters.search) // ✅ FIXED: Sanitized input
+      query = query.ilike("title", `%${sanitizedSearch}%`)
     }
-    if (validatedFilters.location) {
-      const sanitizedLocation = sanitizeInput(validatedFilters.location)
+    if (filters.location) {
+      const sanitizedLocation = sanitizeInput(filters.location) // ✅ FIXED: Sanitized input
       query = query.ilike("location", `%${sanitizedLocation}%`)
     }
-    if (validatedFilters.activityTypes && validatedFilters.activityTypes.length > 0) {
-      query = query.in("activity_type", validatedFilters.activityTypes)
+    if (filters.activityTypes && filters.activityTypes.length > 0) {
+      query = query.in("activity_type", filters.activityTypes)
     }
-    if (validatedFilters.priceRange) {
-      query = query.gte("price_per_person", validatedFilters.priceRange[0])
-      query = query.lte("price_per_person", validatedFilters.priceRange[1])
+    if (filters.priceRange) {
+      query = query.gte("price_per_person", filters.priceRange[0])
+      query = query.lte("price_per_person", filters.priceRange[1])
     }
-    if (validatedFilters.difficultyLevels && validatedFilters.difficultyLevels.length > 0) {
-      query = query.in("difficulty_level", validatedFilters.difficultyLevels)
+    if (filters.difficultyLevels && filters.difficultyLevels.length > 0) {
+      query = query.in("difficulty_level", filters.difficultyLevels)
     }
-    if (validatedFilters.minGuests) {
-      query = query.gte("max_guests", validatedFilters.minGuests)
+    if (filters.minGuests) {
+      query = query.gte("max_guests", filters.minGuests)
     }
-    if (validatedFilters.rating) {
-      query = query.gte("rating", validatedFilters.rating)
+    if (filters.rating) {
+      query = query.gte("rating", filters.rating)
     }
 
     // Apply sorting
-    if (validatedFilters.sortBy) {
-      switch (validatedFilters.sortBy) {
+    if (filters.sortBy) {
+      switch (filters.sortBy) {
         case "price_low":
           query = query.order("price_per_person", { ascending: true })
           break
@@ -450,41 +370,17 @@ export async function getExperiences(filters: any = {}) {
       query = query.order("created_at", { ascending: false })
     }
 
-    // Execute query with timeout
-    const { data, error } = (await Promise.race([
-      query,
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Query timeout")), 10000)),
-    ])) as any
+    const { data, error } = await query
 
     if (error) {
-      console.error("Database error:", error)
+      console.error("Error fetching experiences:", error)
       return { success: false, error: error.message, data: [] }
     }
 
-    // Cache successful results
-    if (data) {
-      experiencesCache.set(cacheKey, data)
-    }
-
-    return { success: true, data: data || [], cached: false }
+    return { success: true, data: data || [] }
   } catch (error) {
     console.error("Error fetching experiences:", error)
-    if (error instanceof z.ZodError) {
-      return { success: false, error: "Invalid filter parameters", data: [] }
-    }
-
-    // Return cached data if available on error
-    const fallbackData = experiencesCache.get(cacheKey)
-    if (fallbackData) {
-      return {
-        success: true,
-        data: fallbackData,
-        cached: true,
-        fallback: true,
-      }
-    }
-
-    return { success: false, error: error instanceof Error ? error.message : "Network error occurred", data: [] }
+    return { success: false, error: "Network error occurred", data: [] }
   }
 }
 
@@ -625,7 +521,7 @@ export async function getHostBookings(hostId: string) {
     return { success: true, data: data || [] }
   } catch (error) {
     console.error("Error fetching bookings:", error)
-    return { success: false, error: "Network error occurred" }
+    return { success: false, error: "Network error occurred", data: [] }
   }
 }
 
@@ -818,16 +714,15 @@ export async function getHostDashboardData(hostId: string): Promise<{
     })
 
     // Recent activity
-    const nowActivity = new Date()
     const recentActivity = [
       ...bookingsData.slice(0, 3).map((b) => ({
         description: `New booking for ${b.experiences?.title || "an experience"} by ${b.users?.first_name || "a customer"}`,
-        time: `${Math.floor((nowActivity.getTime() - new Date(b.booked_at).getTime()) / (1000 * 60 * 60))} hours ago`,
+        time: `${Math.floor((now.getTime() - new Date(b.booked_at).getTime()) / (1000 * 60 * 60))} hours ago`,
         color: "bg-green-500",
       })),
       ...experiencesData.slice(0, 2).map((exp) => ({
         description: `Experience "${exp.title}" ${exp.is_active ? "activated" : "updated"}`,
-        time: `${Math.floor((nowActivity.getTime() - new Date(exp.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
+        time: `${Math.floor((now.getTime() - new Date(exp.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
         color: "bg-blue-500",
       })),
     ].slice(0, 5)
@@ -1094,4 +989,3 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
 
   return { success: true, hostProfile: hostProfileResult, settings: settingsResult }
 }
-// Note: The `getHostDashboardData` and `getUserDashboardData` functions are currently called from client components (`BusinessDashboardPage` and `CustomerDashboard`), they are not directly benefiting from Next.js's `fetch` caching. Consider using Server Components for data fetching to leverage Next.js caching capabilities. When feasible, migrate these functions to Server Components or Server Actions to take advantage of Next.js's built-in caching mechanisms, such as `revalidatePath` or `revalidateTag`, for improved performance and data freshness.
