@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import type React from "react"
+
+import { useState, useEffect, useMemo, useCallback, memo } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   Search,
@@ -37,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
+import { SearchResultsSkeleton } from "@/components/loading-skeleton"
 
 // Enhanced search filters
 const initialFilters = {
@@ -95,300 +98,323 @@ const quickFilters = [
 ]
 
 // Enhanced Experience Card Component
-function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }) {
-  const hasDiscount = experience.total_bookings > 50 // Simple discount logic
-  const discountPercentage = hasDiscount ? 15 : 0
+interface ExperienceCardProps {
+  experience: Experience
+  viewMode: "grid" | "list" | "map"
+  isWishlisted: boolean
+  onToggleWishlist: (id: string) => void
+}
 
-  // Transform database experience to match UI expectations
-  const transformedExperience = {
-    ...experience,
-    primaryImage: experience.primary_image_url || "/placeholder.svg?height=350&width=500",
-    hostProfile: {
-      name: experience.host_profiles?.name || "Host",
-      avatar: experience.host_profiles?.avatar_url || "/placeholder.svg?height=50&width=50",
-      rating: experience.host_profiles?.rating || 0,
-      responseRate: 95, // Default value
-      responseTime: "within 2 hours", // Default value
-    },
-    tags: experience.tags || [],
-    includedAmenities: experience.included_amenities || [],
-    isInstantBook: true, // Default for demo
-    isSuperhost: (experience.host_profiles?.rating || 0) >= 4.8,
-    isPremium: experience.category?.includes("luxury") || false,
-    availableToday: true, // Default for demo
-    isPopular: experience.total_bookings > 20,
-    lastBooked: experience.total_bookings > 0 ? "2 hours ago" : null,
-    discount: discountPercentage,
-  }
+const ExperienceCard = memo<ExperienceCardProps>(
+  ({ experience, viewMode, isWishlisted, onToggleWishlist }) => {
+    // Memoize expensive calculations
+    const transformedExperience = useMemo(
+      () => ({
+        ...experience,
+        primaryImage: experience.primary_image_url || "/placeholder.svg?height=350&width=500",
+        hostProfile: {
+          name: experience.host_profiles?.name || "Host",
+          avatar: experience.host_profiles?.avatar_url || "/placeholder.svg?height=50&width=50",
+          rating: experience.host_profiles?.rating || 0,
+          responseRate: 95, // Default value
+          responseTime: "within 2 hours", // Default value
+        },
+        tags: experience.tags || [],
+        includedAmenities: experience.included_amenities || [],
+        isInstantBook: true, // Default for demo
+        isSuperhost: (experience.host_profiles?.rating || 0) >= 4.8,
+        isPremium: experience.category?.includes("luxury") || false,
+        availableToday: true, // Default for demo
+        isPopular: experience.total_bookings > 20,
+        lastBooked: experience.total_bookings > 0 ? "2 hours ago" : null,
+        hasDiscount: experience.total_bookings > 50, // Simple discount logic
+        discountPercentage: experience.total_bookings > 50 ? 15 : 0,
+      }),
+      [experience],
+    )
 
-  if (viewMode === "list") {
+    // Memoize click handler to prevent child re-renders
+    const handleToggleWishlist = useCallback(
+      (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onToggleWishlist(experience.id)
+      },
+      [experience.id, onToggleWishlist],
+    )
+
+    if (viewMode === "list") {
+      return (
+        <Link href={`/experience/${experience.id}`} className="block">
+          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
+            <div className="flex">
+              <div className="relative w-80 h-48 flex-shrink-0">
+                <img
+                  src={transformedExperience.primaryImage || "/placeholder.svg"}
+                  alt={experience.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-3 left-3 flex flex-col space-y-2">
+                  {transformedExperience.isPremium && (
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300">
+                      <Award className="h-3 w-3 mr-1" />
+                      Premium
+                    </Badge>
+                  )}
+                  {transformedExperience.isSuperhost && <Badge variant="secondary">Superhost</Badge>}
+                  {transformedExperience.isInstantBook && (
+                    <Badge variant="default" className="bg-green-600">
+                      <Zap className="h-3 w-3 mr-1" />
+                      Instant Book
+                    </Badge>
+                  )}
+                  {transformedExperience.hasDiscount && (
+                    <Badge variant="destructive">{transformedExperience.discountPercentage}% OFF</Badge>
+                  )}
+                </div>
+                <button
+                  onClick={handleToggleWishlist}
+                  className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
+                >
+                  <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
+                </button>
+                {transformedExperience.availableToday && (
+                  <div className="absolute bottom-3 left-3">
+                    <Badge className="bg-green-500 text-white">Available Today</Badge>
+                  </div>
+                )}
+              </div>
+
+              <CardContent className="flex-1 p-6">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {experience.activity_type.replace("_", " ")}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {experience.difficulty_level}
+                      </Badge>
+                      {transformedExperience.isPopular && (
+                        <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{experience.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{experience.short_description}</p>
+
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {experience.location}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {experience.duration_display}
+                      </div>
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        Up to {experience.max_guests} guests
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <img
+                          src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+                          alt={transformedExperience.hostProfile.name}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {transformedExperience.hostProfile.name}
+                          </span>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>{transformedExperience.hostProfile.responseRate}% response rate</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                        <span className="font-medium">{experience.rating}</span>
+                        <span className="text-gray-500 ml-1">({experience.total_reviews})</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {transformedExperience.tags.slice(0, 4).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="text-xs text-gray-500 mb-2">
+                      <span className="font-medium">Includes:</span>{" "}
+                      {transformedExperience.includedAmenities.slice(0, 3).join(", ")}
+                      {transformedExperience.includedAmenities.length > 3 && "..."}
+                    </div>
+                  </div>
+
+                  <div className="text-right ml-6">
+                    <div className="mb-2">
+                      <div className="text-2xl font-bold text-gray-900">€{experience.price_per_person}</div>
+                      <div className="text-sm text-gray-500">per person</div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {/* Removed asChild and Link here */}
+                      <Button className="w-full">
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <div className="flex space-x-1">
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {transformedExperience.availableToday && (
+                      <p className="text-xs text-green-600 mt-2 font-medium">Available today</p>
+                    )}
+                    {transformedExperience.lastBooked && (
+                      <p className="text-xs text-gray-500 mt-1">Last booked {transformedExperience.lastBooked}</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </div>
+          </Card>
+        </Link>
+      )
+    }
+
+    // Grid view (default)
     return (
       <Link href={`/experience/${experience.id}`} className="block">
         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
-          <div className="flex">
-            <div className="relative w-80 h-48 flex-shrink-0">
-              <img
-                src={transformedExperience.primaryImage || "/placeholder.svg"}
-                alt={experience.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute top-3 left-3 flex flex-col space-y-2">
-                {transformedExperience.isPremium && (
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300">
-                    <Award className="h-3 w-3 mr-1" />
-                    Premium
-                  </Badge>
-                )}
-                {transformedExperience.isSuperhost && <Badge variant="secondary">Superhost</Badge>}
-                {transformedExperience.isInstantBook && (
-                  <Badge variant="default" className="bg-green-600">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Instant Book
-                  </Badge>
-                )}
-                {hasDiscount && <Badge variant="destructive">{discountPercentage}% OFF</Badge>}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onToggleWishlist()
-                }}
-                className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-              >
-                <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-              </button>
-              {transformedExperience.availableToday && (
-                <div className="absolute bottom-3 left-3">
-                  <Badge className="bg-green-500 text-white">Available Today</Badge>
-                </div>
+          <div className="relative">
+            <img
+              src={transformedExperience.primaryImage || "/placeholder.svg"}
+              alt={experience.title}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute top-3 left-3 flex flex-col space-y-1">
+              {transformedExperience.isPremium && (
+                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 text-xs">
+                  <Award className="h-3 w-3 mr-1" />
+                  Premium
+                </Badge>
+              )}
+              {transformedExperience.isSuperhost && (
+                <Badge variant="secondary" className="text-xs">
+                  Superhost
+                </Badge>
+              )}
+              {transformedExperience.isInstantBook && (
+                <Badge variant="default" className="bg-green-600 text-xs">
+                  <Zap className="h-3 w-3 mr-1" />
+                  Instant
+                </Badge>
+              )}
+              {transformedExperience.hasDiscount && (
+                <Badge variant="destructive" className="text-xs">
+                  {transformedExperience.discountPercentage}% OFF
+                </Badge>
               )}
             </div>
-
-            <CardContent className="flex-1 p-6">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {experience.activity_type.replace("_", " ")}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs capitalize">
-                      {experience.difficulty_level}
-                    </Badge>
-                    {transformedExperience.isPopular && (
-                      <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
-                    )}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{experience.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{experience.short_description}</p>
-
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {experience.location}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {experience.duration_display}
-                    </div>
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      Up to {experience.max_guests} guests
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <img
-                        src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
-                        alt={transformedExperience.hostProfile.name}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {transformedExperience.hostProfile.name}
-                        </span>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <span>{transformedExperience.hostProfile.responseRate}% response rate</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                      <span className="font-medium">{experience.rating}</span>
-                      <span className="text-gray-500 ml-1">({experience.total_reviews})</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {transformedExperience.tags.slice(0, 4).map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <div className="text-xs text-gray-500 mb-2">
-                    <span className="font-medium">Includes:</span>{" "}
-                    {transformedExperience.includedAmenities.slice(0, 3).join(", ")}
-                    {transformedExperience.includedAmenities.length > 3 && "..."}
-                  </div>
-                </div>
-
-                <div className="text-right ml-6">
-                  <div className="mb-2">
-                    <div className="text-2xl font-bold text-gray-900">€{experience.price_per_person}</div>
-                    <div className="text-sm text-gray-500">per person</div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Button className="w-full" asChild>
-                      <Link href={`/experience/${experience.id}`}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Link>
-                    </Button>
-                    <div className="flex space-x-1">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {transformedExperience.availableToday && (
-                    <p className="text-xs text-green-600 mt-2 font-medium">Available today</p>
-                  )}
-                  {transformedExperience.lastBooked && (
-                    <p className="text-xs text-gray-500 mt-1">Last booked {transformedExperience.lastBooked}</p>
-                  )}
-                </div>
+            <button
+              onClick={handleToggleWishlist}
+              className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
+            >
+              <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
+            </button>
+            {transformedExperience.availableToday && (
+              <div className="absolute bottom-3 left-3">
+                <Badge className="bg-green-500 text-white text-xs">Available Today</Badge>
               </div>
-            </CardContent>
+            )}
+            {transformedExperience.isPopular && (
+              <div className="absolute bottom-3 right-3">
+                <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
+              </div>
+            )}
           </div>
+
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Badge variant="outline" className="text-xs">
+                {experience.activity_type.replace("_", " ")}
+              </Badge>
+              <Badge variant="secondary" className="text-xs capitalize">
+                {experience.difficulty_level}
+              </Badge>
+            </div>
+
+            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{experience.title}</h3>
+
+            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+              <div className="flex items-center">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span className="truncate">{experience.location}</span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                {experience.duration_display}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <img
+                  src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+                  alt={transformedExperience.hostProfile.name}
+                  className="w-6 h-6 rounded-full"
+                />
+                <span className="text-sm text-gray-600 truncate">{transformedExperience.hostProfile.name}</span>
+              </div>
+              <div className="flex items-center">
+                <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                <span className="font-medium">{experience.rating}</span>
+                <span className="text-gray-500 ml-1 text-sm">({experience.total_reviews})</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-lg font-bold text-gray-900">€{experience.price_per_person}</span>
+                <span className="text-sm text-gray-500"> / person</span>
+              </div>
+              {/* Removed asChild and Link here */}
+              <Button size="sm">
+                <Eye className="h-4 w-4 mr-1" />
+                View
+              </Button>
+            </div>
+
+            {transformedExperience.lastBooked && (
+              <p className="text-xs text-gray-500 mt-2">Last booked {transformedExperience.lastBooked}</p>
+            )}
+          </CardContent>
         </Card>
       </Link>
     )
-  }
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison for optimal re-rendering
+    return (
+      prevProps.experience.id === nextProps.experience.id &&
+      prevProps.experience.updated_at === nextProps.experience.updated_at &&
+      prevProps.viewMode === nextProps.viewMode &&
+      prevProps.isWishlisted === nextProps.isWishlisted
+    )
+  },
+)
 
-  // Grid view (default)
-  return (
-    <Link href={`/experience/${experience.id}`} className="block">
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
-        <div className="relative">
-          <img
-            src={transformedExperience.primaryImage || "/placeholder.svg"}
-            alt={experience.title}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <div className="absolute top-3 left-3 flex flex-col space-y-1">
-            {transformedExperience.isPremium && (
-              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 text-xs">
-                <Award className="h-3 w-3 mr-1" />
-                Premium
-              </Badge>
-            )}
-            {transformedExperience.isSuperhost && (
-              <Badge variant="secondary" className="text-xs">
-                Superhost
-              </Badge>
-            )}
-            {transformedExperience.isInstantBook && (
-              <Badge variant="default" className="bg-green-600 text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                Instant
-              </Badge>
-            )}
-            {hasDiscount && (
-              <Badge variant="destructive" className="text-xs">
-                {discountPercentage}% OFF
-              </Badge>
-            )}
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onToggleWishlist()
-            }}
-            className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-          >
-            <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-          </button>
-          {transformedExperience.availableToday && (
-            <div className="absolute bottom-3 left-3">
-              <Badge className="bg-green-500 text-white text-xs">Available Today</Badge>
-            </div>
-          )}
-          {transformedExperience.isPopular && (
-            <div className="absolute bottom-3 right-3">
-              <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
-            </div>
-          )}
-        </div>
-
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <Badge variant="outline" className="text-xs">
-              {experience.activity_type.replace("_", " ")}
-            </Badge>
-            <Badge variant="secondary" className="text-xs capitalize">
-              {experience.difficulty_level}
-            </Badge>
-          </div>
-
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{experience.title}</h3>
-
-          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-            <div className="flex items-center">
-              <MapPin className="h-3 w-3 mr-1" />
-              <span className="truncate">{experience.location}</span>
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {experience.duration_display}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
-              <img
-                src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
-                alt={transformedExperience.hostProfile.name}
-                className="w-6 h-6 rounded-full"
-              />
-              <span className="text-sm text-gray-600 truncate">{transformedExperience.hostProfile.name}</span>
-            </div>
-            <div className="flex items-center">
-              <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-              <span className="font-medium">{experience.rating}</span>
-              <span className="text-gray-500 ml-1 text-sm">({experience.total_reviews})</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-lg font-bold text-gray-900">€{experience.price_per_person}</span>
-              <span className="text-sm text-gray-500"> / person</span>
-            </div>
-            <Button size="sm" asChild>
-              <Link href={`/experience/${experience.id}`}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Link>
-            </Button>
-          </div>
-
-          {transformedExperience.lastBooked && (
-            <p className="text-xs text-gray-500 mt-2">Last booked {transformedExperience.lastBooked}</p>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
-  )
-}
+ExperienceCard.displayName = "ExperienceCard"
 
 // Main Search Page Component
 export default function EnhancedExperiencesSearchPage() {
@@ -949,23 +975,7 @@ export default function EnhancedExperiencesSearchPage() {
 
             {/* Experience Cards */}
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <div className="w-full h-48 bg-gray-200 rounded-t-lg"></div>
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        <div className="flex justify-between">
-                          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <SearchResultsSkeleton />
             ) : filteredExperiences.length === 0 ? (
               <div className="text-center py-16">
                 <Card className="max-w-md mx-auto">

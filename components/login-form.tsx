@@ -3,199 +3,165 @@
 import type React from "react"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Loader2 } from "lucide-react"
 
-interface LoginFormProps {
-  userType: string
-  onSuccess?: (user: any) => void
+const getTestCredentials = (userType: string) => {
+  // Only show in development environment
+  if (process.env.NODE_ENV !== "development") {
+    return null
+  }
+
+  switch (userType) {
+    case "customer":
+      return {
+        email: process.env.NEXT_PUBLIC_TEST_CUSTOMER_EMAIL || "customer@seafable.com",
+        label: "Customer Test Account",
+      }
+    case "host":
+      return { email: process.env.NEXT_PUBLIC_TEST_HOST_EMAIL || "host@seafable.com", label: "Host Test Account" }
+    case "business":
+      return {
+        email: process.env.NEXT_PUBLIC_TEST_BUSINESS_EMAIL || "business@seafable.com",
+        label: "Business Test Account",
+      }
+    default:
+      return null
+  }
 }
 
-export function LoginForm({ userType, onSuccess }: LoginFormProps) {
-  const { login } = useAuth()
-  const [formData, setFormData] = useState({ email: "", password: "" })
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [loginAttempts, setLoginAttempts] = useState(0)
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.email) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+export default function LoginForm() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [userType, setUserType] = useState("customer") // 'customer', 'host', 'business'
+  const { login, isLoading, authError } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateForm()) return
-
-    setIsLoading(true)
-    setErrors({})
-
-    try {
-      const result = await login(formData.email, formData.password, userType)
-
-      if (result.success && result.user) {
-        onSuccess?.(result.user)
+    const result = await login(email, password, userType)
+    if (result.success) {
+      if (userType === "business" || userType === "host") {
+        router.push("/business/dashboard")
       } else {
-        setErrors({ general: result.error || "Login failed" })
-        setLoginAttempts((prev) => prev + 1)
-        setFormData({ ...formData, password: "" })
+        router.push("/dashboard")
       }
-    } catch (error) {
-      setErrors({ general: "Network error occurred" })
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value })
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" })
-    }
-  }
-
-  const getTestCredentials = () => {
-    switch (userType) {
-      case "customer":
-        return { email: "customer@seafable.com", label: "Customer Test Account" }
-      case "host":
-        return { email: "host@seafable.com", label: "Host Test Account" }
-      case "business":
-        return { email: "business@seafable.com", label: "Business Test Account" }
-      default:
-        return { email: "customer@seafable.com", label: "Test Account" }
-    }
-  }
-
-  const testCreds = getTestCredentials()
+  const testCreds = getTestCredentials(userType)
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="your@email.com"
-            value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
-            disabled={isLoading}
-          />
-          {formData.email && !errors.email && <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />}
+    <Card className="w-full max-w-md">
+      <CardHeader className="space-y-1 text-center">
+        <CardTitle className="text-2xl">Sign In</CardTitle>
+        <CardDescription>Choose your account type and enter your credentials</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="userType">Account Type</Label>
+            <RadioGroup
+              defaultValue="customer"
+              value={userType}
+              onValueChange={setUserType}
+              className="flex justify-center space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="customer" id="customer" />
+                <Label htmlFor="customer">Customer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="host" id="host" />
+                <Label htmlFor="host">Host</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="business" id="business" />
+                <Label htmlFor="business">Business</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </form>
+
+        {process.env.NODE_ENV === "development" && testCreds && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200 text-sm text-blue-800">
+            <p className="font-semibold mb-1">Development Test Account:</p>
+            <p>
+              Email: <span className="font-mono">{testCreds.email}</span>
+            </p>
+            <p>
+              Password: <span className="font-mono">password</span>
+            </p>
+            <p className="mt-2">
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0 h-auto text-blue-800"
+                onClick={() => {
+                  setEmail(testCreds.email)
+                  setPassword("password")
+                }}
+              >
+                Auto-fill
+              </Button>
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 text-center text-sm">
+          Don&apos;t have an account?{" "}
+          <Link href="/register" className="underline">
+            Sign Up
+          </Link>
         </div>
-        {errors.email && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {errors.email}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-            disabled={isLoading}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+        <div className="mt-2 text-center text-sm">
+          <Link href="/forgot-password" className="underline">
+            Forgot password?
+          </Link>
         </div>
-        {errors.password && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {errors.password}
-          </p>
-        )}
-      </div>
-
-      {errors.general && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general}</AlertDescription>
-        </Alert>
-      )}
-
-      {loginAttempts >= 3 && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Multiple failed attempts. Please double-check your credentials or{" "}
-            <Link href="/forgot-password" className="underline">
-              reset your password
-            </Link>
-            .
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Button type="submit" className="w-full" disabled={isLoading || !formData.email || !formData.password}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
-          </>
-        ) : (
-          <>
-            Sign In
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </>
-        )}
-      </Button>
-
-      {/* Test Credentials Helper */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-md border">
-        <p className="text-sm text-blue-800 font-medium">🧪 {testCreds.label}:</p>
-        <p className="text-sm text-blue-700">Email: {testCreds.email}</p>
-        <p className="text-sm text-blue-700">Password: password123</p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-2 w-full"
-          onClick={() => {
-            setFormData({ email: testCreds.email, password: "password123" })
-            setErrors({})
-          }}
-        >
-          Fill Test Credentials
-        </Button>
-      </div>
-    </form>
+      </CardContent>
+    </Card>
   )
 }

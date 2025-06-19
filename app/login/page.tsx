@@ -1,186 +1,138 @@
 "use client"
-
 import { useState } from "react"
+import type React from "react"
+
+import { supabase } from "@/lib/auth-utils"
 import { useRouter } from "next/navigation"
-import { User, UserCheck, Building, Anchor, ArrowRight, CheckCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DatabaseStatus } from "@/components/database-status"
-import { LoginForm } from "@/components/login-form"
-import { useAuth } from "@/lib/auth-context"
+import Link from "next/link"
+import { Anchor, Mail, Lock, ArrowRight } from "lucide-react"
 
-export default function LoginPage() {
+export default function CustomerLoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("customer")
-  const { user, isAuthenticated, logout } = useAuth()
 
-  const handleLoginSuccess = (userData: any) => {
-    console.log("Login successful:", userData)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
 
-    // Route based on user type
-    switch (userData.role) {
-      case "user":
-        router.push("/dashboard")
-        break
-      case "host":
-        if (userData.businessProfile) {
-          router.push("/business/dashboard")
-        } else {
-          router.push("/host/dashboard")
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      if (data.user) {
+        // Check if user is actually a business user
+        const { data: hostProfile } = await supabase.from("host_profiles").select("id").eq("id", data.user.id).single()
+
+        if (hostProfile) {
+          // Business user trying to log in on customer page
+          await supabase.auth.signOut()
+          setError("Business accounts should use the business login page.")
+          return
         }
-        break
-      case "admin":
-        router.push("/admin/dashboard")
-        break
-      default:
+
         router.push("/dashboard")
+      }
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (isAuthenticated && user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-              <CardTitle>Welcome Back, {user.firstName}!</CardTitle>
-              <CardDescription>You are successfully logged in to SeaFable</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Account Details:</h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="font-medium">Name:</span> {user.firstName} {user.lastName}
-                  </div>
-                  <div>
-                    <span className="font-medium">Email:</span> {user.email}
-                  </div>
-                  <div>
-                    <span className="font-medium">Role:</span> {user.role}
-                  </div>
-                  {user.hostProfile && (
-                    <div>
-                      <span className="font-medium">Host Type:</span> {user.hostProfile.hostType}
-                    </div>
-                  )}
-                  {user.businessProfile && (
-                    <div>
-                      <span className="font-medium">Business:</span> {user.businessProfile.companyName}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button onClick={() => handleLoginSuccess(user)} className="flex-1">
-                  Go to Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button variant="outline" onClick={logout}>
-                  Sign Out
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center items-center gap-3 mb-4">
-            <Anchor className="h-8 w-8 text-teal-600" />
-            <h1 className="text-3xl font-bold text-gray-900">SeaFable</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <Anchor className="w-8 h-8 text-teal-600 mr-2" />
+              <span className="text-2xl font-bold text-gray-900">SeaFable</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <p className="text-gray-600">Sign in to your customer account</p>
           </div>
-          <p className="text-gray-600">Sign in to your account and dive into adventure</p>
-        </div>
 
-        {/* Database Status */}
-        <DatabaseStatus />
-
-        {/* Login Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Account Type Selection */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Account Type</CardTitle>
-                <CardDescription>Choose your account type to sign in</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <button
-                  onClick={() => setActiveTab("customer")}
-                  className={`w-full p-4 rounded-lg border-2 transition-all ${
-                    activeTab === "customer" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <User className="h-6 w-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-medium">Customer</div>
-                      <div className="text-sm text-gray-500">Book water adventures</div>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("host")}
-                  className={`w-full p-4 rounded-lg border-2 transition-all ${
-                    activeTab === "host" ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <UserCheck className="h-6 w-6 text-green-600" />
-                    <div className="text-left">
-                      <div className="font-medium">Host/Guide</div>
-                      <div className="text-sm text-gray-500">Offer experiences</div>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("business")}
-                  className={`w-full p-4 rounded-lg border-2 transition-all ${
-                    activeTab === "business"
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Building className="h-6 w-6 text-purple-600" />
-                    <div className="text-left">
-                      <div className="font-medium">Business</div>
-                      <div className="text-sm text-gray-500">Manage operations</div>
-                    </div>
-                  </div>
-                </button>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Login Form */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Sign In as {activeTab === "customer" ? "Customer" : activeTab === "host" ? "Host/Guide" : "Business"}
-                </CardTitle>
-                <CardDescription>Enter your credentials to access your SeaFable account</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <LoginForm userType={activeTab} onSuccess={handleLoginSuccess} />
-              </CardContent>
-            </Card>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                <>
+                  Sign In <ArrowRight className="ml-2 h-4 w-4 inline-block" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer Links */}
+          <div className="mt-6 text-sm">
+            <Link href="/forgot-password" className="text-teal-600 hover:underline">
+              Forgot Password?
+            </Link>
+            <p className="mt-2">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-teal-600 hover:underline">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
       </div>

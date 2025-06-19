@@ -1,28 +1,26 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
+import { ThemeProvider } from "@/components/theme-provider"
+import ErrorBoundary from "@/components/error-boundary" // Import ErrorBoundary
+import AccessDenied from "@/components/ui/AccessDenied" // Use AccessDenied as a simple fallback
+import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "SeaFable - Dive into Adventure",
-  description:
-    "Connect with experienced captains, instructors, and guides for unforgettable water adventures worldwide",
-    generator: 'v0.dev'
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <ErrorBoundary fallback={<AccessDenied message="Something went wrong. Please try again later." />}>
+              {children}
+            </ErrorBoundary>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
 }
+
+export const metadata = {
+      generator: 'v0.dev'
+    };
