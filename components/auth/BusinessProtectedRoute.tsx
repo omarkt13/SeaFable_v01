@@ -5,63 +5,29 @@ import type React from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { AccessDenied } from "@/components/ui/AccessDenied" // Assuming AccessDenied is a client component
 
-interface BusinessProtectedRouteProps {
-  children: React.ReactNode
-  requireOnboarding?: boolean
-}
-
-export function BusinessProtectedRoute({ children, requireOnboarding = true }: BusinessProtectedRouteProps) {
-  const { user, userType, loading, businessProfile } = useAuth() // Get businessProfile directly from useAuth
+export function BusinessProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (loading) {
-      // Still loading auth state, do nothing yet
-      return
+    if (!isLoading && (!user || user.userType !== "business")) {
+      // If not loading and no user, or user is not a business, redirect to login
+      router.replace("/business/login")
     }
+  }, [user, isLoading, router])
 
-    if (!user) {
-      // No user, redirect to business login
-      router.push("/business/login")
-      return
-    }
-
-    if (userType === "customer") {
-      // User is a customer, redirect to customer dashboard
-      router.push("/dashboard")
-      return
-    }
-
-    if (userType !== "business") {
-      // User is not a business type (e.g., null or undefined), redirect to business login
-      router.push("/business/login")
-      return
-    }
-
-    // If business user, check onboarding status
-    if (requireOnboarding && !businessProfile?.onboarding_completed) {
-      // Onboarding required and not completed, redirect to onboarding page
-      router.push("/business/onboarding")
-      return
-    }
-    // If all checks pass, allow access to the children
-  }, [user, userType, loading, businessProfile, requireOnboarding, router]) // Depend on businessProfile
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
-      </div>
-    )
+  if (isLoading) {
+    // Optionally render a loading spinner or placeholder while auth status is being determined
+    return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>
   }
 
-  // If user is not a business or onboarding is not complete when required,
-  // we return null here because the useEffect above will handle the redirect.
-  // This prevents rendering protected content before redirect.
-  if (!user || userType !== "business" || (requireOnboarding && !businessProfile?.onboarding_completed)) {
-    return null
+  if (user && user.userType === "business") {
+    return <>{children}</>
   }
 
-  return <>{children}</>
+  // If user is not a business or not logged in, show AccessDenied (before redirect takes effect)
+  // The useEffect above will handle the actual redirection.
+  return <AccessDenied userType="business" message="You do not have access to the business dashboard." />
 }
