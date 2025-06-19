@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { mockBusinessData } from "@/lib/mock-data"
+import { mockBusinessData } from "@/lib/mock-data" // Ensure this import is correct
 
 export function BusinessSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { businessProfile, signOut } = useAuth()
