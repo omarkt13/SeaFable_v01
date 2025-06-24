@@ -25,7 +25,7 @@ export function BusinessSidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   const { businessProfile, signOut } = useAuth()
 
   const navigation = [
-    { name: "Home", icon: Home, href: "/business/home" }, // Updated href
+    { name: "Home", icon: Home, href: "/business/home" }, // Updated href to /business/home
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
     { name: "Sales", icon: DollarSign, href: "/business/sales" },
