@@ -509,10 +509,10 @@ export async function getHostBookings(hostId: string) {
       .select(`
         *,
         experiences!bookings_experience_id_fkey (title),
-        users!bookings_user_id_fkey (first_name, last_name, email, avatar_url)
-      `)
+        users!bookings_user_id_fkey (first_name, last_name, email, avatar_url, phone)
+      `) // ✅ MODIFIED: Added 'phone' to user select
       .eq("host_id", hostId)
-      .order("booked_at", { ascending: false }) // FIX: Changed from created_at to booked_at
+      .order("booked_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching bookings:", error)
