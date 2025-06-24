@@ -48,6 +48,7 @@ export interface Experience {
   host_profiles?: HostProfile
   experience_images?: ExperienceImage[]
   reviews?: Review[]
+  itinerary?: any // Add this line
 }
 
 export interface HostProfile {
@@ -511,7 +512,7 @@ export async function getHostBookings(hostId: string) {
         users!bookings_user_id_fkey (first_name, last_name, email, avatar_url)
       `)
       .eq("host_id", hostId)
-      .order("booking_date", { ascending: false })
+      .order("booked_at", { ascending: false }) // FIX: Changed from created_at to booked_at
 
     if (error) {
       console.error("Error fetching bookings:", error)
@@ -521,7 +522,7 @@ export async function getHostBookings(hostId: string) {
     return { success: true, data: data || [] }
   } catch (error) {
     console.error("Error fetching bookings:", error)
-    return { success: false, error: "Network error occurred", data: [] }
+    return { success: false, error: "Network error occurred" }
   }
 }
 
@@ -569,11 +570,10 @@ export async function getHostDashboardData(hostId: string): Promise<{
           first_name,
           last_name,
           avatar_url
-          // Removed 'phone' as it does not exist in the users table
         )
-      `)
+      `) // ✅ FIXED: Removed inline comment from select string
       .eq("host_id", hostId)
-      .order("booked_at", { ascending: false })
+      .order("booked_at", { ascending: false }) // Already correct, no change needed here
 
     if (bookingsError) {
       console.error("Error fetching bookings:", bookingsError)

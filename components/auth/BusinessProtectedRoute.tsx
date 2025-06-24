@@ -8,22 +8,31 @@ import { useEffect } from "react"
 import { AccessDenied } from "@/components/ui/AccessDenied" // Assuming AccessDenied is a client component
 
 export function BusinessProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth()
+  const { user, userType, isLoading } = useAuth() // Destructure userType from useAuth
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && (!user || user.userType !== "business")) {
-      // If not loading and no user, or user is not a business, redirect to login
-      router.replace("/business/login")
+    if (!isLoading) {
+      if (!user) {
+        // Not logged in, redirect to business login
+        router.replace("/business/login")
+      } else if (userType !== "business") {
+        // Logged in but not a business user, redirect to home page
+        router.replace("/")
+      }
     }
-  }, [user, isLoading, router])
+  }, [user, userType, isLoading, router]) // Add userType to dependency array
 
   if (isLoading) {
-    // Optionally render a loading spinner or placeholder while auth status is being determined
-    return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>
+    // Show a loading spinner or placeholder while auth status is being determined
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
-  if (user && user.userType === "business") {
+  if (user && userType === "business") {
     return <>{children}</>
   }
 

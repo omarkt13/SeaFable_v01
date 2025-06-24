@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
 import { BusinessSidebar } from "@/components/navigation/BusinessSidebar"
-import { Menu, Bell, Star, Building2 } from "lucide-react" // Changed Building to Building2
+import { Menu, Bell, Star, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { mockBusinessData } from "@/lib/mock-data"
@@ -15,23 +15,20 @@ export function BusinessLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <BusinessProtectedRoute>
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-white">
         {/* Sidebar */}
         <BusinessSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top bar */}
-          <header className="bg-white shadow-sm border-b">
-            <div className="flex items-center justify-between px-6 py-4">
+          <header className="bg-white shadow-sm border-b border-gray-200">
+            <div className="flex items-center justify-between px-6 py-3">
               <div className="flex items-center">
+                {/* Mobile menu button - only visible on mobile */}
                 <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="lg:hidden mr-4">
                   <Menu className="h-5 w-5" />
                 </Button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Business Dashboard</h1>
-                  <p className="text-sm text-gray-500">Welcome back, {businessProfile?.businessName || "Host"}!</p>
-                </div>
               </div>
 
               <div className="flex items-center space-x-4">
@@ -41,7 +38,7 @@ export function BusinessLayout({ children }: { children: React.ReactNode }) {
                 </Button>
 
                 <div className="flex items-center space-x-3">
-                  <div className="text-right">
+                  <div className="text-right hidden sm:block">
                     <p className="text-sm font-medium text-gray-900">
                       {businessProfile?.businessName || mockBusinessData.businessProfile.name}
                     </p>
@@ -52,13 +49,15 @@ export function BusinessLayout({ children }: { children: React.ReactNode }) {
                     </div>
                   </div>
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-white" /> {/* Changed Building to Building2 */}
+                    <Building2 className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto">{children}</main>
+
+          {/* Main content with better background */}
+          <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
         </div>
       </div>
     </BusinessProtectedRoute>
