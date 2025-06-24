@@ -1,17 +1,99 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { MailIcon, PhoneIcon } from "lucide-react"
+import { MailIcon, PhoneIcon, UserIcon, Loader2, AlertCircle } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { getHostBookings } from "@/lib/database" // Using getHostBookings to derive clients
+
+interface ClientData {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  totalBookings: number
+}
 
 export default function BusinessClientsPage() {
-  const mockClients = [
-    { id: "C001", name: "John Doe", email: "john.doe@example.com", phone: "555-123-4567", totalBookings: 3 },
-    { id: "C002", name: "Jane Smith", email: "jane.smith@example.com", phone: "555-987-6543", totalBookings: 1 },
-    { id: "C003", name: "Peter Jones", email: "peter.j@example.com", phone: null, totalBookings: 2 },
-  ]
+  const { user, isLoading: authLoading } = useAuth()
+  const [clients, setClients] = useState<ClientData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading && user?.id) {
+      fetchClients(user.id)
+    } else if (!authLoading && !user) {
+      setError("You must be logged in as a business user to view clients.")
+      setIsLoading(false)
+    }
+  }, [user, authLoading])
+
+  const fetchClients = async (hostId: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const { data: bookings, error: fetchError } = await getHostBookings(hostId)
+      if (fetchError) {
+        throw new Error(fetchError)
+      }
+
+      const clientMap = new Map<string, ClientData>()
+      ;(bookings || []).forEach((booking) => {
+        if (booking.users?.id) {
+          const userId = booking.users.id
+          if (!clientMap.has(userId)) {
+            clientMap.set(userId, {
+              id: userId,
+              name: `${booking.users.first_name || "Unknown"} ${booking.users.last_name || "User"}`,
+              email: booking.users.email || "N/A",
+              phone: booking.users.phone || null,
+              totalBookings: 0,
+            })
+          }
+          const client = clientMap.get(userId)
+          if (client) {
+            client.totalBookings += 1
+            clientMap.set(userId, client)
+          }
+        }
+      })
+
+      setClients(Array.from(clientMap.values()))
+    } catch (err: any) {
+      console.error("Failed to fetch clients:", err)
+      setError(err.message || "Failed to load clients.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <BusinessLayout>
+        <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          <span className="ml-2 text-gray-500">Loading clients...</span>
+        </div>
+      </BusinessLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <BusinessLayout>
+        <div className="container mx-auto py-8 px-4 text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Clients</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => user?.id && fetchClients(user.id)}>Try Again</Button>
+        </div>
+      </BusinessLayout>
+    )
+  }
 
   return (
     <BusinessLayout>
@@ -23,46 +105,54 @@ export default function BusinessClientsPage() {
             <CardDescription>View and manage your customer base.</CardDescription>
           </CardHeader>
           <CardContent>
-            {mockClients.length === 0 ? (
-              <p className="text-gray-500">No clients found yet.</p>
+            {clients.length === 0 ? (
+              <div className="text-center py-8">
+                <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-lg font-semibold text-gray-700 mb-2">No clients found yet.</p>
+                <p className="text-gray-500 mb-4">Clients will appear here once they make a booking with you.</p>
+                <Button onClick={() => (window.location.href = "/business/experiences/new")}>
+                  Create New Experience
+                </Button>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Total Bookings</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">{client.name}</TableCell>
-                      <TableCell>{client.email}</TableCell>
-                      <TableCell>{client.phone || "N/A"}</TableCell>
-                      <TableCell className="text-right">{client.totalBookings}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon" title="Send Email">
-                            <MailIcon className="h-4 w-4" />
-                          </Button>
-                          {client.phone && (
-                            <Button variant="outline" size="icon" title="Call Client">
-                              <PhoneIcon className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Client Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead className="text-right">Total Bookings</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {clients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">{client.name}</TableCell>
+                        <TableCell>{client.email}</TableCell>
+                        <TableCell>{client.phone || "N/A"}</TableCell>
+                        <TableCell className="text-right">{client.totalBookings}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-2">
+                            <Button variant="outline" size="icon" title="Send Email">
+                              <MailIcon className="h-4 w-4" />
+                            </Button>
+                            {client.phone && (
+                              <a href={`tel:${client.phone}`}>
+                                <Button variant="outline" size="icon" title="Call Client">
+                                  <PhoneIcon className="h-4 w-4" />
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
-            <p className="mt-4 text-sm text-gray-500">
-              (Note: This is a placeholder. Actual client data will be fetched from the database.)
-            </p>
           </CardContent>
         </Card>
       </div>

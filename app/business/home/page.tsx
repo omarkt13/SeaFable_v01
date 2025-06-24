@@ -16,10 +16,12 @@ import {
   Settings,
   Plus,
   Users,
-  TrendingUp,
+  Phone,
+  Bell,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/auth-utils"
+import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 
 interface DashboardData {
   overview: {
@@ -29,6 +31,9 @@ interface DashboardData {
     averageRating: number
     revenueGrowth: number
     bookingGrowth: number
+    bookingsMade: number // New: Total bookings made
+    paymentsReceived: number // New: Total payments received
+    bookingsFulfilled: number // New: Total bookings fulfilled
   }
   recentBookings: Array<{
     id: string
@@ -47,6 +52,7 @@ interface DashboardData {
     time: string
     guests: number
     specialRequests?: string
+    phone?: string
   }>
   earnings: {
     thisMonth: number
@@ -63,9 +69,15 @@ interface DashboardData {
     repeatCustomerRate: number
     marketplaceVsDirectRatio: number
   }
+  notifications: Array<{
+    id: string
+    message: string
+    type: "info" | "warning" | "success" | "error"
+    timestamp: string
+  }>
 }
 
-export default function BusinessDashboardPage() {
+export default function BusinessHomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -102,8 +114,12 @@ export default function BusinessDashboardPage() {
       let activeBookings = 0
       let totalExperiences = 0
       let averageRating = 0
+      let bookingsMade = 0
+      let paymentsReceived = 0
+      let bookingsFulfilled = 0
       let recentBookings: any[] = []
       let upcomingBookings: any[] = []
+      let notifications: any[] = []
 
       // Get experiences
       try {
@@ -130,19 +146,21 @@ export default function BusinessDashboardPage() {
       // Get bookings
       try {
         const today = new Date().toISOString().split("T")[0]
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0]
 
         const { data: bookings, error: bookingsError } = await supabase
           .from("bookings")
           .select(`
-            id, 
-            total_price, 
-            booking_status, 
-            booking_date, 
+            id,
+            total_price,
+            booking_status,
+            booking_date,
             number_of_guests,
             departure_time,
             special_requests,
             created_at,
-            users!bookings_user_id_fkey(first_name, last_name),
+            payment_status,
+            users!bookings_user_id_fkey(first_name, last_name, phone),
             experiences!bookings_experience_id_fkey(title)
           `)
           .eq("host_id", businessProfile.id)
@@ -150,16 +168,25 @@ export default function BusinessDashboardPage() {
         if (!bookingsError && bookings) {
           console.log("Total bookings found:", bookings.length)
 
-          // Count active bookings (future confirmed/pending)
+          // Monthly Stats
+          const currentMonthBookings = bookings.filter((b) => b.created_at >= startOfMonth && b.created_at <= today)
+          bookingsMade = currentMonthBookings.length
+          paymentsReceived = currentMonthBookings
+            .filter((b) => b.payment_status === "paid" || b.payment_status === "completed")
+            .reduce((sum, b) => sum + (Number(b.total_price) || 0), 0)
+          bookingsFulfilled = currentMonthBookings.filter((b) => b.booking_status === "completed").length
+
+          // Active bookings (future confirmed/pending)
           activeBookings = bookings.filter(
             (b) => (b.booking_status === "confirmed" || b.booking_status === "pending") && b.booking_date >= today,
           ).length
 
-          // Calculate revenue from confirmed bookings
-          const confirmedBookings = bookings.filter((b) => b.booking_status === "confirmed")
-          totalRevenue = confirmedBookings.reduce((sum, booking) => {
-            return sum + (Number(booking.total_price) || 0)
-          }, 0)
+          // Calculate total revenue from all confirmed bookings (for overall earnings)
+          totalRevenue = bookings
+            .filter((b) => b.booking_status === "confirmed")
+            .reduce((sum, booking) => {
+              return sum + (Number(booking.total_price) || 0)
+            }, 0)
 
           // Apply platform fee (approximate net revenue)
           totalRevenue = Math.round(totalRevenue * 0.85) // 15% platform fee
@@ -195,15 +222,39 @@ export default function BusinessDashboardPage() {
               time: booking.departure_time || "09:00",
               guests: booking.number_of_guests || 1,
               specialRequests: booking.special_requests,
+              phone: booking.users?.phone || "N/A",
             }))
 
-          console.log("Active bookings:", activeBookings, "Revenue:", totalRevenue)
+          console.log("Active bookings:", activeBookings, "Revenue:", totalRevenue, "Fulfilled:", bookingsFulfilled)
         } else {
           console.log("Bookings error:", bookingsError?.message)
         }
       } catch (error) {
         console.error("Error loading bookings:", error)
       }
+
+      // Placeholder Notifications
+      notifications = [
+        {
+          id: "1",
+          message: "New booking confirmed for 'Sunset Kayak Tour' on 2024-07-15.",
+          type: "success",
+          timestamp: "2 hours ago",
+        },
+        {
+          id: "2",
+          message: "Your 'Diving Expedition' experience is low on availability for next week.",
+          type: "warning",
+          timestamp: "1 day ago",
+        },
+        { id: "3", message: "Payment received for booking #12345.", type: "info", timestamp: "3 days ago" },
+        {
+          id: "4",
+          message: "Review your business settings for optimal performance.",
+          type: "info",
+          timestamp: "5 days ago",
+        },
+      ]
 
       // Build dashboard data
       const data: DashboardData = {
@@ -212,26 +263,30 @@ export default function BusinessDashboardPage() {
           activeBookings,
           totalExperiences,
           averageRating: Math.round(averageRating * 10) / 10,
-          revenueGrowth: 12,
-          bookingGrowth: 8,
+          revenueGrowth: 12, // Placeholder
+          bookingGrowth: 8, // Placeholder
+          bookingsMade,
+          paymentsReceived: Math.round(paymentsReceived),
+          bookingsFulfilled,
         },
         recentBookings,
         upcomingBookings,
         earnings: {
-          thisMonth: Math.round(totalRevenue),
-          lastMonth: 0,
-          pending: Math.round(totalRevenue * 0.3),
+          thisMonth: Math.round(paymentsReceived), // Use paymentsReceived for thisMonth earnings
+          lastMonth: 0, // Placeholder
+          pending: Math.round(totalRevenue * 0.3), // Placeholder
           nextPayout: {
-            amount: Math.round(totalRevenue * 0.3),
+            amount: Math.round(totalRevenue * 0.3), // Placeholder
             date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           },
         },
         analytics: {
-          conversionRate: 68,
+          conversionRate: 68, // Placeholder
           customerSatisfaction: averageRating,
-          repeatCustomerRate: 34,
-          marketplaceVsDirectRatio: 60,
+          repeatCustomerRate: 34, // Placeholder
+          marketplaceVsDirectRatio: 60, // Placeholder
         },
+        notifications,
       }
 
       setDashboardData(data)
@@ -275,6 +330,20 @@ export default function BusinessDashboardPage() {
     }
   }
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "success":
+        return <CheckCircle className="h-5 w-5 text-green-500" />
+      case "warning":
+        return <AlertCircle className="h-5 w-5 text-yellow-500" />
+      case "error":
+        return <AlertCircle className="h-5 w-5 text-red-500" />
+      case "info":
+      default:
+        return <Bell className="h-5 w-5 text-blue-500" />
+    }
+  }
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -309,13 +378,13 @@ export default function BusinessDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <BusinessLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Business Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Business Home</h1>
               <p className="text-gray-600">
                 Welcome back, {businessProfile?.businessName || businessProfile?.name || "Business Owner"}
               </p>
@@ -333,42 +402,38 @@ export default function BusinessDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Monthly Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">€{dashboardData.overview.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />+{dashboardData.overview.revenueGrowth}% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
+              <CardTitle className="text-sm font-medium">Bookings Made (This Month)</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.activeBookings}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />+{dashboardData.overview.bookingGrowth}% from last month
-              </p>
+              <div className="text-2xl font-bold">{dashboardData.overview.bookingsMade}</div>
+              <p className="text-xs text-muted-foreground">Total new bookings this month</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Experiences Listed</CardTitle>
-              <Ship className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Payments Received (This Month)</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.totalExperiences}</div>
-              <p className="text-xs text-muted-foreground">All active experiences</p>
+              <div className="text-2xl font-bold">€{dashboardData.overview.paymentsReceived.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Total payments processed this month</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Bookings Fulfilled (This Month)</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardData.overview.bookingsFulfilled}</div>
+              <p className="text-xs text-muted-foreground">Experiences completed this month</p>
             </CardContent>
           </Card>
 
@@ -393,9 +458,9 @@ export default function BusinessDashboardPage() {
           </Card>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Bookings */}
+          {/* Left Column - Bookings & Calendar */}
           <div className="lg:col-span-2 space-y-6">
             {/* Upcoming Bookings */}
             <Card>
@@ -420,6 +485,11 @@ export default function BusinessDashboardPage() {
                             <p className="text-sm text-gray-500">
                               {new Date(booking.date).toLocaleDateString()} at {booking.time}
                             </p>
+                            {booking.phone && booking.phone !== "N/A" && (
+                              <a href={`tel:${booking.phone}`} className="text-xs text-blue-500 flex items-center">
+                                <Phone className="h-3 w-3 mr-1" /> {booking.phone}
+                              </a>
+                            )}
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -436,6 +506,23 @@ export default function BusinessDashboardPage() {
                     <Button onClick={() => router.push("/business/calendar")}>Set Your Availability</Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Weekly Calendar */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Calendar</CardTitle>
+                <CardDescription>Overview of your schedule for the current week</CardDescription>
+              </CardHeader>
+              <CardContent className="text-center py-8">
+                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-2">Your weekly schedule at a glance.</p>
+                <p className="text-sm text-gray-400 mb-4">Click below to manage your full calendar.</p>
+                <Button onClick={() => router.push("/business/calendar")}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  View Full Calendar
+                </Button>
               </CardContent>
             </Card>
 
@@ -483,30 +570,28 @@ export default function BusinessDashboardPage() {
             </Card>
           </div>
 
-          {/* Right Column - Analytics & Earnings */}
+          {/* Right Column - Payments, Notifications & Quick Actions */}
           <div className="space-y-6">
-            {/* Earnings Summary */}
+            {/* Upcoming Payments */}
             <Card>
               <CardHeader>
-                <CardTitle>Earnings</CardTitle>
-                <CardDescription>Your financial overview</CardDescription>
+                <CardTitle>Upcoming Payments</CardTitle>
+                <CardDescription>Summary of your next payout</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">This Month</span>
-                  <span className="text-lg font-bold">€{dashboardData.earnings.thisMonth.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Pending Payout</span>
-                  <span className="text-sm text-yellow-600">€{dashboardData.earnings.pending.toLocaleString()}</span>
+                  <span className="text-lg font-bold text-yellow-600">
+                    €{dashboardData.earnings.pending.toLocaleString()}
+                  </span>
                 </div>
                 <div className="pt-4 border-t">
-                  <div className="text-sm text-gray-600 mb-2">Next Payout</div>
+                  <div className="text-sm text-gray-600 mb-2">Next Payout Date</div>
                   <div className="text-lg font-semibold">
-                    €{dashboardData.earnings.nextPayout.amount.toLocaleString()}
+                    {new Date(dashboardData.earnings.nextPayout.date).toLocaleDateString()}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {new Date(dashboardData.earnings.nextPayout.date).toLocaleDateString()}
+                    Amount: €{dashboardData.earnings.nextPayout.amount.toLocaleString()}
                   </div>
                 </div>
                 <Button className="w-full" variant="outline" onClick={() => router.push("/business/earnings")}>
@@ -515,51 +600,26 @@ export default function BusinessDashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Performance Metrics */}
+            {/* Key Notifications */}
             <Card>
               <CardHeader>
-                <CardTitle>Performance</CardTitle>
-                <CardDescription>Key business metrics</CardDescription>
+                <CardTitle>Key Notifications</CardTitle>
+                <CardDescription>Important alerts and announcements</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Booking Conversion</span>
-                    <span className="text-sm text-green-600">{dashboardData.analytics.conversionRate}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full"
-                      style={{ width: `${dashboardData.analytics.conversionRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Customer Satisfaction</span>
-                    <span className="text-sm text-blue-600">{dashboardData.analytics.customerSatisfaction}/5.0</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(dashboardData.analytics.customerSatisfaction / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Repeat Customers</span>
-                    <span className="text-sm text-purple-600">{dashboardData.analytics.repeatCustomerRate}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${dashboardData.analytics.repeatCustomerRate}%` }}
-                    ></div>
-                  </div>
-                </div>
+              <CardContent className="space-y-3">
+                {dashboardData.notifications.length > 0 ? (
+                  dashboardData.notifications.map((notification) => (
+                    <div key={notification.id} className="flex items-start space-x-3">
+                      <div className="pt-1">{getNotificationIcon(notification.type)}</div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{notification.message}</p>
+                        <p className="text-xs text-gray-500">{notification.timestamp}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">No new notifications.</div>
+                )}
               </CardContent>
             </Card>
 
@@ -576,6 +636,14 @@ export default function BusinessDashboardPage() {
                 >
                   <Ship className="h-4 w-4 mr-2" />
                   Manage Experiences
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => router.push("/business/calendar")}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Manage Availability
                 </Button>
                 <Button
                   variant="outline"
@@ -598,6 +666,6 @@ export default function BusinessDashboardPage() {
           </div>
         </div>
       </div>
-    </div>
+    </BusinessLayout>
   )
 }

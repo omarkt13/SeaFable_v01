@@ -20,7 +20,7 @@ export function BusinessLayout({ children }: { children: React.ReactNode }) {
         <BusinessSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
           {/* Top bar */}
           <header className="bg-white shadow-sm border-b border-gray-200">
             <div className="flex items-center justify-between px-6 py-3">
