@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/auth-utils"
+import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 
 interface DashboardData {
   overview: {
@@ -377,7 +378,7 @@ export default function BusinessHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <BusinessLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -665,6 +666,6 @@ export default function BusinessHomePage() {
           </div>
         </div>
       </div>
-    </div>
+    </BusinessLayout>
   )
 }
