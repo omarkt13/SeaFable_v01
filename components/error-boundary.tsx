@@ -25,8 +25,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can use your own error logging service here
-    console.error({ error, errorInfo })
+    // Log the error object directly for better inspection
+    console.error("Error caught by ErrorBoundary:", error, errorInfo)
   }
 
   // Method to reset the error boundary state
@@ -41,10 +41,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback({ error: this.state.error, reset: this.resetErrorBoundary })
       }
       // Default fallback UI if no fallback function is provided
+      // Use String(this.state.error) for robust display of any error object
+      const errorMessage = this.state.error ? String(this.state.error) : "An unknown error occurred."
       return (
         <div className="flex min-h-screen items-center justify-center bg-red-100 text-red-800 p-4 flex-col">
           <h2 className="text-xl font-semibold">Oops, something went wrong!</h2>
-          <p className="mt-2">{this.state.error?.message || "An unknown error occurred."}</p>
+          <p className="mt-2">{errorMessage}</p> {/* Display the stringified error */}
           <button
             type="button"
             onClick={this.resetErrorBoundary}
