@@ -1,8 +1,9 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import type { User } from "@supabase/auth-helpers-nextjs"
-import { supabase, getUserProfile, getBusinessProfile } from "@/lib/auth-utils"
+import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client" // Use the client-side Supabase instance
+import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils" // Import profile fetching and signOut from auth-utils
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
@@ -11,6 +12,8 @@ interface AuthContextType {
   businessProfile: BusinessProfile | null
   userType: "customer" | "business" | null
   isLoading: boolean
+  login: (email: string, password: string, type: string) => Promise<{ success: boolean; user?: User; error?: string }>
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,12 +25,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchUserAndProfiles = async (currentUser: User | null) => {
-    console.log("AuthContext: fetchUserAndProfiles started. Current user:", currentUser?.id)
-    setIsLoading(true) // Ensure loading is true at the start of fetching
+  const supabase = createClient() // Use the client-side Supabase instance
 
+  const fetchUserAndProfiles = async (currentUser: User | null) => {
+    setIsLoading(true)
     setUser(currentUser)
-    setUserProfile(null) // Reset profiles
+    setUserProfile(null)
     setBusinessProfile(null)
     setUserType(null)
 
@@ -36,34 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let fetchedUserProfile: UserProfile | null = null
       let fetchedBusinessProfile: BusinessProfile | null = null
 
+      // Attempt to determine user type from metadata first (if set during signup)
       const userMetadataType = currentUser.user_metadata?.user_type as "customer" | "business" | undefined
 
       if (userMetadataType === "business") {
-        console.log("AuthContext: User metadata indicates 'business'. Fetching business profile.")
         fetchedBusinessProfile = await getBusinessProfile(currentUser.id)
         if (fetchedBusinessProfile) {
           determinedUserType = "business"
-        } else {
-          console.warn("AuthContext: User metadata 'business' but no business profile found.")
         }
       } else if (userMetadataType === "customer") {
-        console.log("AuthContext: User metadata indicates 'customer'. Fetching customer profile.")
         fetchedUserProfile = await getUserProfile(currentUser.id)
         if (fetchedUserProfile) {
           determinedUserType = "customer"
-        } else {
-          console.warn("AuthContext: User metadata 'customer' but no customer profile found.")
         }
-      } else {
-        // Fallback for users without user_type in metadata (e.g., older users or if not set during signup)
-        console.log("AuthContext: User metadata user_type not set. Attempting to determine via profiles.")
+      }
+
+      // Fallback: if user_type not in metadata or profile not found, check both tables
+      if (!determinedUserType) {
         fetchedBusinessProfile = await getBusinessProfile(currentUser.id)
         if (fetchedBusinessProfile) {
           determinedUserType = "business"
         } else {
           fetchedUserProfile = await getUserProfile(currentUser.id)
           if (fetchedUserProfile) {
-            determinedUserType = "customer" // Default to customer if no business profile found
+            determinedUserType = "customer"
           }
         }
       }
@@ -71,16 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserProfile(fetchedUserProfile)
       setBusinessProfile(fetchedBusinessProfile)
       setUserType(determinedUserType)
-      console.log("AuthContext: Profiles fetched. UserType:", determinedUserType, "User:", currentUser?.id)
-    } else {
-      console.log("AuthContext: No current user. Setting states to null.")
     }
-    setIsLoading(false) // Set loading to false ONLY after all async operations are complete
-    console.log("AuthContext: fetchUserAndProfiles completed. isLoading set to false.")
+    setIsLoading(false)
   }
 
   useEffect(() => {
-    console.log("AuthContext: useEffect mounted. Initial session check.")
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       fetchUserAndProfiles(session?.user || null)
@@ -90,18 +84,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("AuthContext: onAuthStateChange event:", event, "Session user:", session?.user?.id)
       fetchUserAndProfiles(session?.user || null)
     })
 
     return () => {
-      console.log("AuthContext: useEffect cleanup. Unsubscribing from auth state changes.")
       subscription.unsubscribe()
     }
   }, []) // Empty dependency array ensures this runs once on mount
 
+  const login = async (
+    email: string,
+    password: string,
+    type: string,
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      if (data.user) {
+        // After successful login, re-fetch profiles and user type
+        await fetchUserAndProfiles(data.user)
+
+        // Additional check to ensure user logs into the correct portal
+        if (type === "customer" && userType === "business") {
+          await authUtilsSignOut() // Use the signOut from auth-utils
+          return { success: false, error: "Business accounts should use the business login page." }
+        }
+        if (type === "business" && userType === "customer") {
+          await authUtilsSignOut() // Use the signOut from auth-utils
+          return { success: false, error: "Customer accounts should use the customer login page." }
+        }
+
+        return { success: true, user: data.user }
+      }
+      return { success: false, error: "Login failed: No user data." }
+    } catch (error: any) {
+      return { success: false, error: error.message || "An unexpected error occurred during login." }
+    }
+  }
+
+  const signOut = async () => {
+    await authUtilsSignOut() // Use the signOut from auth-utils
+    setUser(null)
+    setUserProfile(null)
+    setBusinessProfile(null)
+    setUserType(null)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading }}>
+    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, login, signOut }}>
       {children}
     </AuthContext.Provider>
   )

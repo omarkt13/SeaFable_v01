@@ -237,3 +237,46 @@ export async function updateExperience(
   if (error) throw error
   return data
 }
+
+export async function updateBusinessProfile(
+  hostProfileId: string,
+  updates: Partial<{
+    business_name: string
+    business_description: string
+    business_address: string
+    business_city: string
+    business_state: string
+    business_zip_code: string
+    business_phone: string
+    business_email: string
+    website_url: string
+    logo_url: string
+    cover_image_url: string
+    social_media_links: any
+    stripe_account_id: string
+    currency: string
+    timezone: string
+    language: string
+    cancellation_policy: string
+    refund_policy: string
+    terms_and_conditions: string
+    privacy_policy: string
+    is_verified: boolean
+    verification_details: any
+    status: string
+    notes: string
+  }>,
+) {
+  const { data, error } = await supabase
+    .from("host_profiles")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", hostProfileId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
