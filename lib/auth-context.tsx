@@ -13,12 +13,9 @@ interface AuthContextType {
   isLoading: boolean
 }
 
-// Define AuthContext internally, without an explicit export here.
-// It will be accessed by useAuth within the same module.
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Changing AuthProvider to a const arrow function to address HMR issue
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
@@ -110,7 +107,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   )
 }
 
-// Export useAuth as a function declaration
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

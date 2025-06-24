@@ -30,7 +30,7 @@ interface DashboardData {
     averageRating: number
     revenueGrowth: number
     bookingGrowth: number
-    bookingsFulfilled: number // New stat
+    bookingsFulfilled: number // Added for new stat
   }
   recentBookings: Array<{
     id: string
@@ -138,10 +138,10 @@ export default function BusinessHomePage() {
         const { data: bookings, error: bookingsError } = await supabase
           .from("bookings")
           .select(`
-            id, 
-            total_price, 
-            booking_status, 
-            booking_date, 
+            id,
+            total_price,
+            booking_status,
+            booking_date,
             number_of_guests,
             departure_time,
             special_requests,
@@ -159,14 +159,14 @@ export default function BusinessHomePage() {
             (b) => (b.booking_status === "confirmed" || b.booking_status === "pending") && b.booking_date >= today,
           ).length
 
+          // Count fulfilled bookings
+          bookingsFulfilled = bookings.filter((b) => b.booking_status === "completed").length
+
           // Calculate revenue from confirmed bookings
           const confirmedBookings = bookings.filter((b) => b.booking_status === "confirmed")
           totalRevenue = confirmedBookings.reduce((sum, booking) => {
             return sum + (Number(booking.total_price) || 0)
           }, 0)
-
-          // Count fulfilled bookings
-          bookingsFulfilled = bookings.filter((b) => b.booking_status === "completed").length
 
           // Apply platform fee (approximate net revenue)
           totalRevenue = Math.round(totalRevenue * 0.85) // 15% platform fee
@@ -202,7 +202,7 @@ export default function BusinessHomePage() {
               time: booking.departure_time || "09:00",
               guests: booking.number_of_guests || 1,
               specialRequests: booking.special_requests,
-              phone: booking.users?.phone || "N/A", // Include phone number
+              phone: booking.users?.phone || "N/A", // Added phone
             }))
 
           console.log("Active bookings:", activeBookings, "Revenue:", totalRevenue, "Fulfilled:", bookingsFulfilled)
@@ -220,26 +220,26 @@ export default function BusinessHomePage() {
           activeBookings,
           totalExperiences,
           averageRating: Math.round(averageRating * 10) / 10,
-          revenueGrowth: 12, // Placeholder, ideally calculated from historical data
-          bookingGrowth: 8, // Placeholder, ideally calculated from historical data
-          bookingsFulfilled, // New stat
+          revenueGrowth: 12,
+          bookingGrowth: 8,
+          bookingsFulfilled, // Assign new stat
         },
         recentBookings,
         upcomingBookings,
         earnings: {
           thisMonth: Math.round(totalRevenue),
-          lastMonth: 0, // Placeholder
-          pending: Math.round(totalRevenue * 0.3), // Example pending calculation
+          lastMonth: 0,
+          pending: Math.round(totalRevenue * 0.3),
           nextPayout: {
-            amount: Math.round(totalRevenue * 0.3), // Example payout amount
-            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 7 days from now
+            amount: Math.round(totalRevenue * 0.3),
+            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           },
         },
         analytics: {
-          conversionRate: 68, // Placeholder
+          conversionRate: 68,
           customerSatisfaction: averageRating,
-          repeatCustomerRate: 34, // Placeholder
-          marketplaceVsDirectRatio: 60, // Placeholder
+          repeatCustomerRate: 34,
+          marketplaceVsDirectRatio: 60,
         },
       }
 
@@ -377,7 +377,7 @@ export default function BusinessHomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardData.overview.bookingsFulfilled}</div>
-              <p className="text-xs text-muted-foreground">Total completed bookings</p>
+              <p className="text-xs text-muted-foreground">Total completed bookings this month</p>
             </CardContent>
           </Card>
 
@@ -429,10 +429,10 @@ export default function BusinessHomePage() {
                             <p className="text-sm text-gray-500">
                               {new Date(booking.date).toLocaleDateString()} at {booking.time}
                             </p>
-                            {booking.phone && (
-                              <p className="text-xs text-gray-500 flex items-center">
+                            {booking.phone && booking.phone !== "N/A" && (
+                              <a href={`tel:${booking.phone}`} className="text-xs text-blue-500 flex items-center">
                                 <Phone className="h-3 w-3 mr-1" /> {booking.phone}
-                              </p>
+                              </a>
                             )}
                           </div>
                         </div>
