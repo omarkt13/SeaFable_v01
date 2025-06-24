@@ -17,6 +17,7 @@ import {
   Plus,
   Users,
   TrendingUp,
+  Phone,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/auth-utils"
@@ -29,6 +30,7 @@ interface DashboardData {
     averageRating: number
     revenueGrowth: number
     bookingGrowth: number
+    bookingsFulfilled: number // New stat
   }
   recentBookings: Array<{
     id: string
@@ -47,6 +49,7 @@ interface DashboardData {
     time: string
     guests: number
     specialRequests?: string
+    phone?: string // Added phone for upcoming bookings
   }>
   earnings: {
     thisMonth: number
@@ -65,7 +68,7 @@ interface DashboardData {
   }
 }
 
-export default function BusinessDashboardPage() {
+export default function BusinessHomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -102,6 +105,7 @@ export default function BusinessDashboardPage() {
       let activeBookings = 0
       let totalExperiences = 0
       let averageRating = 0
+      let bookingsFulfilled = 0 // Initialize new stat
       let recentBookings: any[] = []
       let upcomingBookings: any[] = []
 
@@ -142,7 +146,7 @@ export default function BusinessDashboardPage() {
             departure_time,
             special_requests,
             created_at,
-            users!bookings_user_id_fkey(first_name, last_name),
+            users!bookings_user_id_fkey(first_name, last_name, phone),
             experiences!bookings_experience_id_fkey(title)
           `)
           .eq("host_id", businessProfile.id)
@@ -160,6 +164,9 @@ export default function BusinessDashboardPage() {
           totalRevenue = confirmedBookings.reduce((sum, booking) => {
             return sum + (Number(booking.total_price) || 0)
           }, 0)
+
+          // Count fulfilled bookings
+          bookingsFulfilled = bookings.filter((b) => b.booking_status === "completed").length
 
           // Apply platform fee (approximate net revenue)
           totalRevenue = Math.round(totalRevenue * 0.85) // 15% platform fee
@@ -195,9 +202,10 @@ export default function BusinessDashboardPage() {
               time: booking.departure_time || "09:00",
               guests: booking.number_of_guests || 1,
               specialRequests: booking.special_requests,
+              phone: booking.users?.phone || "N/A", // Include phone number
             }))
 
-          console.log("Active bookings:", activeBookings, "Revenue:", totalRevenue)
+          console.log("Active bookings:", activeBookings, "Revenue:", totalRevenue, "Fulfilled:", bookingsFulfilled)
         } else {
           console.log("Bookings error:", bookingsError?.message)
         }
@@ -212,25 +220,26 @@ export default function BusinessDashboardPage() {
           activeBookings,
           totalExperiences,
           averageRating: Math.round(averageRating * 10) / 10,
-          revenueGrowth: 12,
-          bookingGrowth: 8,
+          revenueGrowth: 12, // Placeholder, ideally calculated from historical data
+          bookingGrowth: 8, // Placeholder, ideally calculated from historical data
+          bookingsFulfilled, // New stat
         },
         recentBookings,
         upcomingBookings,
         earnings: {
           thisMonth: Math.round(totalRevenue),
-          lastMonth: 0,
-          pending: Math.round(totalRevenue * 0.3),
+          lastMonth: 0, // Placeholder
+          pending: Math.round(totalRevenue * 0.3), // Example pending calculation
           nextPayout: {
-            amount: Math.round(totalRevenue * 0.3),
-            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+            amount: Math.round(totalRevenue * 0.3), // Example payout amount
+            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 7 days from now
           },
         },
         analytics: {
-          conversionRate: 68,
+          conversionRate: 68, // Placeholder
           customerSatisfaction: averageRating,
-          repeatCustomerRate: 34,
-          marketplaceVsDirectRatio: 60,
+          repeatCustomerRate: 34, // Placeholder
+          marketplaceVsDirectRatio: 60, // Placeholder
         },
       }
 
@@ -315,7 +324,7 @@ export default function BusinessDashboardPage() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Business Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Business Home</h1>
               <p className="text-gray-600">
                 Welcome back, {businessProfile?.businessName || businessProfile?.name || "Business Owner"}
               </p>
@@ -363,12 +372,12 @@ export default function BusinessDashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Experiences Listed</CardTitle>
-              <Ship className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Bookings Fulfilled</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.totalExperiences}</div>
-              <p className="text-xs text-muted-foreground">All active experiences</p>
+              <div className="text-2xl font-bold">{dashboardData.overview.bookingsFulfilled}</div>
+              <p className="text-xs text-muted-foreground">Total completed bookings</p>
             </CardContent>
           </Card>
 
@@ -420,6 +429,11 @@ export default function BusinessDashboardPage() {
                             <p className="text-sm text-gray-500">
                               {new Date(booking.date).toLocaleDateString()} at {booking.time}
                             </p>
+                            {booking.phone && (
+                              <p className="text-xs text-gray-500 flex items-center">
+                                <Phone className="h-3 w-3 mr-1" /> {booking.phone}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
@@ -576,6 +590,14 @@ export default function BusinessDashboardPage() {
                 >
                   <Ship className="h-4 w-4 mr-2" />
                   Manage Experiences
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => router.push("/business/calendar")}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Manage Availability
                 </Button>
                 <Button
                   variant="outline"
