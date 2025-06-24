@@ -49,7 +49,7 @@ export default function BusinessLoginPage() {
         console.log("Login Page: Business user confirmed, redirecting to home.")
         // Use router.push for client-side navigation.
         // AuthContext's onAuthStateChange will pick up the new session.
-        router.push("/business/home") // Redirect to /business/home
+        router.push("/business/home") // Confirmed: Redirect to /business/home
         // IMPORTANT: Do NOT use router.refresh() here. It causes AuthContext to remount.
       }
     } catch (error: any) {
