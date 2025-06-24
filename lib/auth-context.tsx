@@ -15,7 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+const AuthProviderComponent = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
@@ -24,10 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("AuthContext: fetchUserAndProfiles started. Current user:", currentUser?.id)
-    setIsLoading(true) // Ensure loading is true at the start of fetching
+    setIsLoading(true)
 
     setUser(currentUser)
-    setUserProfile(null) // Reset profiles
+    setUserProfile(null)
     setBusinessProfile(null)
     setUserType(null)
 
@@ -55,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.warn("AuthContext: User metadata 'customer' but no customer profile found.")
         }
       } else {
-        // Fallback for users without user_type in metadata (e.g., older users or if not set during signup)
         console.log("AuthContext: User metadata user_type not set. Attempting to determine via profiles.")
         fetchedBusinessProfile = await getBusinessProfile(currentUser.id)
         if (fetchedBusinessProfile) {
@@ -63,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           fetchedUserProfile = await getUserProfile(currentUser.id)
           if (fetchedUserProfile) {
-            determinedUserType = "customer" // Default to customer if no business profile found
+            determinedUserType = "customer"
           }
         }
       }
@@ -75,18 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       console.log("AuthContext: No current user. Setting states to null.")
     }
-    setIsLoading(false) // Set loading to false ONLY after all async operations are complete
+    setIsLoading(false)
     console.log("AuthContext: fetchUserAndProfiles completed. isLoading set to false.")
   }
 
   useEffect(() => {
     console.log("AuthContext: useEffect mounted. Initial session check.")
-    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       fetchUserAndProfiles(session?.user || null)
     })
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -98,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("AuthContext: useEffect cleanup. Unsubscribing from auth state changes.")
       subscription.unsubscribe()
     }
-  }, []) // Empty dependency array ensures this runs once on mount
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading }}>
@@ -114,3 +111,5 @@ export function useAuth() {
   }
   return context
 }
+
+export { AuthProviderComponent as AuthProvider }
