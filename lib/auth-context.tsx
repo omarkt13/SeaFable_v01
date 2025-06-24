@@ -13,9 +13,11 @@ interface AuthContextType {
   isLoading: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+// Export AuthContext explicitly to ensure proper initialization
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+// Reverting AuthProvider to a function declaration
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
