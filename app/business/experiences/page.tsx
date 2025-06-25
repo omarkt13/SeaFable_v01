@@ -5,7 +5,7 @@ import Link from "next/link"
 import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PlusIcon, EditIcon, EyeIcon, Loader2 } from "lucide-react"
+import { PlusIcon, EditIcon, EyeIcon, Loader2, UsersIcon, ClockIcon, CalendarDaysIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Experience } from "@/types/business"
 
@@ -78,14 +78,26 @@ export default function BusinessExperiencesPage() {
                   <CardDescription className="line-clamp-2">{experience.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <UsersIcon className="mr-2 h-4 w-4" />
+                    <strong>Capacity:</strong> {experience.max_guests} guests
+                  </p>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <ClockIcon className="mr-2 h-4 w-4" />
+                    <strong>Length:</strong> {experience.duration_hours} hours
+                  </p>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <CalendarDaysIcon className="mr-2 h-4 w-4" />
+                    <strong>Next Booking:</strong>{" "}
+                    {experience.next_booking_date && experience.next_booking_time
+                      ? `${new Date(experience.next_booking_date).toLocaleDateString()} at ${experience.next_booking_time}`
+                      : "No upcoming bookings"}
+                  </p>
                   <p className="text-sm text-gray-600">
                     <strong>Location:</strong> {experience.location}
                   </p>
                   <p className="text-sm text-gray-600">
                     <strong>Price:</strong> ${experience.price.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Duration:</strong> {experience.duration} minutes
                   </p>
                   <div className="flex gap-2 mt-4">
                     <Link href={`/experience/${experience.id}`}>

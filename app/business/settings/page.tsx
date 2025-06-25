@@ -34,6 +34,9 @@ export default function BusinessSettingsPage() {
     } else if (!authLoading && !user) {
       setError("You must be logged in as a business user to manage settings.")
       setIsLoading(false)
+    } else if (!authLoading && user?.id && !businessProfile?.id) {
+      setError("Business profile not found for the logged-in user.")
+      setIsLoading(false)
     }
   }, [user, businessProfile, authLoading])
 
@@ -41,17 +44,14 @@ export default function BusinessSettingsPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data: profileData, error: profileError } = await getHostProfile(userId)
-      if (profileError) throw new Error(profileError.message)
-
+      const profileData = await getHostProfile(userId)
       const { data: settingsData, error: settingsError } = await getBusinessSettings(hostProfileId)
-      if (settingsError) throw new Error(settingsError.message)
 
-      setBusinessName(profileData.business_name || profileData.name || "")
-      setContactEmail(profileData.email || "")
-      setPhoneNumber(profileData.phone || "")
-      setLocation(profileData.location || "")
-      setDescription(profileData.description || "")
+      setBusinessName(profileData?.business_name || profileData?.name || "")
+      setContactEmail(profileData?.email || "")
+      setPhoneNumber(profileData?.phone || "")
+      setLocation(profileData?.location || "")
+      setDescription(profileData?.description || "")
     } catch (err: any) {
       console.error("Failed to load settings:", err)
       setError(err.message || "Failed to load business settings.")
@@ -73,18 +73,15 @@ export default function BusinessSettingsPage() {
     setIsSaving(true)
     setError(null)
     try {
-      await updateBusinessProfile(user.id, {
+      await updateBusinessProfile(businessProfile.id, {
+        // Use businessProfile.id for host_profiles update
         name: businessName, // Update host_profiles.name
         business_name: businessName, // Update host_profiles.business_name
-        email: contactEmail,
-        phone: phoneNumber,
-        location: location,
-        description: description,
+        business_email: contactEmail, // Map to business_email
+        business_phone: phoneNumber, // Map to business_phone
+        business_address: location, // Map to business_address
+        business_description: description, // Map to business_description
       })
-
-      // Note: updateBusinessSettings is for host_business_settings table,
-      // which currently doesn't hold these fields.
-      // If more settings are added to host_business_settings, use it here.
 
       toast({
         title: "Success",
@@ -107,7 +104,7 @@ export default function BusinessSettingsPage() {
   if (isLoading) {
     return (
       <BusinessLayout>
-        <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
           <span className="ml-2 text-gray-500">Loading settings...</span>
         </div>
@@ -118,7 +115,7 @@ export default function BusinessSettingsPage() {
   if (error) {
     return (
       <BusinessLayout>
-        <div className="container mx-auto py-8 px-4 text-center">
+        <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Settings</h2>
           <p className="text-gray-600 mb-4">{error}</p>
@@ -132,7 +129,7 @@ export default function BusinessSettingsPage() {
 
   return (
     <BusinessLayout>
-      <div className="container mx-auto py-8 px-4">
+      <div>
         <h1 className="text-3xl font-bold mb-6">Business Settings</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card>

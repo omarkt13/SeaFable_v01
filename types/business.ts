@@ -25,10 +25,13 @@ export type Experience = {
   description: string
   location: string
   price: number
-  duration: number // in minutes or hours, define unit
-  itinerary?: ItineraryItem[] // New field
+  duration_hours: number // Changed from 'duration' to 'duration_hours' to match DB
+  max_guests: number // Added max_guests
+  itinerary?: ItineraryItem[]
   created_at: string
   updated_at: string
+  next_booking_date?: string | null // Added for next booking date
+  next_booking_time?: string | null // Added for next booking time
 }
 
 export type ItineraryItem = {
@@ -70,4 +73,30 @@ export type TeamMember = {
   created_at: string
   updated_at: string
   user?: User // Joined user data
+}
+
+export type BusinessSettings = {
+  host_profile_id: string
+  currency: string
+  timezone: string
+  language: string
+  cancellation_policy: string
+  refund_policy: string
+  terms_and_conditions: string
+  privacy_policy: string
+  updated_at: string
+}
+
+export type HostAvailability = {
+  id?: string
+  host_profile_id: string
+  date: string
+  startTime: string
+  endTime: string
+  availableCapacity: number
+  priceOverride?: number | null
+  notes?: string
+  weatherDependent: boolean
+  isRecurring: boolean
+  recurringPattern?: string | null
 }

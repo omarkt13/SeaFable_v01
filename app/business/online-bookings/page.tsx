@@ -40,17 +40,17 @@ export default function BusinessOnlineBookingsPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data, error: fetchError } = await getBusinessSettings(hostProfileId)
+      const { data: fetchedSettings, error: fetchError } = await getBusinessSettings(hostProfileId)
       if (fetchError) {
         throw new Error(fetchError.message)
       }
 
-      if (data) {
-        setOnlineBookingsEnabled(data.online_bookings_enabled ?? true)
-        setRequireApproval(data.require_booking_approval ?? false)
-        setMinBookingNotice(data.min_booking_notice_hours ?? 24)
-        setWelcomeMessage(data.booking_page_welcome_message || "")
-        setBookingInstructions(data.booking_page_instructions || "")
+      if (fetchedSettings) {
+        setOnlineBookingsEnabled(fetchedSettings?.online_bookings_enabled ?? true)
+        setRequireApproval(fetchedSettings?.require_booking_approval ?? false)
+        setMinBookingNotice(fetchedSettings?.min_booking_notice_hours ?? 24)
+        setWelcomeMessage(fetchedSettings?.booking_page_welcome_message || "")
+        setBookingInstructions(fetchedSettings?.booking_page_instructions || "")
       }
     } catch (err: any) {
       console.error("Failed to load online booking settings:", err)

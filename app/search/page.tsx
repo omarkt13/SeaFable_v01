@@ -24,6 +24,7 @@ import {
   MessageCircle,
   ShieldCheck,
   FilterX,
+  CalendarDays,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,7 +85,6 @@ const difficultyLevels = [
   { value: "beginner", label: "Beginner" },
   { value: "intermediate", label: "Intermediate" },
   { value: "advanced", label: "Advanced" },
-  { value: "all_levels", label: "All Levels" },
 ]
 
 // Quick filter options
@@ -111,6 +111,24 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
     const hasDiscount = experience.total_bookings > 50 // Simple discount logic
     const discountPercentage = hasDiscount ? 15 : 0
 
+    // Determine general availability status for the search page
+    let availabilityStatus: "Available" | "Fully Booked" | "Limited Availability" = "Available"
+    if (experience.host_availability && experience.host_availability.length > 0) {
+      const totalAvailableCapacity = experience.host_availability.reduce(
+        (sum, slot) => sum + slot.available_capacity,
+        0,
+      )
+      if (totalAvailableCapacity === 0) {
+        availabilityStatus = "Fully Booked"
+      } else if (totalAvailableCapacity < experience.max_guests * 2) {
+        // Arbitrary threshold for "limited"
+        availabilityStatus = "Limited Availability"
+      }
+    } else {
+      // If no specific availability data, assume available if active
+      availabilityStatus = experience.is_active ? "Available" : "Fully Booked"
+    }
+
     // Transform database experience to match UI expectations
     return {
       ...experience,
@@ -131,6 +149,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
       isPopular: experience.total_bookings > 20,
       lastBooked: experience.total_bookings > 0 ? "2 hours ago" : null,
       discount: discountPercentage,
+      availabilityStatus: availabilityStatus, // Add availability status
     }
   }, [experience])
 
@@ -393,6 +412,23 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>
+          </div>
+
+          {/* Availability Status */}
+          <div className="mt-2 flex items-center text-sm">
+            {transformedExperience.availabilityStatus === "Fully Booked" ? (
+              <Badge variant="destructive" className="flex items-center">
+                <CalendarDays className="h-3 w-3 mr-1" /> Fully Booked
+              </Badge>
+            ) : transformedExperience.availabilityStatus === "Limited Availability" ? (
+              <Badge className="bg-yellow-100 text-yellow-800 flex items-center">
+                <CalendarDays className="h-3 w-3 mr-1" /> Limited Availability
+              </Badge>
+            ) : (
+              <Badge className="bg-green-100 text-green-800 flex items-center">
+                <CalendarDays className="h-3 w-3 mr-1" /> Available
+              </Badge>
+            )}
           </div>
 
           {transformedExperience.lastBooked && (
@@ -805,7 +841,7 @@ export default function EnhancedExperiencesSearchPage() {
                                   } else {
                                     handleFilterChange(
                                       "categories",
-                                      filters.categories.filter((c) => c !== category.value),
+                                      filters.categories.filter((c) => c !== category),
                                     )
                                   }
                                 }}

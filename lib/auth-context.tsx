@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client" // Use the client-side Supabase instance
+import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Use the client-side Supabase instance with alias
 import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils" // Import profile fetching and signOut from auth-utils
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
@@ -13,6 +13,12 @@ interface AuthContextType {
   userType: "customer" | "business" | null
   isLoading: boolean
   login: (email: string, password: string, type: string) => Promise<{ success: boolean; user?: User; error?: string }>
+  signUp: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+  ) => Promise<{ success: boolean; user?: User; error?: string }>
   signOut: () => Promise<void>
 }
 
@@ -25,20 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const supabase = createClient() // Use the client-side Supabase instance
+  const supabase = createBrowserSupabaseClient() // Use the client-side Supabase instance
 
-  const fetchUserAndProfiles = async (currentUser: User | null) => {
+  const fetchUserAndProfiles = async (currentUser: User | null): Promise<"customer" | "business" | null> => {
+    console.log("fetchUserAndProfiles called. Current user:", currentUser?.id)
     setIsLoading(true)
     setUser(currentUser)
     setUserProfile(null)
     setBusinessProfile(null)
     setUserType(null)
 
-    if (currentUser) {
-      let determinedUserType: "customer" | "business" | null = null
-      let fetchedUserProfile: UserProfile | null = null
-      let fetchedBusinessProfile: BusinessProfile | null = null
+    let determinedUserType: "customer" | "business" | null = null
+    let fetchedUserProfile: UserProfile | null = null
+    let fetchedBusinessProfile: BusinessProfile | null = null
 
+    if (currentUser) {
       // Attempt to determine user type from metadata first (if set during signup)
       const userMetadataType = currentUser.user_metadata?.user_type as "customer" | "business" | undefined
 
@@ -72,11 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserType(determinedUserType)
     }
     setIsLoading(false)
+    console.log("fetchUserAndProfiles finished. User:", currentUser?.id, "User Type:", determinedUserType)
+    return determinedUserType
   }
 
   useEffect(() => {
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial getSession result:", session?.user?.id)
       fetchUserAndProfiles(session?.user || null)
     })
 
@@ -84,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id)
       fetchUserAndProfiles(session?.user || null)
     })
 
@@ -104,20 +115,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
+        console.error("Login error:", error.message)
         return { success: false, error: error.message }
       }
 
       if (data.user) {
-        // After successful login, re-fetch profiles and user type
-        await fetchUserAndProfiles(data.user)
+        console.log("Login successful for user:", data.user.id)
+        const actualUserType = await fetchUserAndProfiles(data.user) // Capture the returned user type
 
         // Additional check to ensure user logs into the correct portal
-        if (type === "customer" && userType === "business") {
-          await authUtilsSignOut() // Use the signOut from auth-utils
+        if (type === "customer" && actualUserType === "business") {
+          await authUtilsSignOut()
           return { success: false, error: "Business accounts should use the business login page." }
         }
-        if (type === "business" && userType === "customer") {
-          await authUtilsSignOut() // Use the signOut from auth-utils
+        if (type === "business" && actualUserType === "customer") {
+          await authUtilsSignOut()
           return { success: false, error: "Customer accounts should use the customer login page." }
         }
 
@@ -126,6 +138,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: "Login failed: No user data." }
     } catch (error: any) {
       return { success: false, error: error.message || "An unexpected error occurred during login." }
+    }
+  }
+
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      // 1. Sign up with Supabase Auth
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            user_type: "customer", // Store user type in metadata for quicker lookup
+          },
+        },
+      })
+
+      if (authError) {
+        console.error("Sign up auth error:", authError.message)
+        return { success: false, error: authError.message }
+      }
+
+      if (data.user) {
+        console.log("Sign up successful for user:", data.user.id)
+        // 2. Insert user profile into 'users' table
+        const { error: profileError } = await supabase.from("users").insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            first_name: firstName,
+            last_name: lastName,
+            role: "user", // Assign 'user' role as per schema
+          },
+        ])
+
+        if (profileError) {
+          // If profile creation fails, consider rolling back auth user or logging
+          console.error("Error creating user profile:", profileError)
+          // Optionally, delete the auth user if profile creation fails
+          // await supabase.auth.admin.deleteUser(data.user.id);
+          return { success: false, error: profileError.message || "Failed to create user profile." }
+        }
+
+        // After successful signup and profile creation, re-fetch profiles and user type
+        await fetchUserAndProfiles(data.user)
+        return { success: true, user: data.user }
+      }
+
+      return { success: false, error: "Sign up failed: No user data." }
+    } catch (error: any) {
+      return { success: false, error: error.message || "An unexpected error occurred during sign up." }
     }
   }
 
@@ -138,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, login, signOut }}>
+    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, login, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

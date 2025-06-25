@@ -37,6 +37,10 @@ export default function BusinessLoginPage() {
           .eq("id", data.user.id)
           .single()
 
+        // --- ADDED LOG FOR DEBUGGING ---
+        console.log("Login Page: Host profile query result:", { hostProfile, hostError })
+        // --- END ADDED LOG ---
+
         if (hostError || !hostProfile) {
           // If not found in host_profiles, it's not a business account for this login page
           await supabase.auth.signOut() // Sign out the user if they are not a business

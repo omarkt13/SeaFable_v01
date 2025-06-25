@@ -4,20 +4,24 @@ import type { BusinessSettings, HostAvailability } from "@/types/business"
 const supabase = createClient()
 
 export async function getHostProfile(userId: string) {
-  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
+  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
 
   if (error) throw error
+  if (!data) return null
   return data
 }
 
-export async function getBusinessSettings(hostProfileId: string) {
+export async function getBusinessSettings(
+  hostProfileId: string,
+): Promise<{ data: BusinessSettings | null; error: any }> {
   const { data, error } = await supabase
     .from("host_business_settings")
     .select("*")
     .eq("host_profile_id", hostProfileId)
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) return { data: null, error: null }
   return data
 }
 

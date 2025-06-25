@@ -1,8 +1,9 @@
-import { createBrowserClient } from "@/lib/supabase/client" // Import client-side Supabase client
+import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Import client-side Supabase client with alias
 import { createClient } from "@/lib/supabase/server" // Import server-side Supabase client for specific functions
 import { getUserProfile } from "./auth-utils"
 import type { BusinessProfile } from "../types/auth"
 import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
+import type { HostAvailability } from "@/types/business" // Import HostAvailability type
 
 // ✅ FIXED: Added input sanitization helper
 function sanitizeInput(input: string): string {
@@ -51,6 +52,7 @@ export interface Experience {
   experience_images?: ExperienceImage[]
   reviews?: Review[]
   itinerary?: any // Add this line
+  host_availability?: HostAvailability[] // Add host_availability to Experience interface
 }
 
 export interface HostProfile {
@@ -146,7 +148,6 @@ export interface Booking {
     last_name: string
     email: string
     avatar_url?: string
-    phone?: string // Added phone to user type for upcoming bookings
   }
   host_profiles?: {
     id: string
@@ -184,7 +185,6 @@ export interface BusinessDashboardData {
     time: string
     guests: number
     specialRequests: string
-    phone: string
   }>
   earnings: {
     thisMonth: number
@@ -213,7 +213,7 @@ export interface BusinessDashboardData {
 
 export async function signInUser(email: string, password: string) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -288,7 +288,7 @@ export async function signInUser(email: string, password: string) {
 
 export async function signOutUser() {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error("Sign out error:", error)
@@ -304,7 +304,7 @@ export async function signOutUser() {
 // Experience functions
 export async function getExperiences(filters: any = {}) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     let query = supabase
       .from("experiences")
       .select(`
@@ -392,7 +392,7 @@ export async function getExperiences(filters: any = {}) {
 
 export async function getExperienceById(id: string) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("experiences")
       .select(`
@@ -436,7 +436,21 @@ export async function getExperienceById(id: string) {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data }
+    // Fetch host availability separately as it's linked to host_profile_id
+    const { data: availabilityData, error: availabilityError } = await supabase
+      .from("host_availability")
+      .select("*")
+      .eq("host_profile_id", data.host_id)
+      .gte("date", new Date().toISOString().split("T")[0]) // Only future dates
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true })
+
+    if (availabilityError) {
+      console.error("Error fetching host availability:", availabilityError)
+      // Don't fail the whole experience fetch if availability fails
+    }
+
+    return { success: true, data: { ...data, host_availability: availabilityData || [] } }
   } catch (error) {
     console.error("Error fetching experience:", error)
     return { success: false, error: "Network error occurred", data: null }
@@ -446,7 +460,7 @@ export async function getExperienceById(id: string) {
 // Get reviews for a specific experience
 export async function getExperienceReviews(experienceId: string) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("reviews")
       .select(`
@@ -475,7 +489,7 @@ export async function getExperienceReviews(experienceId: string) {
 // Get user bookings
 export async function getUserBookings(userId: string) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("bookings")
       .select(`
@@ -510,52 +524,50 @@ export async function getUserBookings(userId: string) {
 }
 
 // Get host bookings
-export async function getHostBookings(hostId: string) {
-  const supabase = createBrowserClient() // Use client-side client for this function
+export async function getHostBookings(hostId: string): Promise<Booking[]> {
+  const supabase = createBrowserSupabaseClient() // ✅ FIXED: Use client-side client for this function
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        booking_date,
+        booking_status,
+        number_of_guests,
+        total_price,
+        departure_time,
+        special_requests,
+        experiences ( id, title, primary_image_url, duration_display, activity_type ),
+        users ( id, first_name, last_name, email, avatar_url ) // ✅ FIXED: Removed phone from users select
+      `)
+      .eq("host_id", hostId)
+      .order("booking_date", { ascending: true })
 
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(
-      `
-      *,
-      experiences (
-        title,
-        primary_image_url
-      ),
-      users (
-        first_name,
-        last_name,
-        email,
-        phone // Include phone number here
-      ),
-      host_profiles (
-        name
-      )
-    `,
-    )
-    .eq("host_id", hostId)
-    .order("booking_date", { ascending: false })
+    if (error) {
+      console.error("Error fetching host bookings:", error)
+      throw new Error(error.message)
+    }
 
-  if (error) {
-    console.error("Error fetching host bookings:", error)
-    return { data: null, error: error.message }
+    // Ensure data is an array, even if null or undefined
+    return Array.isArray(data) ? data : []
+  } catch (error: any) {
+    console.error("Bookings error:", error.message)
+    throw error
   }
-
-  return { data, error: null }
 }
 
 // Get host earnings
 export async function getHostEarnings(hostId: string) {
-  const supabase = createBrowserClient() // Use client-side client for this function
+  const supabase = createBrowserSupabaseClient() // Use client-side client for this function
 
   const { data, error } = await supabase
     .from("bookings")
     .select(
       `
-      total_price,
-      payment_status,
-      booked_at
-    `,
+        total_price,
+        payment_status,
+        booked_at
+      `,
     )
     .eq("host_id", hostId)
     .eq("payment_status", "succeeded") // Only count succeeded payments
@@ -614,7 +626,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
         users!bookings_user_id_fkey (
           first_name,
           last_name,
-          avatar_url
+          avatar_url // ✅ FIXED: Removed phone from users select
         )
       `) // ✅ FIXED: Removed inline comment from select string
       .eq("host_id", hostId)
@@ -712,7 +724,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
         time: booking.departure_time || "N/A",
         guests: booking.number_of_guests || 1,
         specialRequests: booking.special_requests || "",
-        phone: booking.users?.phone || "N/A", // This will now correctly be 'N/A' if phone is not in users table
+        // phone: booking.users?.phone || "N/A", // This line has been removed entirely
       }))
 
     // Earnings calculations
@@ -834,7 +846,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
 // Get user dashboard data
 export async function getUserDashboardData(userId: string) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
 
     // Get user profile using the centralized function from auth-utils
     const user = await getUserProfile(userId)
@@ -889,7 +901,7 @@ export async function createBooking(bookingData: {
   dietary_requirements?: string[]
 }) {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("bookings")
       .insert([
@@ -918,7 +930,7 @@ export async function createBooking(bookingData: {
 // Database connection test functions
 export async function testDatabaseConnection() {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase.from("users").select("count").limit(1)
 
     if (error) {
@@ -932,7 +944,7 @@ export async function testDatabaseConnection() {
 }
 
 export async function testTableAccess() {
-  const supabase = createBrowserClient() // Use client-side client
+  const supabase = createBrowserSupabaseClient() // Use client-side client
   const tables = [
     "users",
     "host_profiles",
@@ -965,7 +977,7 @@ export async function testTableAccess() {
 
 export async function getSampleData() {
   try {
-    const supabase = createBrowserClient() // Use client-side client
+    const supabase = createBrowserSupabaseClient() // Use client-side client
     const [usersResult, experiencesResult, bookingsResult] = await Promise.all([
       supabase.from("users").select("*").limit(3),
       supabase.from("experiences").select("*, host_profiles(name)").limit(3),
@@ -988,7 +1000,7 @@ export async function getSampleData() {
 }
 
 export async function updateBusinessProfile(userId: string, updates: Partial<BusinessProfile>) {
-  const supabase = createBrowserClient() // Use client-side client
+  const supabase = createBrowserSupabaseClient() // Use client-side client
   const hostProfileUpdates: Partial<Omit<BusinessProfile, "onboarding_completed" | "marketplace_enabled">> = {}
   const hostBusinessSettingsUpdates: { onboarding_completed?: boolean; marketplace_enabled?: boolean } = {}
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Info,
   CheckCircle,
+  CalendarDays,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -32,8 +33,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { getExperienceById, getExperienceReviews, createBooking, type Experience, type Review } from "@/lib/database"
-import { supabase } from "@/lib/supabase"
+import { getExperienceById, getExperienceReviews, type Experience, type Review } from "@/lib/database"
+import { createBooking } from "@/app/actions/booking" // Import the new Server Action
+import { supabase } from "@/lib/supabase" // Keep for auth.getUser()
 
 export default function ExperienceDetailPage() {
   const params = useParams()
@@ -47,11 +49,13 @@ export default function ExperienceDetailPage() {
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [bookingData, setBookingData] = useState({
     date: "",
+    time: "", // New state for selected time
     guests: 1,
     specialRequests: "",
     dietaryRequirements: "",
   })
   const [isBooking, setIsBooking] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
 
   useEffect(() => {
     if (params.id) {
@@ -86,7 +90,14 @@ export default function ExperienceDetailPage() {
       return
     }
 
+    if (!bookingData.date || !bookingData.time || bookingData.guests < 1) {
+      setBookingError("Please select a date, time, and number of guests.")
+      return
+    }
+
     setIsBooking(true)
+    setBookingError(null)
+
     try {
       // Get the current user's ID from Supabase auth
       const {
@@ -98,26 +109,27 @@ export default function ExperienceDetailPage() {
         return
       }
 
-      const booking = {
+      const bookingPayload = {
         user_id: authUser.id,
         experience_id: experience.id,
         host_id: experience.host_id,
         booking_date: bookingData.date,
+        departure_time: bookingData.time, // Pass selected time
         number_of_guests: bookingData.guests,
         special_requests: bookingData.specialRequests,
         dietary_requirements: bookingData.dietaryRequirements ? [bookingData.dietaryRequirements] : [],
         total_price: experience.price_per_person * bookingData.guests,
       }
 
-      const result = await createBooking(booking)
+      const result = await createBooking(bookingPayload) // Call the Server Action
       if (result.success) {
         router.push(`/dashboard?booking=${result.data.id}`)
       } else {
-        alert("Booking failed: " + result.error)
+        setBookingError(result.error || "Booking failed. Please try again.")
       }
     } catch (error) {
       console.error("Booking error:", error)
-      alert("Booking failed. Please try again.")
+      setBookingError("Booking failed. Please try again.")
     } finally {
       setIsBooking(false)
     }
@@ -127,6 +139,19 @@ export default function ExperienceDetailPage() {
     setIsWishlisted(!isWishlisted)
     // TODO: Implement wishlist API call
   }
+
+  // Filter available slots based on selected date
+  const availableTimeSlots = useMemo(() => {
+    if (!experience?.host_availability || !bookingData.date) return []
+    return experience.host_availability
+      .filter(
+        (slot) =>
+          slot.date === bookingData.date &&
+          slot.available_capacity >= bookingData.guests &&
+          new Date(`${slot.date}T${slot.start_time}`) > new Date(), // Only future slots
+      )
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [experience?.host_availability, bookingData.date, bookingData.guests])
 
   if (isLoading) {
     return (
@@ -485,6 +510,7 @@ export default function ExperienceDetailPage() {
                   </Button>
                 ) : (
                   <div className="space-y-4">
+                    {bookingError && <div className="text-red-500 text-sm text-center">{bookingError}</div>}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="date">Date</Label>
@@ -492,7 +518,10 @@ export default function ExperienceDetailPage() {
                           id="date"
                           type="date"
                           value={bookingData.date}
-                          onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                          onChange={(e) => {
+                            setBookingData({ ...bookingData, date: e.target.value, time: "" }) // Reset time on date change
+                            setBookingError(null)
+                          }}
                           min={new Date().toISOString().split("T")[0]}
                         />
                       </div>
@@ -500,7 +529,10 @@ export default function ExperienceDetailPage() {
                         <Label htmlFor="guests">Guests</Label>
                         <Select
                           value={bookingData.guests.toString()}
-                          onValueChange={(value) => setBookingData({ ...bookingData, guests: Number.parseInt(value) })}
+                          onValueChange={(value) => {
+                            setBookingData({ ...bookingData, guests: Number.parseInt(value), time: "" }) // Reset time on guests change
+                            setBookingError(null)
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -515,6 +547,36 @@ export default function ExperienceDetailPage() {
                         </Select>
                       </div>
                     </div>
+
+                    {bookingData.date && (
+                      <div>
+                        <Label htmlFor="time">Available Times</Label>
+                        {availableTimeSlots.length > 0 ? (
+                          <Select
+                            value={bookingData.time}
+                            onValueChange={(value) => {
+                              setBookingData({ ...bookingData, time: value })
+                              setBookingError(null)
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableTimeSlots.map((slot) => (
+                                <SelectItem key={slot.id} value={slot.start_time}>
+                                  {slot.start_time} ({slot.available_capacity} spots left)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="text-sm text-gray-500 flex items-center mt-2">
+                            <CalendarDays className="h-4 w-4 mr-1" /> No available slots for this date and guest count.
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <div>
                       <Label htmlFor="special-requests">Special Requests (Optional)</Label>
@@ -556,7 +618,9 @@ export default function ExperienceDetailPage() {
                         className="w-full"
                         size="lg"
                         onClick={handleBooking}
-                        disabled={!bookingData.date || isBooking}
+                        disabled={
+                          !bookingData.date || !bookingData.time || isBooking || availableTimeSlots.length === 0
+                        }
                       >
                         {isBooking ? "Booking..." : "Confirm Booking"}
                       </Button>
