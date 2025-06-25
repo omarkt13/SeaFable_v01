@@ -6,27 +6,45 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // Recommended for Vercel deployments
-  experimental: {
-    outputFileTracingRoot: process.cwd(), // Recommended for Vercel deployments
-    workerThreads: false, // Recommended for Vercel deployments to avoid memory issues
-    cpus: 1, // Recommended for Vercel deployments to avoid memory issues
-  },
+  // Remove output: 'standalone' for Vercel deployment
   images: {
-    unoptimized: true, // Keep unoptimized as per previous config, can be changed for optimization
-    domains: [
-      'images.unsplash.com',
-      'placeholder.com',
-      'via.placeholder.com',
-      'your-supabase-storage-url.com'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.com',
+      },
     ],
   },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production', // Remove console logs in production builds
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  // Removed error suppression flags as per report
-  // eslint: { ignoreDuringBuilds: true },
-  // typescript: { ignoreBuildErrors: true },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Keep build-time error suppression minimal for better debugging
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
 }
 
 export default withBundleAnalyzer(nextConfig)
