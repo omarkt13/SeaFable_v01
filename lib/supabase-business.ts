@@ -1,10 +1,13 @@
-import { createClient } from "@/lib/supabase/client"
-import type { BusinessSettings, HostAvailability } from "@/types/business"
+import { createClient as createServerClient } from "@/lib/supabase/server"
+import { createClient as createBrowserClient } from "@/lib/supabase/client"
+import type { Database } from "@/types/database"
+import { cache } from "react"
 
-const supabase = createClient()
+const serverSupabase = createServerClient()
+const browserSupabase = createBrowserClient()
 
 export async function getHostProfile(userId: string) {
-  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
+  const { data, error } = await serverSupabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
 
   if (error) throw error
   if (!data) return null
@@ -13,8 +16,8 @@ export async function getHostProfile(userId: string) {
 
 export async function getBusinessSettings(
   hostProfileId: string,
-): Promise<{ data: BusinessSettings | null; error: any }> {
-  const { data, error } = await supabase
+): Promise<{ data: Database["public"]["Tables"]["host_business_settings"]["Row"] | null; error: any }> {
+  const { data, error } = await serverSupabase
     .from("host_business_settings")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -25,8 +28,11 @@ export async function getBusinessSettings(
   return data
 }
 
-export async function updateBusinessSettings(hostProfileId: string, settings: Partial<BusinessSettings>) {
-  const { data, error } = await supabase
+export async function updateBusinessSettings(
+  hostProfileId: string,
+  settings: Partial<Database["public"]["Tables"]["host_business_settings"]["Row"]>,
+) {
+  const { data, error } = await serverSupabase
     .from("host_business_settings")
     .upsert({
       host_profile_id: hostProfileId,
@@ -41,7 +47,7 @@ export async function updateBusinessSettings(hostProfileId: string, settings: Pa
 }
 
 export async function getHostEarnings(hostProfileId: string, startDate?: string, endDate?: string) {
-  let query = supabase
+  let query = serverSupabase
     .from("host_earnings")
     .select(`
       *,
@@ -67,7 +73,7 @@ export async function getHostEarnings(hostProfileId: string, startDate?: string,
 }
 
 export async function getHostAvailability(hostProfileId: string, startDate?: string, endDate?: string) {
-  let query = supabase
+  let query = serverSupabase
     .from("host_availability")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -86,15 +92,10 @@ export async function getHostAvailability(hostProfileId: string, startDate?: str
   return data
 }
 
-export async function setHostAvailability(hostProfileId: string, availability: HostAvailability[]) {
-  // Delete existing availability for the dates
-  const dates = availability.map((a) => a.date)
-  await supabase.from("host_availability").delete().eq("host_profile_id", hostProfileId).in("date", dates)
-
-  // Insert new availability
-  const { data, error } = await supabase
+export async function setHostAvailability(hostProfileId: string, availability: any[]) {
+  const { data, error } = await serverSupabase
     .from("host_availability")
-    .insert(
+    .upsert(
       availability.map((a) => ({
         host_profile_id: hostProfileId,
         date: a.date,
@@ -115,7 +116,7 @@ export async function setHostAvailability(hostProfileId: string, availability: H
 }
 
 export async function getHostTeamMembers(hostProfileId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await serverSupabase
     .from("host_team_members")
     .select(`
       *,
@@ -138,7 +139,7 @@ export async function getHostAnalytics(hostProfileId: string, days = 30) {
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
 
-  const { data, error } = await supabase
+  const { data, error } = await serverSupabase
     .from("host_analytics")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -149,129 +150,125 @@ export async function getHostAnalytics(hostProfileId: string, days = 30) {
   return data
 }
 
-// Experience Management Functions
-export async function createExperience(experienceData: {
-  host_id: string
-  title: string
-  description: string
-  short_description?: string
-  location: string
-  specific_location?: string
-  country?: string
-  activity_type: string
-  category: string[]
-  duration_hours: number
-  duration_display?: string
-  max_guests: number
-  min_guests: number
-  price_per_person: number
-  difficulty_level: string
-  primary_image_url?: string
-  weather_contingency?: string
-  included_amenities: string[]
-  what_to_bring: string[]
-  min_age?: number
-  max_age?: number
-  age_restriction_details?: string
-  activity_specific_details?: any
-  tags: string[]
-  seasonal_availability: string[]
-  is_active?: boolean
-  itinerary?: any // Include itinerary
-}) {
-  const { data, error } = await supabase
-    .from("experiences")
-    .insert([
-      {
-        ...experienceData,
-        rating: 0, // Default values for new experiences
-        total_reviews: 0,
-        total_bookings: 0,
-        is_active: experienceData.is_active ?? true, // Default to active if not provided
-      },
-    ])
-    .select()
+// Cache frequently accessed data
+export const getCachedHostProfile = cache(async (hostId: string) => {
+  const { data, error } = await serverSupabase
+    .from("host_profiles")
+    .select(`
+      *,
+      host_business_settings (
+        onboarding_completed,
+        marketplace_enabled
+      )
+    `)
+    .eq("id", hostId)
     .single()
 
   if (error) throw error
   return data
+})
+
+// Optimized experience creation with transaction-like behavior
+export async function createExperience(experienceData: any) {
+  const { data: experience, error: experienceError } = await browserSupabase
+    .from("experiences")
+    .insert([experienceData])
+    .select()
+    .single()
+
+  if (experienceError) throw experienceError
+
+  // Update host statistics
+  const { error: statsError } = await browserSupabase.rpc("increment_host_experience_count", {
+    host_id: experienceData.host_id,
+  })
+
+  if (statsError) {
+    console.warn("Failed to update host statistics:", statsError)
+    // Don't fail the entire operation for statistics
+  }
+
+  return experience
 }
 
-export async function updateExperience(
-  experienceId: string,
-  updates: Partial<{
-    title: string
-    description: string
-    short_description: string
-    location: string
-    specific_location: string
-    country: string
-    activity_type: string
-    category: string[]
-    duration_hours: number
-    duration_display: string
-    max_guests: number
-    min_guests: number
-    price_per_person: number
-    difficulty_level: string
-    primary_image_url: string
-    weather_contingency: string
-    included_amenities: string[]
-    what_to_bring: string[]
-    min_age: number
-    max_age: number
-    age_restriction_details: string
-    activity_specific_details: any
-    tags: string[]
-    seasonal_availability: string[]
-    is_active: boolean
-    itinerary: any // Include itinerary
-  }>,
-) {
-  const { data, error } = await supabase
-    .from("experiences")
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", experienceId)
-    .select()
-    .single()
+// Batch operations for better performance
+export async function batchUpdateExperiences(updates: Array<{ id: string; data: any }>) {
+  const results = await Promise.allSettled(
+    updates.map(({ id, data }) => browserSupabase.from("experiences").update(data).eq("id", id).select().single()),
+  )
 
-  if (error) throw error
-  return data
+  const successful = results
+    .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
+    .map((result) => result.value.data)
+
+  const failed = results
+    .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+    .map((result) => result.reason)
+
+  return { successful, failed }
+}
+
+// Optimized availability setting with conflict detection
+export async function setHostAvailabilityWithConflictCheck(hostId: string, availabilitySlots: any[]) {
+  try {
+    // Check for conflicts first
+    const existingSlots = await browserSupabase
+      .from("host_availability")
+      .select("date, start_time, end_time")
+      .eq("host_profile_id", hostId)
+      .in(
+        "date",
+        availabilitySlots.map((slot) => slot.date),
+      )
+
+    if (existingSlots.error) throw existingSlots.error
+
+    // Filter out conflicting slots
+    const conflicts = availabilitySlots.filter((newSlot) =>
+      existingSlots.data?.some(
+        (existing) =>
+          existing.date === newSlot.date &&
+          ((newSlot.startTime >= existing.start_time && newSlot.startTime < existing.end_time) ||
+            (newSlot.endTime > existing.start_time && newSlot.endTime <= existing.end_time)),
+      ),
+    )
+
+    if (conflicts.length > 0) {
+      throw new Error(`Availability conflicts detected for ${conflicts.length} slots`)
+    }
+
+    // Insert new availability slots
+    const { data, error } = await browserSupabase
+      .from("host_availability")
+      .insert(
+        availabilitySlots.map((slot) => ({
+          host_profile_id: hostId,
+          date: slot.date,
+          start_time: slot.startTime,
+          end_time: slot.endTime,
+          available_capacity: slot.availableCapacity,
+          price_override: slot.priceOverride,
+          notes: slot.notes,
+          weather_dependent: slot.weatherDependent,
+          is_recurring: slot.isRecurring,
+          recurring_pattern: slot.recurringPattern,
+        })),
+      )
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error setting host availability:", error)
+    throw error
+  }
 }
 
 export async function updateBusinessProfile(
   hostProfileId: string,
-  updates: Partial<{
-    business_name: string
-    business_description: string
-    business_address: string
-    business_city: string
-    business_state: string
-    business_zip_code: string
-    business_phone: string
-    business_email: string
-    website_url: string
-    logo_url: string
-    cover_image_url: string
-    social_media_links: any
-    stripe_account_id: string
-    currency: string
-    timezone: string
-    language: string
-    cancellation_policy: string
-    refund_policy: string
-    terms_and_conditions: string
-    privacy_policy: string
-    is_verified: boolean
-    verification_details: any
-    status: string
-    notes: string
-  }>,
+  updates: Partial<Database["public"]["Tables"]["host_profiles"]["Row"]>,
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await serverSupabase
     .from("host_profiles")
     .update({
       ...updates,

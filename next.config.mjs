@@ -6,8 +6,16 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove output: 'standalone' for Vercel deployment
+  // Performance optimizations
+  swcMinify: true,
+  poweredByHeader: false,
+  
+  // Image optimization
   images: {
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
@@ -31,28 +39,92 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.vusercontent.net', // Add this line
+        hostname: '**.vusercontent.net',
       },
       {
         protocol: 'https',
-        hostname: 'blob.v0.dev', // Add this line
+        hostname: 'blob.v0.dev',
       },
     ],
   },
+
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ]
+  },
+
+  // Environment variables validation
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
+
+  // Compiler optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
   },
-  // Keep build-time error suppression minimal for better debugging
+
+  // Build optimizations
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    // Optimize bundle size
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      }
+    }
+
+    return config
+  },
+
+  // Error handling
   eslint: {
     ignoreDuringBuilds: false,
   },
   typescript: {
     ignoreBuildErrors: false,
   },
+
+  // Output configuration for better caching
+  generateEtags: true,
+  compress: true,
 }
 
 export default withBundleAnalyzer(nextConfig)

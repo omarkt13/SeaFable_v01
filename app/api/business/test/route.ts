@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     tests.push({
       name: "host_availability table",
-      status: availabilityError ? "❌ FAILED" : "✅ PASSED",
+      status: availabilityError ? "❌ FAILED" : "�� PASSED",
       error: availabilityError?.message,
     })
 
