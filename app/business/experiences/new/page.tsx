@@ -17,6 +17,7 @@ import { createExperience } from "@/lib/supabase-business"
 import { Loader2, PlusCircle, XCircle, Save } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { setHostAvailability } from "@/lib/supabase-business"
 
 const itineraryItemSchema = z.object({
   time: z.string().min(1, "Time is required."),
@@ -149,27 +150,32 @@ export default function NewExperiencePage() {
 
     setIsSubmitting(true)
     try {
+      // Destructure availability from values before passing to createExperience
+      const { availability, ...experienceDataToCreate } = values
+
       const newExperience = await createExperience({
         host_id: businessProfile.id,
-        ...values,
+        ...experienceDataToCreate,
         // Ensure arrays are not undefined if optional
-        category: values.category || [],
-        included_amenities: values.included_amenities || [],
-        what_to_bring: values.what_to_bring || [],
-        tags: values.tags || [],
-        seasonal_availability: values.seasonal_availability || [],
-        itinerary: values.itinerary || [],
+        category: experienceDataToCreate.category || [],
+        included_amenities: experienceDataToCreate.included_amenities || [],
+        what_to_bring: experienceDataToCreate.what_to_bring || [],
+        tags: experienceDataToCreate.tags || [],
+        seasonal_availability: experienceDataToCreate.seasonal_availability || [],
+        itinerary: experienceDataToCreate.itinerary || [],
         // Ensure nullable number fields are correctly passed as null if empty string
-        min_age: values.min_age === null ? null : values.min_age,
-        max_age: values.max_age === null ? null : values.max_age,
+        min_age: experienceDataToCreate.min_age === null ? null : experienceDataToCreate.min_age,
+        max_age: experienceDataToCreate.max_age === null ? null : experienceDataToCreate.max_age,
       })
 
       // If availability is provided, set it for the new experience
-      if (values.availability && values.availability.length > 0) {
-        // This would typically be a separate API call to set host_availability
-        // For now, we'll just log it or handle it as part of the experience creation if the schema supports it.
-        // In a real app, you'd call setHostAvailability here, linking it to the new experience ID.
-        console.log("Availability to set:", values.availability)
+      if (availability && availability.length > 0) {
+        const mappedAvailability = availability.map((slot) => ({
+          ...slot,
+          host_profile_id: businessProfile.id,
+          experience_id: newExperience.id, // Link availability to the newly created experience
+        }))
+        await setHostAvailability(businessProfile.id, mappedAvailability)
       }
 
       toast({
@@ -333,10 +339,10 @@ export default function NewExperiencePage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="easy">Easy</SelectItem>
-                            <SelectItem value="moderate">Moderate</SelectItem>
-                            <SelectItem value="challenging">Challenging</SelectItem>
-                            <SelectItem value="expert">Expert</SelectItem>
+                            <SelectItem value="easy">easy</SelectItem>
+                            <SelectItem value="moderate">moderate</SelectItem>
+                            <SelectItem value="challenging">challenging</SelectItem>
+                            <SelectItem value="expert">expert</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>How challenging is this experience?</FormDescription>

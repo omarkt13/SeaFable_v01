@@ -29,6 +29,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.supabase.com',
       },
+      {
+        protocol: 'https',
+        hostname: '**.vusercontent.net', // Add this line
+      },
+      {
+        protocol: 'https',
+        hostname: 'blob.v0.dev', // Add this line
+      },
     ],
   },
   env: {
