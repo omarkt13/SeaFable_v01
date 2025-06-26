@@ -22,6 +22,7 @@ function rateLimit(identifier: string, limit = 100, windowMs = 60000): boolean {
   return true
 }
 
+// Helper function to check if a user is a business user directly in middleware
 async function isBusinessUser(supabase: any, userId: string): Promise<boolean> {
   const { data, error } = await supabase.from("host_profiles").select("id").eq("id", userId).single()
 
