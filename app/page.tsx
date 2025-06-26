@@ -393,7 +393,7 @@ export default function LandingPage() {
               </div>
               <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-xl">
                 <img
-                  src="/placeholder.svg?height=400&width=600&text=Our Mission"
+                  src="/placeholder.svg?height=400&width=600"
                   alt="Our Mission"
                   className="w-full h-full object-cover"
                 />
