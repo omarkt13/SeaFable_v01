@@ -92,12 +92,28 @@ body {
     @apply bg-background text-foreground;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Improve font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Improved focus styles */
   *:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+
+  /* Optimize images for better performance */
+  img {
+    @apply will-change-auto;
+  }
+
+  /* Prevent layout shift */
+  .aspect-video img,
+  .aspect-square img,
+  .aspect-[4/3] img {
+    @apply object-cover w-full h-full;
   }
 }
 
@@ -111,14 +127,52 @@ body {
     @apply py-16 sm:py-20 lg:py-24;
   }
 
-  /* Consistent card styles */
+  /* Optimized card styles with performance considerations */
   .card-hover {
     @apply transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+    /* Use transform3d for hardware acceleration */
+    transform: translate3d(0, 0, 0);
+  }
+
+  .card-hover:hover {
+    transform: translate3d(0, -4px, 0);
   }
 
   /* Smooth transitions for interactive elements */
   .smooth-transition {
     @apply transition-all duration-200 ease-in-out;
+    /* Enable hardware acceleration */
+    will-change: transform, opacity;
+  }
+
+  /* Optimize animations for better performance */
+  .performance-animation {
+    /* Use transform instead of changing layout properties */
+    animation-fill-mode: both;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Line clamp utilities for consistent text truncation */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -135,5 +189,113 @@ body {
   /* Backdrop blur utilities */
   .backdrop-blur-xs {
     backdrop-filter: blur(2px);
+  }
+
+  /* Performance utilities */
+  .gpu-accelerated {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Loading states */
+  .loading-skeleton {
+    @apply bg-gray-200 animate-pulse rounded;
+  }
+
+  .loading-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loading-shimmer::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+    content: '';
+  }
+
+  /* Scroll optimization */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  .scroll-snap-y {
+    scroll-snap-type: y mandatory;
+  }
+
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+
+  /* Image optimization */
+  .image-optimize {
+    @apply will-change-auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+  }
+}
+
+/* Animation keyframes */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-hover {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .card-hover:hover {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card-hover {
+    border: 2px solid;
+  }
+  
+  .focus-ring:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 }
