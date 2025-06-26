@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
+import { getClientSupabase } from "@/lib/client-supabase"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 // Extended BusinessProfile interface to include business settings
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   const mountedRef = useRef(true)
-  const supabase = createClient()
+  const supabase = getClientSupabase() // Use singleton
 
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return

@@ -47,10 +47,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     })
 
     // Log to external service in production
-    if (process.env.NODE_ENV === "production") {
-      // You can integrate with Sentry, LogRocket, etc. here
-      this.logErrorToService(error, errorInfo)
-    }
+    this.logErrorToService(error, errorInfo)
   }
 
   private logErrorToService = (error: Error, errorInfo: ErrorInfo) => {
@@ -60,8 +57,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
       stack: error.stack,
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+      url: typeof window !== "undefined" ? window.location.href : "unknown",
     })
   }
 
@@ -87,7 +84,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 }
 
 function DefaultErrorFallback({ error, reset, message }: ErrorFallbackProps) {
-  const isDevelopment = process.env.NODE_ENV === "development"
+  // Always show user-friendly error without exposing technical details
+  const showTechnicalDetails = false
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -102,9 +100,9 @@ function DefaultErrorFallback({ error, reset, message }: ErrorFallbackProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isDevelopment && error && (
+          {showTechnicalDetails && error && (
             <div className="rounded-md bg-red-50 p-4">
-              <h4 className="text-sm font-medium text-red-800 mb-2">Error Details (Development Mode)</h4>
+              <h4 className="text-sm font-medium text-red-800 mb-2">Error Details</h4>
               <p className="text-xs text-red-700 font-mono break-all">{error.message}</p>
               {error.stack && (
                 <details className="mt-2">
@@ -120,7 +118,15 @@ function DefaultErrorFallback({ error, reset, message }: ErrorFallbackProps) {
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            <Button variant="outline" onClick={() => (window.location.href = "/")} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/"
+                }
+              }}
+              className="flex-1"
+            >
               <Home className="w-4 h-4 mr-2" />
               Go Home
             </Button>
