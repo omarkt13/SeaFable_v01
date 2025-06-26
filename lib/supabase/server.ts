@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr"
 import type { cookies } from "next/headers"
 
 export function createSupabaseServerClient(cookieStore: ReturnType<typeof cookies>) {
@@ -7,21 +7,11 @@ export function createSupabaseServerClient(cookieStore: ReturnType<typeof cookie
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options })
-        } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Route Handler
-          // This error is typically ignored if we're within a Client Component
-        }
+      set(name: string, value: string, options: any) {
+        cookieStore.set({ name, value, ...options })
       },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: "", ...options })
-        } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Route Handler
-          // This error is typically ignored if we're within a Client Component
-        }
+      remove(name: string, options: any) {
+        cookieStore.set({ name, value: "", ...options })
       },
     },
   })

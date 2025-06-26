@@ -1,107 +1,130 @@
 "use client"
-
+import { useState } from "react"
 import type React from "react"
 
-import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client" // Keep signInUser and getClientBusinessProfile
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-// Removed useAuth as it's not needed for this original logic
+import Link from "next/link"
+import { Building, Mail, Lock, ArrowRight } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 export default function BusinessLoginPage() {
+  const { login, isLoading: authLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setIsLoading(true)
+    setLoading(true)
+    setError("")
 
-    try {
-      const { user, error: signInError } = await signInUser(email, password)
+    const result = await login(email, password, "business")
 
-      if (signInError) {
-        setError(signInError.message || "Login failed. Please check your credentials.")
-        setIsLoading(false)
-        return
-      }
-
-      if (user) {
-        // Explicitly check for business profile after successful login
-        const businessProfile = await getClientBusinessProfile(user.id)
-        if (businessProfile) {
-          router.push("/business/home")
-        } else {
-          // If logged in but no business profile, redirect to customer dashboard
-          // This handles cases where a customer might try to log in via the business portal
-          router.push("/dashboard")
-        }
-      } else {
-        setError("Login failed. Please check your credentials.")
-      }
-    } catch (err: any) {
-      console.error("Login error:", err)
-      setError(err.message || "An unexpected error occurred during login.")
-    } finally {
-      setIsLoading(false)
+    if (result.success) {
+      router.push("/business/home")
+    } else {
+      setError(result.error || "Login failed.")
     }
+    setLoading(false)
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold">Business Login</CardTitle>
-          <CardDescription>Enter your email and password to access your business dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <Building className="w-8 h-8 text-teal-600 mr-2" />
+              <span className="text-2xl font-bold text-gray-900">SeaFable Business</span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back, Host!</h1>
+            <p className="text-gray-600">Sign in to your business account</p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
-            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-            <div className="text-center text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link href="/business/register" className="font-medium text-teal-600 hover:underline">
-                Register as a Business
-              </Link>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="your@business.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
             </div>
-            <div className="text-center text-sm text-gray-600">
-              <Link href="/forgot-password" className="font-medium text-teal-600 hover:underline">
-                Forgot password?
-              </Link>
+            <div>
+              <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
             </div>
+
+            <button
+              type="submit"
+              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
+              disabled={loading || authLoading}
+            >
+              {loading || authLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                <>
+                  Sign In <ArrowRight className="ml-2 h-4 w-4 inline-block" />
+                </>
+              )}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+
+          {/* Footer Links */}
+          <div className="mt-6 text-sm">
+            <Link href="/forgot-password" className="text-teal-600 hover:underline">
+              Forgot Password?
+            </Link>
+            <p className="mt-2">
+              Don't have a business account?{" "}
+              <Link href="/business/register" className="text-teal-600 hover:underline">
+                Register your business
+              </Link>
+            </p>
+            <p className="mt-2 text-gray-500">
+              Customer account?{" "}
+              <Link href="/login" className="text-teal-600 hover:underline">
+                Customer Login
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

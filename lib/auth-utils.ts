@@ -1,7 +1,7 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server" // Corrected import path
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import type { UserProfile, BusinessProfile } from "@/types/auth"
+import type { UserProfile, BusinessProfile } from "@/types/auth" // Fixed import path
 
 // Server-side Supabase client
 const getSupabaseServer = () => {
@@ -36,7 +36,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
           marketplace_enabled
         )
       `)
-      .eq("user_id", userId) // Changed from .eq("id", userId) to .eq("user_id", userId)
+      .eq("user_id", userId) // Ensure it's user_id
       .maybeSingle()
 
     if (error) {
@@ -44,11 +44,13 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
       return null
     }
 
-    const profile = {
-      ...data,
-      onboarding_completed: data?.host_business_settings?.onboarding_completed || false,
-      marketplace_enabled: data?.host_business_settings?.marketplace_enabled || false,
-    }
+    const profile = data
+      ? {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
+      : null
     return profile as BusinessProfile
   } catch (error) {
     console.error("Network error fetching business profile (server):", error)
@@ -84,22 +86,10 @@ export async function getAuthenticatedUserType(): Promise<"customer" | "business
   const { user } = await getSessionAndUser()
   if (!user) return null
 
-  // Check if user is a business host
-  const supabaseServer = getSupabaseServer()
-  const { data: businessProfile, error: businessError } = await supabaseServer
-    .from("host_profiles")
-    .select("id")
-    .eq("user_id", user.id) // Changed from .eq("id", user.id) to .eq("user_id", user.id)
-    .maybeSingle()
-
-  if (businessError && businessError.code !== "PGRST116") {
-    console.error("Error checking business profile:", businessError)
-  }
-
+  const businessProfile = await getBusinessProfile(user.id) // Use the getBusinessProfile function
   if (businessProfile) {
     return "business"
   }
 
-  // If not a business, assume customer
   return "customer"
 }
