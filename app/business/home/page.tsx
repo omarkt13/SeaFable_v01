@@ -1,29 +1,18 @@
 "use client"
-
-import Link from "next/link"
-
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import {
-  Calendar,
-  Star,
-  DollarSign,
-  Ship,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Settings,
-  Plus,
-  Users,
-  Phone,
-  Bell,
-} from "lucide-react"
+import { Clock, CheckCircle, AlertCircle, Bell } from "lucide-react"
 import { getBusinessProfile, getHostExperiences, getHostBookings } from "@/lib/supabase-business"
 import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { StatsOverview } from "@/components/dashboard/business/stats-overview"
+import { QuickActions } from "@/components/dashboard/business/quick-actions"
+import { RecentBookings } from "@/components/dashboard/business/recent-bookings"
+import { UpcomingBookings } from "@/components/dashboard/business/upcoming-bookings"
+import { PerformanceMetrics } from "@/components/dashboard/business/performance-metrics"
+import { WeatherWidget } from "@/components/dashboard/business/weather-widget"
 
 interface DashboardData {
   overview: {
@@ -319,296 +308,25 @@ export default async function BusinessHomePage() {
   }
 
   return (
-    <BusinessLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Business Home</h1>
-              <p className="text-gray-600">
-                Welcome back, {businessProfile?.businessName || businessProfile?.name || "Business Owner"}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href="/business/calendar">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Calendar
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link href="/business/experiences/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Experience
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Monthly Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bookings Made (This Month)</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.bookingsMade}</div>
-              <p className="text-xs text-muted-foreground">Total new bookings this month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Payments Received (This Month)</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">€{dashboardData.overview.paymentsReceived.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Total payments processed this month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bookings Fulfilled (This Month)</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.bookingsFulfilled}</div>
-              <p className="text-xs text-muted-foreground">Experiences completed this month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData.overview.averageRating}</div>
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`h-3 w-3 ${
-                      star <= dashboardData.overview.averageRating ? "text-yellow-400 fill-current" : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Bookings & Calendar */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Upcoming Bookings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Bookings</CardTitle>
-                <CardDescription>Your confirmed bookings for the next few days</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboardData.upcomingBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {dashboardData.upcomingBookings.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{booking.experienceTitle}</p>
-                            <p className="text-sm text-gray-600">
-                              {booking.customerName} • {booking.guests} guests
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(booking.date).toLocaleDateString()} at {booking.time}
-                            </p>
-                            {booking.phone && booking.phone !== "N/A" && (
-                              <a href={`tel:${booking.phone}`} className="text-xs text-blue-500 flex items-center">
-                                <Phone className="h-3 w-3 mr-1" /> {booking.phone}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">No upcoming bookings</p>
-                    <p className="text-sm text-gray-400 mb-4">Set your availability to start receiving bookings</p>
-                    <Button asChild>
-                      <Link href="/business/calendar">Set Your Availability</Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Weekly Calendar */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Weekly Calendar</CardTitle>
-                <CardDescription>Overview of your schedule for the current week</CardDescription>
-              </CardHeader>
-              <CardContent className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">Your weekly schedule at a glance.</p>
-                <p className="text-sm text-gray-400 mb-4">Click below to manage your full calendar.</p>
-                <Button asChild>
-                  <Link href="/business/calendar">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View Full Calendar
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Bookings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
-                <CardDescription>Latest customer bookings and their status</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboardData.recentBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {dashboardData.recentBookings.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            {getStatusIcon(booking.status)}
-                          </div>
-                          <div>
-                            <p className="font-medium">{booking.experienceTitle}</p>
-                            <p className="text-sm text-gray-600">
-                              {booking.customerName} • {booking.guests} guests
-                            </p>
-                            <p className="text-sm text-gray-500">{new Date(booking.date).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">€{booking.amount}</p>
-                          <Badge className={getStatusColor(booking.status)}>{booking.status.replace("_", " ")}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Ship className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">No bookings yet</p>
-                    <p className="text-sm text-gray-400 mb-4">
-                      Create your first experience to start receiving bookings
-                    </p>
-                    <Button asChild>
-                      <Link href="/business/experiences/new">Create Experience</Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+    <BusinessProtectedRoute>
+      <BusinessLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <WeatherWidget />
           </div>
 
-          {/* Right Column - Payments, Notifications & Quick Actions */}
-          <div className="space-y-6">
-            {/* Upcoming Payments */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Payments</CardTitle>
-                <CardDescription>Summary of your next payout</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Pending Payout</span>
-                  <span className="text-lg font-bold text-yellow-600">
-                    €{dashboardData.earnings.pending.toLocaleString()}
-                  </span>
-                </div>
-                <div className="pt-4 border-t">
-                  <div className="text-sm text-gray-600 mb-2">Next Payout Date</div>
-                  <div className="text-lg font-semibold">
-                    {new Date(dashboardData.earnings.nextPayout.date).toLocaleDateString()}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Amount: €{dashboardData.earnings.nextPayout.amount.toLocaleString()}
-                  </div>
-                </div>
-                <Button asChild className="w-full" variant="outline">
-                  <Link href="/business/earnings">View Financial Details</Link>
-                </Button>
-              </CardContent>
-            </Card>
+          <StatsOverview dashboardData={dashboardData} />
+          <QuickActions />
 
-            {/* Key Notifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Notifications</CardTitle>
-                <CardDescription>Important alerts and announcements</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {dashboardData.notifications.length > 0 ? (
-                  dashboardData.notifications.map((notification) => (
-                    <div key={notification.id} className="flex items-start space-x-3">
-                      <div className="pt-1">{getNotificationIcon(notification.type)}</div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{notification.message}</p>
-                        <p className="text-xs text-gray-500">{notification.timestamp}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-gray-500">No new notifications.</div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href="/business/experiences">
-                    <Ship className="h-4 w-4 mr-2" />
-                    Manage Experiences
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href="/business/calendar">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Manage Availability
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href="/business/team">
-                    <Users className="h-4 w-4 mr-2" />
-                    Team Management
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href="/business/settings">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Business Settings
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentBookings bookings={dashboardData.recentBookings} />
+            <UpcomingBookings bookings={dashboardData.upcomingBookings} />
           </div>
+
+          <PerformanceMetrics dashboardData={dashboardData} />
         </div>
-      </div>
-    </BusinessLayout>
+      </BusinessLayout>
+    </BusinessProtectedRoute>
   )
 }

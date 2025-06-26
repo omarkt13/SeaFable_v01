@@ -2,46 +2,41 @@
 
 import type React from "react"
 
-import { useAuth } from "@/lib/auth-context"
-import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 
 interface CustomerProtectedRouteProps {
   children: React.ReactNode
 }
 
 export function CustomerProtectedRoute({ children }: CustomerProtectedRouteProps) {
-  const { user, userType, loading } = useAuth()
+  const { user, userType, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       if (!user) {
         router.push("/login")
         return
       }
 
       if (userType === "business") {
-        router.push("/business/dashboard")
-        return
-      }
-
-      if (userType !== "customer") {
-        router.push("/login")
+        router.push("/business/home")
         return
       }
     }
-  }, [user, userType, loading, router])
+  }, [user, userType, isLoading, router])
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
       </div>
     )
   }
 
-  if (!user || userType !== "customer") {
+  if (!user || userType === "business") {
     return null
   }
 
