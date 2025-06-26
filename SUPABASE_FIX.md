@@ -7,10 +7,10 @@ The error `"Importing binding name 'supabase' is not found"` was caused by **pro
 
 ### **Issue 1: Direct Client Export in lib/supabase/client.ts**
 **Problem**: 
-```typescript
+\`\`\`typescript
 // This was breaking - creates client during import
 export const supabase = createClient()
-```
+\`\`\`
 
 **Fix Applied**: ✅ **FIXED**
 - Removed the direct export
@@ -19,10 +19,10 @@ export const supabase = createClient()
 
 ### **Issue 2: Duplicate Client in lib/supabase.ts**  
 **Problem**:
-```typescript
+\`\`\`typescript
 // This was also breaking - another direct instance
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {...})
-```
+\`\`\`
 
 **Fix Applied**: ✅ **FIXED**
 - Removed the broken export
@@ -31,11 +31,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {...})
 
 ### **Issue 3: Immediate Client Creation in lib/supabase-business.ts**
 **Problem**:
-```typescript
+\`\`\`typescript
 // These were calling functions immediately during import
 const serverSupabase = createServerClient()
 const browserSupabase = createBrowserClient()
-```
+\`\`\`
 
 **Fix Applied**: ✅ **FIXED**
 - Changed to lazy initialization with getter functions
@@ -52,18 +52,18 @@ const browserSupabase = createBrowserClient()
 ## **Solution Summary**
 
 ### **Before (Broken)**:
-```typescript
+\`\`\`typescript
 // ❌ BROKEN - immediate instantiation
 export const supabase = createClient()
 const serverSupabase = createServerClient()
-```
+\`\`\`
 
 ### **After (Fixed)**:
-```typescript
+\`\`\`typescript
 // ✅ FIXED - lazy initialization
 export function createClient() { /* safe creation */ }
 function getServerSupabase() { return createServerClient() }
-```
+\`\`\`
 
 ## **Files Modified**
 1. ✅ `lib/supabase/client.ts` - Removed direct export, added getter
