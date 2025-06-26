@@ -37,7 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
-import { ErrorBoundary } from "@/components/error-boundary" // ✅ FIXED: Added ErrorBoundary import
+import { ErrorBoundary } from "@/components/error-boundary"
 
 // Enhanced search filters
 const initialFilters = {
@@ -95,7 +95,6 @@ const quickFilters = [
   { label: "Superhost", key: "superhostOnly", icon: ShieldCheck },
 ]
 
-// ✅ FIXED: Defined ExperienceCardProps interface for type safety
 interface ExperienceCardProps {
   experience: Experience
   viewMode: "grid" | "list" | "map"
@@ -105,8 +104,6 @@ interface ExperienceCardProps {
 
 // Enhanced Experience Card Component
 function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }: ExperienceCardProps) {
-  // ✅ FIXED: Applied ExperienceCardProps
-  // ✅ FIXED: Used useMemo to optimize transformedExperience object creation
   const transformedExperience = useMemo(() => {
     const hasDiscount = experience.total_bookings > 50 // Simple discount logic
     const discountPercentage = hasDiscount ? 15 : 0
@@ -258,7 +255,6 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
                   </div>
 
                   <div className="space-y-2">
-                    {/* Removed asChild and Link here */}
                     <Button className="w-full">
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
@@ -388,7 +384,6 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
               <span className="text-lg font-bold text-gray-900">€{experience.price_per_person}</span>
               <span className="text-sm text-gray-500"> / person</span>
             </div>
-            {/* Removed asChild and Link here */}
             <Button size="sm">
               <Eye className="h-4 w-4 mr-1" />
               View
@@ -406,35 +401,28 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
 // Main Search Page Component
 export default function EnhancedExperiencesSearchPage() {
-  const [filters, setFilters] = useState(initialFilters)
+  const searchParams = useSearchParams()
+
+  // Initialize filters from URL params only once
+  const initialFiltersFromParams = useMemo(() => {
+    const service = searchParams.get("service")
+    const location = searchParams.get("location")
+    const date = searchParams.get("date")
+    return {
+      ...initialFilters,
+      search: service || "",
+      location: location || "",
+      date: date || "",
+    }
+  }, [searchParams])
+
+  const [filters, setFilters] = useState(initialFiltersFromParams)
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [viewMode, setViewMode] = useState("grid")
   const [sortBy, setSortBy] = useState("recommended")
   const [showFilters, setShowFilters] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [wishlistItems, setWishlistItems] = useState(new Set())
-  const [hasInitialized, setHasInitialized] = useState(false)
-  const { user } = useAuth()
-  const searchParams = useSearchParams()
-
-  // Initialize filters from URL params only once
-  useEffect(() => {
-    if (!hasInitialized) {
-      const service = searchParams.get("service")
-      const location = searchParams.get("location")
-      const date = searchParams.get("date")
-
-      if (service || location || date) {
-        setFilters((prev) => ({
-          ...prev,
-          search: service || "",
-          location: location || "",
-          date: date || "",
-        }))
-      }
-      setHasInitialized(true)
-    }
-  }, [searchParams, hasInitialized])
 
   // Load experiences function - stable reference
   const loadExperiences = useCallback(async () => {
@@ -476,12 +464,10 @@ export default function EnhancedExperiencesSearchPage() {
     sortBy,
   ])
 
-  // Load experiences on initialization
+  // Load experiences on initial mount and when filters change
   useEffect(() => {
-    if (hasInitialized) {
-      loadExperiences()
-    }
-  }, [hasInitialized, loadExperiences])
+    loadExperiences()
+  }, [filters, sortBy, loadExperiences]) // Depend on filters and sortBy to re-fetch
 
   // Apply client-side filters that aren't handled by the database
   const filteredExperiences = useMemo(() => {
@@ -544,10 +530,10 @@ export default function EnhancedExperiencesSearchPage() {
     }).length
   }, [filters])
 
+  const { user } = useAuth() // Keep useAuth for client-side user context
+
   return (
     <ErrorBoundary>
-      {" "}
-      {/* ✅ FIXED: Wrapped with ErrorBoundary */}
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
