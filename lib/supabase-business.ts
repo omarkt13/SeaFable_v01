@@ -1,27 +1,40 @@
-import { createClient } from "@/lib/supabase/client"
+import { createClient as createServerClient } from "@/lib/supabase/server" // ✅ FIXED: Import server-side client
 import type { BusinessSettings, HostAvailability } from "@/types/business"
+import type { Experience } from "@/lib/database" // Import Experience type from database.ts
 
-const supabase = createClient()
+// Helper to get the server-side Supabase client
+function getSupabase() {
+  return createServerClient()
+}
 
 export async function getHostProfile(userId: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostProfile:", error)
+    throw error
+  }
   return data
 }
 
 export async function getBusinessSettings(hostProfileId: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase
     .from("host_business_settings")
     .select("*")
     .eq("host_profile_id", hostProfileId)
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getBusinessSettings:", error)
+    throw error
+  }
   return data
 }
 
 export async function updateBusinessSettings(hostProfileId: string, settings: Partial<BusinessSettings>) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase
     .from("host_business_settings")
     .upsert({
@@ -32,11 +45,15 @@ export async function updateBusinessSettings(hostProfileId: string, settings: Pa
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in updateBusinessSettings:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostEarnings(hostProfileId: string, startDate?: string, endDate?: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   let query = supabase
     .from("host_earnings")
     .select(`
@@ -58,11 +75,15 @@ export async function getHostEarnings(hostProfileId: string, startDate?: string,
 
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostEarnings:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostAvailability(hostProfileId: string, startDate?: string, endDate?: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   let query = supabase
     .from("host_availability")
     .select("*")
@@ -78,11 +99,15 @@ export async function getHostAvailability(hostProfileId: string, startDate?: str
 
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostAvailability:", error)
+    throw error
+  }
   return data
 }
 
 export async function setHostAvailability(hostProfileId: string, availability: HostAvailability[]) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   // Delete existing availability for the dates
   const dates = availability.map((a) => a.date)
   await supabase.from("host_availability").delete().eq("host_profile_id", hostProfileId).in("date", dates)
@@ -106,11 +131,15 @@ export async function setHostAvailability(hostProfileId: string, availability: H
     )
     .select()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in setHostAvailability:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostTeamMembers(hostProfileId: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase
     .from("host_team_members")
     .select(`
@@ -126,11 +155,15 @@ export async function getHostTeamMembers(hostProfileId: string) {
     .eq("is_active", true)
     .order("created_at", { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostTeamMembers:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostAnalytics(hostProfileId: string, days = 30) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
 
@@ -141,7 +174,10 @@ export async function getHostAnalytics(hostProfileId: string, days = 30) {
     .gte("date", startDate.toISOString().split("T")[0])
     .order("date", { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostAnalytics:", error)
+    throw error
+  }
   return data
 }
 
@@ -175,6 +211,7 @@ export async function createExperience(experienceData: {
   is_active?: boolean
   itinerary?: any // Include itinerary
 }) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase
     .from("experiences")
     .insert([
@@ -189,7 +226,10 @@ export async function createExperience(experienceData: {
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in createExperience:", error)
+    throw error
+  }
   return data
 }
 
@@ -224,6 +264,7 @@ export async function updateExperience(
     itinerary: any // Include itinerary
   }>,
 ) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
   const { data, error } = await supabase
     .from("experiences")
     .update({
@@ -234,6 +275,47 @@ export async function updateExperience(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in updateExperience:", error)
+    throw error
+  }
   return data
+}
+
+export async function getHostExperiences(hostId: string): Promise<Experience[]> {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const { data, error } = await supabase.from("experiences").select("*").eq("host_id", hostId).eq("is_active", true)
+
+  if (error) {
+    console.error("Error in getHostExperiences:", error)
+    throw error
+  }
+  return data || []
+}
+
+export async function getHostBookings(hostId: string) {
+  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(`
+      id,
+      total_price,
+      booking_status,
+      booking_date,
+      number_of_guests,
+      departure_time,
+      special_requests,
+      created_at,
+      payment_status,
+      users!bookings_user_id_fkey(first_name, last_name, phone),
+      experiences!bookings_experience_id_fkey(title)
+    `)
+    .eq("host_id", hostId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error in getHostBookings:", error)
+    throw error
+  }
+  return data || []
 }
