@@ -36,7 +36,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
           marketplace_enabled
         )
       `)
-      .eq("user_id", userId) // Ensure it's user_id
+      .eq("id", userId) // Corrected from "user_id" to "id"
       .maybeSingle()
 
     if (error) {
