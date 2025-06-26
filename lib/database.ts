@@ -170,7 +170,7 @@ export async function getExperiences(
     let query = supabase.from("experiences").select("*")
 
     if (searchQuery) {
-      query = query.ilike("name", `%${searchQuery}%`)
+      query = query.ilike("title", `%${searchQuery}%`)
     }
     if (minPrice !== undefined) {
       query = query.gte("price", minPrice)
