@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client" // Updated import path
+import { createClient } from "@/lib/supabase/client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
@@ -14,13 +14,17 @@ interface AuthContextType {
   userType: "customer" | "business" | null
   isLoading: boolean
   error: string | null
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
   login: (
     email: string,
     password: string,
-    userType: "customer" | "business",
-  ) => Promise<{ success: boolean; error?: string }>
-  signOut: () => Promise<void>
-  refreshProfile: () => Promise<void>
+    expectedUserType?: "customer" | "business",
+  ) => Promise<{
+    success: boolean
+    error?: string
+    userType?: "customer" | "business"
+  }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -34,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Use ref to prevent memory leaks
   const mountedRef = useRef(true)
   const supabase = createClient()
 
@@ -51,14 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = useCallback(
     async (userId: string) => {
       try {
-        const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle() // Use maybeSingle
+        const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+
         if (error) throw error
 
         if (mountedRef.current) {
-          setUserProfile(data as UserProfile)
-          if (data) setUserType("customer")
+          setUserProfile(data)
+          setUserType("customer")
         }
-        return data as UserProfile
+        return data
       } catch (error) {
         console.error("Error fetching user profile:", error)
         if (mountedRef.current) {
@@ -82,24 +86,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             marketplace_enabled
           )
         `)
-          .eq("user_id", userId) // Ensure it's user_id
-          .maybeSingle() // Use maybeSingle
+          .eq("id", userId)
+          .single()
 
         if (error) throw error
 
-        const profile = data
-          ? {
-              ...data,
-              onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-              marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
-            }
-          : null
+        const profile = {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
 
         if (mountedRef.current) {
-          setBusinessProfile(profile as BusinessProfile)
-          if (profile) setUserType("business")
+          setBusinessProfile(profile)
+          setUserType("business")
         }
-        return profile as BusinessProfile
+        return profile
       } catch (error) {
         console.error("Error fetching business profile:", error)
         if (mountedRef.current) {
@@ -111,69 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase],
   )
 
-  const login = useCallback(
-    async (email: string, password: string, expectedUserType: "customer" | "business") => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (signInError) throw signInError
-
-        if (!data.user) {
-          throw new Error("No user returned from authentication")
-        }
-
-        // Verify user type matches expected type
-        let isBusiness = false
-        const businessProfile = await fetchBusinessProfile(data.user.id)
-        if (businessProfile) {
-          isBusiness = true
-        }
-
-        if (expectedUserType === "business" && !isBusiness) {
-          await supabase.auth.signOut()
-          throw new Error(
-            "This account is not registered as a business. Please use customer login or register your business first.",
-          )
-        } else if (expectedUserType === "customer" && isBusiness) {
-          await supabase.auth.signOut()
-          throw new Error("This is a business account. Please use the business login.")
-        }
-
-        // Update user metadata to include user type (optional, but good for consistency)
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { user_type: expectedUserType },
-        })
-
-        if (updateError) {
-          console.warn("Failed to update user metadata:", updateError)
-        }
-
-        // Refresh profiles after successful login and type verification
-        await refreshProfile()
-
-        return { success: true }
-      } catch (error: any) {
-        console.error("Login error:", error.message)
-        setError(error.message)
-        return { success: false, error: error.message }
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [supabase, fetchUserProfile, fetchBusinessProfile],
-  )
-
   const refreshProfile = useCallback(async () => {
-    if (!user) {
-      if (mountedRef.current) setIsLoading(false)
-      return
-    }
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -181,19 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Try business profile first
       const businessProfile = await fetchBusinessProfile(user.id)
-      if (businessProfile) {
-        if (mountedRef.current) setUserType("business")
-        return
-      }
+      if (businessProfile) return
 
       // Fallback to user profile
-      const userProfile = await fetchUserProfile(user.id)
-      if (userProfile) {
-        if (mountedRef.current) setUserType("customer")
-      } else {
-        // If neither profile found, clear user type
-        if (mountedRef.current) setUserType(null)
-      }
+      await fetchUserProfile(user.id)
     } catch (error) {
       console.error("Error refreshing profile:", error)
       if (mountedRef.current) {
@@ -205,6 +137,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [user, fetchBusinessProfile, fetchUserProfile])
+
+  // NEW: Login function that handles both customer and business authentication
+  const login = useCallback(
+    async (email: string, password: string, expectedUserType?: "customer" | "business") => {
+      try {
+        setError(null)
+
+        // Sign in with Supabase
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+
+        if (signInError) throw signInError
+
+        if (!data.user) {
+          throw new Error("Authentication failed")
+        }
+
+        // Check user type by querying database tables
+        const [businessCheck, userCheck] = await Promise.all([
+          supabase.from("host_profiles").select("id").eq("id", data.user.id).single(),
+          supabase.from("users").select("id").eq("id", data.user.id).single(),
+        ])
+
+        const isBusiness = !businessCheck.error && businessCheck.data
+        const isUser = !userCheck.error && userCheck.data
+
+        let actualUserType: "customer" | "business"
+
+        if (isBusiness) {
+          actualUserType = "business"
+        } else if (isUser) {
+          actualUserType = "customer"
+        } else {
+          // Sign out if user is not in either table
+          await supabase.auth.signOut()
+          throw new Error("Account not found in system")
+        }
+
+        // If expectedUserType is specified, validate it matches
+        if (expectedUserType && expectedUserType !== actualUserType) {
+          await supabase.auth.signOut()
+
+          if (expectedUserType === "business") {
+            throw new Error("This account is not registered as a business. Please use customer login.")
+          } else {
+            throw new Error("This account is registered as a business. Please use business login.")
+          }
+        }
+
+        return {
+          success: true,
+          userType: actualUserType,
+        }
+      } catch (error: any) {
+        console.error("Login error:", error)
+        return {
+          success: false,
+          error: error.message || "Login failed",
+        }
+      }
+    },
+    [supabase],
+  )
 
   const signOut = useCallback(async () => {
     try {
@@ -290,9 +287,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userType,
     isLoading,
     error,
-    login,
     signOut,
     refreshProfile,
+    login, // Now exported
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

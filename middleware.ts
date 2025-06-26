@@ -90,14 +90,15 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/business/login", req.url))
       }
 
-      // Check if user is a business user by querying host_profiles
-      const { data: hostProfile } = await supabase
+      // Check if user is in host_profiles table (business user)
+      const { data: hostProfile, error } = await supabase
         .from("host_profiles")
         .select("id")
-        .eq("user_id", session.user.id) // Changed from .eq("id", session.user.id) to .eq("user_id", session.user.id)
-        .maybeSingle() // Changed from .single() to .maybeSingle()
+        .eq("id", session.user.id)
+        .single()
 
-      if (!hostProfile) {
+      if (error || !hostProfile) {
+        // Not a business user, redirect to home
         return NextResponse.redirect(new URL("/", req.url))
       }
     }
@@ -108,15 +109,25 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url))
       }
 
-      // Check if they're a business user and redirect appropriately
-      const { data: hostProfile } = await supabase
-        .from("host_profiles")
-        .select("id")
-        .eq("user_id", session.user.id) // Changed from .eq("id", session.user.id) to .eq("user_id", session.user.id)
-        .maybeSingle() // Changed from .single() to .maybeSingle()
+      // Check if user is a business user (should redirect to business dashboard)
+      const { data: hostProfile } = await supabase.from("host_profiles").select("id").eq("id", session.user.id).single()
 
       if (hostProfile) {
+        // Business user trying to access customer dashboard
         return NextResponse.redirect(new URL("/business/home", req.url))
+      }
+
+      // Check if user exists in users table
+      const { data: userProfile, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", session.user.id)
+        .single()
+
+      if (userError || !userProfile) {
+        // User not found in users table, sign out and redirect
+        await supabase.auth.signOut()
+        return NextResponse.redirect(new URL("/login", req.url))
       }
     }
   }
