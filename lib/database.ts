@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers" // Import cookies
 import { getUserProfile } from "./auth-utils" // This will be updated below
 import type { BusinessProfile } from "@/types/auth"
 import type { HostProfile as SupabaseHostProfile } from "@/types/database"
@@ -215,7 +216,8 @@ export interface BusinessDashboardData {
 
 // Use server client for server-side operations
 export function getServerSupabase() {
-  return createSupabaseServerClient()
+  const cookieStore = cookies() // Get cookieStore here
+  return createSupabaseServerClient(cookieStore) // Pass it to the client creator
 }
 
 // Use client for client-side operations

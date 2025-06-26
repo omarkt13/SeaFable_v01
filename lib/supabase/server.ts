@@ -1,30 +1,27 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import type { cookies } from "next/headers"
 
-export function createSupabaseServerClient() {
-  const cookieStore = cookies()
-
+// Modified to accept cookieStore as an argument
+export function createSupabaseServerClient(cookieStore: ReturnType<typeof cookies>) {
   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value, ...options })
+          cookieStore.set(name, value, options)
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Route Handler
-          // This error is typically caught and handled by Next.js automatically
-          console.warn("Could not set cookie from server component:", error)
+          // The `cookies()` API can only be used in Server Components, Server Actions and Route Handlers.
+          // We're ignoring this error on the client since we'll immediately redirect.
+          console.warn("Failed to set cookie on client:", error)
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value: "", ...options })
+          cookieStore.set(name, "", options)
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Route Handler
-          // This error is typically caught and handled by Next.js automatically
-          console.warn("Could not remove cookie from server component:", error)
+          console.warn("Failed to remove cookie on client:", error)
         }
       },
     },

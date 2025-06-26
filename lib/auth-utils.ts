@@ -1,15 +1,18 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers" // Import cookies
 import { redirect } from "next/navigation"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 // Server-side Supabase client
-const supabaseServer = createSupabaseServerClient()
-
-// Client-side Supabase client (only for specific client-side actions if this file were also used on client)
-// const supabaseClient = createClient(); // Not used directly in this server-side file, but kept for context
+// Modified to get cookieStore and pass it
+const getSupabaseServer = () => {
+  const cookieStore = cookies()
+  return createSupabaseServerClient(cookieStore)
+}
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
+    const supabaseServer = getSupabaseServer() // Use the function to get the client
     const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).single()
     if (error) {
       console.error("Error fetching user profile (server):", error)
@@ -24,6 +27,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
   try {
+    const supabaseServer = getSupabaseServer() // Use the function to get the client
     const { data, error } = await supabaseServer
       .from("host_profiles")
       .select(`
@@ -54,6 +58,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 }
 
 export async function signOutAndRedirect(redirectTo = "/login") {
+  const supabaseServer = getSupabaseServer() // Use the function to get the client
   const { error } = await supabaseServer.auth.signOut()
   if (error) {
     console.error("Error signing out (server):", error)
@@ -63,6 +68,7 @@ export async function signOutAndRedirect(redirectTo = "/login") {
 }
 
 export async function getSessionAndUser() {
+  const supabaseServer = getSupabaseServer() // Use the function to get the client
   const {
     data: { session },
     error,
@@ -81,6 +87,7 @@ export async function getAuthenticatedUserType(): Promise<"customer" | "business
   if (!user) return null
 
   // Check if user is a business host
+  const supabaseServer = getSupabaseServer() // Use the function to get the client
   const { data: businessProfile, error: businessError } = await supabaseServer
     .from("host_profiles")
     .select("id")
