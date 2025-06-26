@@ -16,7 +16,6 @@ import {
   Settings,
   Plus,
   Users,
-  Phone,
   Bell,
 } from "lucide-react"
 import { getHostExperiences, getHostBookings } from "@/lib/supabase-business"
@@ -175,7 +174,6 @@ export default function BusinessHomePage() {
               time: booking.departure_time || "09:00",
               guests: booking.number_of_guests || 1,
               specialRequests: booking.special_requests,
-              phone: booking.users?.phone || "N/A",
             }))
         }
 
@@ -439,11 +437,6 @@ export default function BusinessHomePage() {
                               <p className="text-sm text-gray-500">
                                 {new Date(booking.date).toLocaleDateString()} at {booking.time}
                               </p>
-                              {booking.phone && booking.phone !== "N/A" && (
-                                <a href={`tel:${booking.phone}`} className="text-xs text-blue-500 flex items-center">
-                                  <Phone className="h-3 w-3 mr-1" /> {booking.phone}
-                                </a>
-                              )}
                             </div>
                           </div>
                           <Button variant="outline" size="sm">
