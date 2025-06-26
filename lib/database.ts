@@ -1,6 +1,6 @@
 "use server" // Add this line to make the file a Server Action
 
-import { createClient as createClientBrowser } from "@/lib/client-supabase" // Renamed to avoid conflict
+import { getClientSupabase as getClientSupabaseBrowser } from "@/lib/client-supabase" // Corrected import name
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers" // Import cookies
 import { getUserProfile } from "./auth-utils" // This will be updated below
@@ -222,7 +222,7 @@ export function getServerSupabase() {
 
 // Use client for client-side operations
 export function getClientSupabase() {
-  return createClientBrowser() // Use the renamed import
+  return getClientSupabaseBrowser() // Use the renamed import from lib/client-supabase
 }
 
 export async function signOutUser() {
@@ -688,9 +688,9 @@ export async function getUserDashboardData(userId: string) {
     const { data: reviews, error: reviewError } = await supabase
       .from("reviews")
       .select(`
-    *,
-    experiences!reviews_experience_id_fkey (title, primary_image_url)
-  `)
+   *,
+   experiences!reviews_experience_id_fkey (title, primary_image_url)
+ `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
