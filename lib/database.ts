@@ -676,9 +676,18 @@ export async function getUserDashboardData(userId: string) {
     // Get user profile using the centralized function from auth-utils
     const user = await getUserProfile(userId)
 
+    // If user profile is not found, return a success with null user and empty arrays
+    // This allows the dashboard to render with fallback data (e.g., user email)
     if (!user) {
-      console.error("Error fetching user: User profile not found for ID", userId)
-      return { success: false, error: "User profile not found", data: null }
+      console.warn("User profile not found for ID", userId, ". Returning partial dashboard data.")
+      return {
+        success: true,
+        data: {
+          user: null, // Explicitly null
+          bookings: [],
+          reviews: [],
+        },
+      }
     }
 
     // Get user bookings
