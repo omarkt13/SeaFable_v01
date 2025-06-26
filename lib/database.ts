@@ -1,9 +1,11 @@
+"use server" // Add this line to make the file a Server Action
+
 import { createClient } from "@/lib/supabase/client"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { getUserProfile } from "./auth-utils"
-import type { BusinessProfile } from "@/types/auth" // Corrected import path
-import type { HostProfile as SupabaseHostProfile } from "@/types/database" // Corrected import path
-import type { HostAvailability } from "@/types/business" // Import HostAvailability type
+import { getUserProfile } from "./auth-utils" // This will be updated below
+import type { BusinessProfile } from "@/types/auth"
+import type { HostProfile as SupabaseHostProfile } from "@/types/database"
+import type { HostAvailability } from "@/types/business"
 
 // ✅ FIXED: Added input sanitization helper
 function sanitizeInput(input: string): string {
@@ -213,12 +215,12 @@ export interface BusinessDashboardData {
 
 // Use server client for server-side operations
 export function getServerSupabase() {
-  return createSupabaseServerClient() // Use the new server client function
+  return createSupabaseServerClient()
 }
 
 // Use client for client-side operations
 export function getClientSupabase() {
-  return createClient() // Use the new client function
+  return createClient()
 }
 
 export async function signOutUser() {
