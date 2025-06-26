@@ -69,7 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const {
+      data: { subscription: authListenerSubscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession)
       setUser(currentSession?.user || null)
       setIsLoading(true) // Set loading true when auth state changes
@@ -117,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getSession()
 
     return () => {
-      authListener.unsubscribe()
+      authListenerSubscription.unsubscribe()
     }
   }, [supabase, fetchUserProfile, fetchBusinessProfile])
 
