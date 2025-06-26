@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import {
   Search,
   MapPin,
@@ -23,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-// Removed AuthProvider and CustomerNavigation import as they are now in layout.tsx
 
 export default function LandingPage() {
   const router = useRouter()
@@ -77,7 +77,7 @@ export default function LandingPage() {
       reviews: 324,
       host: "Captain Maria",
       duration: "3 hours",
-      image: "/placeholder.svg?height=300&width=400",
+      image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop",
     },
     {
       id: 2,
@@ -88,7 +88,7 @@ export default function LandingPage() {
       reviews: 156,
       host: "Surf Coach Jake",
       duration: "2 hours",
-      image: "/placeholder.svg?height=300&width=400",
+      image: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=400&h=300&fit=crop",
     },
     {
       id: 3,
@@ -99,15 +99,12 @@ export default function LandingPage() {
       reviews: 89,
       host: "Captain Rodriguez",
       duration: "6 hours",
-      image: "/placeholder.svg?height=300&width=400",
+      image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=400&h=300&fit=crop",
     },
   ]
 
   return (
-    // Removed AuthProvider as it's now in layout.tsx
     <main className="flex-1">
-      {" "}
-      {/* Removed pt-16 as it's now handled by layout.tsx */}
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 via-teal-500 to-emerald-500 overflow-hidden min-h-screen flex items-center py-20 sm:py-24 lg:py-32">
         {/* Background decorative elements */}
@@ -250,6 +247,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
       {/* Activity Categories */}
       <section className="section-spacing bg-gray-50">
         <div className="max-w-7xl mx-auto container-padding">
@@ -276,6 +274,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
       {/* Featured Experiences */}
       <section id="featured-experiences" className="section-spacing">
         <div className="max-w-7xl mx-auto container-padding">
@@ -290,12 +289,14 @@ export default function LandingPage() {
             {featuredExperiences.map((experience) => (
               <Link href={`/experience/${experience.id}`} key={experience.id} className="group">
                 <Card className="rounded-2xl shadow-lg overflow-hidden card-hover focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                    <img
-                      src={experience.image || "/placeholder.svg"}
+                  <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                    <Image
+                      src={experience.image}
                       alt={experience.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
                     />
                   </div>
                   <CardContent className="p-5 lg:p-6 space-y-3">
@@ -351,6 +352,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
       {/* Trust & Safety */}
       <section className="section-spacing bg-gray-50">
         <div className="max-w-7xl mx-auto container-padding">
@@ -393,6 +395,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* About Section */}
       <section id="about" className="section-spacing">
         <div className="max-w-7xl mx-auto container-padding">
           <div className="text-center mb-12 sm:mb-16">
@@ -415,16 +419,15 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
-              <img
-                src="/placeholder.svg?height=400&width=600"
-                alt="Our Mission"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
+              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center">
+                <Waves className="h-24 w-24 text-teal-400" />
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Business Section */}
       <section id="business-section" className="section-spacing bg-gray-50">
         <div className="max-w-7xl mx-auto container-padding">
           <div className="text-center mb-12 sm:mb-16">
@@ -470,6 +473,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500 section-spacing">
         <div className="max-w-4xl mx-auto text-center container-padding">
