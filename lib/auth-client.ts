@@ -1,12 +1,16 @@
 import { supabaseClient } from "@/lib/supabase-client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
+import type { User } from "@supabase/supabase-js"
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<User | null> {
   const {
     data: { user },
     error,
   } = await supabaseClient.auth.getUser()
-  if (error || !user) return null
+  if (error) {
+    console.error("Error getting current user:", error)
+    return null
+  }
   return user
 }
 
