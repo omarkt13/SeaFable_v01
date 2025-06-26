@@ -84,8 +84,7 @@ export async function middleware(req: NextRequest) {
     if (
       req.nextUrl.pathname.startsWith("/business") &&
       !req.nextUrl.pathname.startsWith("/business/login") &&
-      !req.nextUrl.pathname.startsWith("/business/register") &&
-      !req.nextUrl.pathname.startsWith("/business/forgot-password")
+      !req.nextUrl.pathname.startsWith("/business/register")
     ) {
       if (!session) {
         return NextResponse.redirect(new URL("/business/login", req.url))
@@ -95,11 +94,10 @@ export async function middleware(req: NextRequest) {
       const { data: hostProfile } = await supabase
         .from("host_profiles")
         .select("id")
-        .eq("user_id", session.user.id) // Use user_id
-        .maybeSingle() // Use maybeSingle
+        .eq("user_id", session.user.id) // Changed from .eq("id", session.user.id) to .eq("user_id", session.user.id)
+        .maybeSingle() // Changed from .single() to .maybeSingle()
 
       if (!hostProfile) {
-        // If not a business profile, redirect to customer dashboard or home
         return NextResponse.redirect(new URL("/", req.url))
       }
     }
@@ -114,8 +112,8 @@ export async function middleware(req: NextRequest) {
       const { data: hostProfile } = await supabase
         .from("host_profiles")
         .select("id")
-        .eq("user_id", session.user.id) // Use user_id
-        .maybeSingle() // Use maybeSingle
+        .eq("user_id", session.user.id) // Changed from .eq("id", session.user.id) to .eq("user_id", session.user.id)
+        .maybeSingle() // Changed from .single() to .maybeSingle()
 
       if (hostProfile) {
         return NextResponse.redirect(new URL("/business/home", req.url))
