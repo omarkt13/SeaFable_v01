@@ -1,5 +1,5 @@
-import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Import client-side Supabase client with alias
-import { createClient as createServerClient } from "@/lib/supabase/server" // Import server-side Supabase client for specific functions
+import { createClient } from "@/lib/supabase/client"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 import { getUserProfile } from "./auth-utils"
 import type { BusinessProfile } from "@/types/auth" // Corrected import path
 import type { HostProfile as SupabaseHostProfile } from "@/types/database" // Corrected import path
@@ -218,7 +218,7 @@ export function getServerSupabase() {
 
 // Use client for client-side operations
 export function getClientSupabase() {
-  return createBrowserSupabaseClient()
+  return createClient()
 }
 
 // Removed signInUser from here, it's now in lib/auth-utils.ts

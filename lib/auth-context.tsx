@@ -3,8 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase/client" // Import the directly exported supabase client
-import { getUserProfile, getBusinessProfile, signOutUser } from "@/lib/auth-client"
+import { createClient } from "@/lib/supabase/client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
@@ -30,11 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Use ref to prevent memory leaks and track component mount state
   const mountedRef = useRef(true)
   const profileCacheRef = useRef<{ [key: string]: UserProfile | BusinessProfile }>({})
 
-  // The problematic line `const supabase = useMemo(() => createClient(), [])` has been removed.
-  // The 'supabase' instance is now directly imported from "@/lib/supabase/client".
+  // Create client instance once and reuse
+  const supabase = useMemo(() => createClient(), [])
 
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return
@@ -44,74 +44,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBusinessProfile(null)
     setUserType(null)
     setError(null)
+    // Clear profile cache
     profileCacheRef.current = {}
   }, [])
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
-    const cached = profileCacheRef.current[`user_${userId}`] as UserProfile
-    if (cached) {
-      if (mountedRef.current) {
-        setUserProfile(cached)
-        setUserType("customer")
-      }
-      return cached
-    }
-
-    try {
-      const data = await getUserProfile(userId)
-      if (!data) throw new Error("User profile not found")
-
-      profileCacheRef.current[`user_${userId}`] = data
-
-      if (mountedRef.current) {
-        setUserProfile(data)
-        setUserType("customer")
-      }
-      return data
-    } catch (error) {
-      console.error("Error fetching user profile:", error)
-      if (mountedRef.current) {
-        setError("Failed to fetch user profile")
-      }
-      return null
-    }
-  }, [])
-
-  const fetchBusinessProfile = useCallback(async (userId: string) => {
-    const cached = profileCacheRef.current[`business_${userId}`] as BusinessProfile
-    if (cached) {
-      if (mountedRef.current) {
-        setBusinessProfile(cached)
-        setUserType("business")
-      }
-      return cached
-    }
-
-    try {
-      const data = await getBusinessProfile(userId)
-      if (!data) throw new Error("Business profile not found")
-
-      const profile = {
-        ...data,
-        onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-        marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+  const fetchUserProfile = useCallback(
+    async (userId: string) => {
+      // Check cache first
+      const cached = profileCacheRef.current[`user_${userId}`] as UserProfile
+      if (cached) {
+        if (mountedRef.current) {
+          setUserProfile(cached)
+          setUserType("customer")
+        }
+        return cached
       }
 
-      profileCacheRef.current[`business_${userId}`] = profile
+      try {
+        const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
-      if (mountedRef.current) {
-        setBusinessProfile(profile)
-        setUserType("business")
+        if (error) throw error
+
+        // Cache the result
+        profileCacheRef.current[`user_${userId}`] = data
+
+        if (mountedRef.current) {
+          setUserProfile(data)
+          setUserType("customer")
+        }
+        return data
+      } catch (error) {
+        console.error("Error fetching user profile:", error)
+        if (mountedRef.current) {
+          setError("Failed to fetch user profile")
+        }
+        return null
       }
-      return profile
-    } catch (error) {
-      console.error("Error fetching business profile:", error)
-      if (mountedRef.current) {
-        setError("Failed to fetch business profile")
+    },
+    [supabase],
+  )
+
+  const fetchBusinessProfile = useCallback(
+    async (userId: string) => {
+      // Check cache first
+      const cached = profileCacheRef.current[`business_${userId}`] as BusinessProfile
+      if (cached) {
+        if (mountedRef.current) {
+          setBusinessProfile(cached)
+          setUserType("business")
+        }
+        return cached
       }
-      return null
-    }
-  }, [])
+
+      try {
+        const { data, error } = await supabase
+          .from("host_profiles")
+          .select(`
+          *,
+          host_business_settings (
+            onboarding_completed,
+            marketplace_enabled
+          )
+        `)
+          .eq("id", userId)
+          .single()
+
+        if (error) throw error
+
+        const profile = {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
+
+        // Cache the result
+        profileCacheRef.current[`business_${userId}`] = profile
+
+        if (mountedRef.current) {
+          setBusinessProfile(profile)
+          setUserType("business")
+        }
+        return profile
+      } catch (error) {
+        console.error("Error fetching business profile:", error)
+        if (mountedRef.current) {
+          setError("Failed to fetch business profile")
+        }
+        return null
+      }
+    },
+    [supabase],
+  )
 
   const refreshProfile = useCallback(async () => {
     if (!user?.id) return
@@ -120,12 +143,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
 
     try {
+      // Clear cache for this user
       delete profileCacheRef.current[`user_${user.id}`]
       delete profileCacheRef.current[`business_${user.id}`]
 
+      // Try business profile first
       const businessProfile = await fetchBusinessProfile(user.id)
       if (businessProfile) return
 
+      // Fallback to user profile
       await fetchUserProfile(user.id)
     } catch (error) {
       console.error("Error refreshing profile:", error)
@@ -142,7 +168,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       setIsLoading(true)
-      await signOutUser()
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+
       clearAuthState()
     } catch (error) {
       console.error("Error signing out:", error)
@@ -154,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-  }, [clearAuthState])
+  }, [supabase, clearAuthState])
 
   useEffect(() => {
     let mounted = true
@@ -165,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession() // Use the imported supabase instance
+        } = await supabase.auth.getSession()
 
         if (error) throw error
 
@@ -204,8 +232,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthState()
         setIsLoading(false)
       } else if (event === "SIGNED_IN") {
+        // Only refresh on actual sign in, not token refresh
         await refreshProfile()
       } else if (event === "TOKEN_REFRESHED") {
+        // Don't refetch profile on token refresh to prevent excessive API calls
         setIsLoading(false)
       }
     })
@@ -215,8 +245,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false
       subscription.unsubscribe()
     }
-  }, [refreshProfile, clearAuthState]) // Removed supabase from dependencies as it's a stable memoized object
+  }, [supabase, refreshProfile, clearAuthState])
 
+  // Cleanup effect
   useEffect(() => {
     return () => {
       mountedRef.current = false

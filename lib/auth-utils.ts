@@ -1,7 +1,16 @@
-import { supabase } from "@/lib/supabase" // This is the client-side instance
+import { createClient } from "@/lib/supabase/client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
+// Get a Supabase client instance
+export function getSupabase() {
+  return createClient()
+}
+
+// Export the client instance for backward compatibility
+export const supabase = getSupabase()
+
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const supabase = getSupabase()
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
   if (error) {
@@ -12,6 +21,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 }
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
+  const supabase = getSupabase()
   const { data, error } = await supabase.from("host_profiles").select("*").eq("id", userId).single()
 
   if (error) {
@@ -22,6 +32,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 }
 
 export async function signInUser(email: string, password: string) {
+  const supabase = getSupabase()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
@@ -32,6 +43,7 @@ export async function signInUser(email: string, password: string) {
 }
 
 export async function signOut() {
+  const supabase = getSupabase()
   const { error } = await supabase.auth.signOut()
 
   if (error) {
@@ -41,6 +53,7 @@ export async function signOut() {
 }
 
 export async function signUpUser(email: string, password: string, userType: "customer" | "business") {
+  const supabase = getSupabase()
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -59,6 +72,7 @@ export async function signUpUser(email: string, password: string, userType: "cus
 }
 
 export async function resetPasswordForEmail(email: string) {
+  const supabase = getSupabase()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/update-password`,
   })
@@ -70,6 +84,7 @@ export async function resetPasswordForEmail(email: string) {
 }
 
 export async function updatePassword(password: string) {
+  const supabase = getSupabase()
   const { data, error } = await supabase.auth.updateUser({ password })
 
   if (error) {
@@ -77,4 +92,21 @@ export async function updatePassword(password: string) {
     throw error
   }
   return data
+}
+
+export async function signOutAndRedirect(userType: "customer" | "business") {
+  try {
+    await signOut()
+
+    // Redirect based on user type
+    if (userType === "business") {
+      window.location.href = "/business/login"
+    } else {
+      window.location.href = "/login"
+    }
+  } catch (error) {
+    console.error("Error during sign out and redirect:", error)
+    // Still redirect even if sign out fails
+    window.location.href = "/"
+  }
 }
