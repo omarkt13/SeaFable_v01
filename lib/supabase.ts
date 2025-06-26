@@ -3,19 +3,9 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { User as SupabaseUser } from "@supabase/supabase-js" // Import User type from core supabase-js
 
-// Use globalThis to ensure a single instance across the entire client-side application.
-// This is robust against hot module reloading in development.
-declare global {
-  // eslint-disable-next-line no-var
-  var supabaseClientInstance: ReturnType<typeof createClientComponentClient> | undefined
-}
-
-export const supabase = (() => {
-  if (!globalThis.supabaseClientInstance) {
-    globalThis.supabaseClientInstance = createClientComponentClient()
-  }
-  return globalThis.supabaseClientInstance
-})()
+// Directly create and export the Supabase client for simplicity in this environment.
+// In a full Next.js app, you might use a global singleton pattern for HMR robustness.
+export const supabase = createClientComponentClient()
 
 // Database types based on the schema (kept for completeness)
 export interface User {
