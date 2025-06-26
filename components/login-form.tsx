@@ -5,37 +5,60 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client" // Import getClientBusinessProfile
-import { getClientSupabase } from "@/lib/client-supabase" // Import getClientSupabase
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/lib/auth-context" // Import useAuth to get refreshAuth
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client"
+import { getClientSupabase } from "@/lib/client-supabase"
+import { useAuth } from "@/lib/auth-context" // Import useAuth
 
-export default function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+interface LoginFormProps {
+  userType: string // This prop is no longer strictly needed for redirection logic within the component, but kept for compatibility if other parts rely on it.
+  onSuccess?: (user: any) => void
+}
+
+export function LoginForm({ userType, onSuccess }: LoginFormProps) {
+  const [formData, setFormData] = useState({ email: "", password: "" })
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [loginAttempts, setLoginAttempts] = useState(0)
   const router = useRouter()
-  const { refreshAuth } = useAuth() // Get refreshAuth from AuthContext
+  const { refreshAuth } = useAuth() // Correctly destructuring refreshAuth
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.email) {
+      newErrors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email"
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    if (!validateForm()) return
+
     setIsLoading(true)
+    setErrors({})
 
     try {
-      const { user, error: signInError } = await signInUser(email, password)
+      const result = await signInUser(formData.email, formData.password)
 
-      if (signInError) {
-        setError(signInError.message || "Login failed. Please check your credentials.")
-        return
-      }
-
-      if (user) {
-        await refreshAuth()
+      if (result.user) {
+        await refreshAuth() // Call refreshAuth to update context state
 
         const {
           data: { user: currentUser },
@@ -48,65 +71,153 @@ export default function LoginForm() {
             router.push("/dashboard")
           }
         } else {
+          // Fallback if user somehow disappears after refresh
           router.push("/login")
         }
+        onSuccess?.(result.user) // Call onSuccess if provided
       } else {
-        setError("Login failed. Please check your credentials.")
+        setErrors({ general: "Login failed: No user data returned." })
+        setLoginAttempts((prev) => prev + 1)
+        setFormData({ ...formData, password: "" })
       }
-    } catch (err: any) {
-      console.error("Login error:", err)
-      setError(err.message || "An unexpected error occurred during login.")
+    } catch (error: any) {
+      setErrors({ general: error.message || "Login failed due to network or server error." })
+      setLoginAttempts((prev) => prev + 1)
+      setFormData({ ...formData, password: "" })
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value })
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: "" })
+    }
+  }
+
+  const getTestCredentials = () => {
+    switch (userType) {
+      case "customer":
+        return { email: "customer@seafable.com", label: "Customer Test Account" }
+      case "host":
+        return { email: "host@seafable.com", label: "Host Test Account" }
+      case "business":
+        return { email: "business@seafable.com", label: "Business Test Account" }
+      default:
+        return { email: "customer@seafable.com", label: "Test Account" }
+    }
+  }
+
+  const testCreds = getTestCredentials()
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-3xl font-bold">Login</CardTitle>
-        <CardDescription>Enter your email and password to access your account.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-          <div className="text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link href="/register" className="font-medium text-blue-600 hover:underline">
-              Sign Up
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email Address</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            id="email"
+            type="email"
+            placeholder="your@email.com"
+            value={formData.email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
+            className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+            disabled={isLoading}
+          />
+          {formData.email && !errors.email && <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />}
+        </div>
+        {errors.email && (
+          <p className="text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            {errors.email}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={(e) => handleInputChange("password", e.target.value)}
+            className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            disabled={isLoading}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.password && (
+          <p className="text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            {errors.password}
+          </p>
+        )}
+      </div>
+
+      {errors.general && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.general}</AlertDescription>
+        </Alert>
+      )}
+
+      {loginAttempts >= 3 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Multiple failed attempts. Please double-check your credentials or{" "}
+            <Link href="/forgot-password" className="underline">
+              reset your password
             </Link>
-          </div>
-          <div className="text-center text-sm text-gray-600">
-            <Link href="/forgot-password" className="font-medium text-blue-600 hover:underline">
-              Forgot password?
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Button type="submit" className="w-full" disabled={isLoading || !formData.email || !formData.password}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Signing in...
+          </>
+        ) : (
+          <>
+            Sign In
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </>
+        )}
+      </Button>
+
+      {/* Test Credentials Helper */}
+      <div className="mt-4 p-3 bg-blue-50 rounded-md border">
+        <p className="text-sm text-blue-800 font-medium">🧪 {testCreds.label}:</p>
+        <p className="text-sm text-blue-700">Email: {testCreds.email}</p>
+        <p className="text-sm text-blue-700">Password: password123</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-2 w-full"
+          onClick={() => {
+            setFormData({ email: testCreds.email, password: "password123" })
+            setErrors({})
+          }}
+        >
+          Fill Test Credentials
+        </Button>
+      </div>
+    </form>
   )
 }

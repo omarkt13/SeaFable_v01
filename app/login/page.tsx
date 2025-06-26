@@ -5,13 +5,13 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client" // Import getClientBusinessProfile
-import { getClientSupabase } from "@/lib/client-supabase" // Import getClientSupabase
+import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client"
+import { getClientSupabase } from "@/lib/client-supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/lib/auth-context" // Import useAuth to get refreshAuth
+import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { refreshAuth } = useAuth()
+  const { refreshAuth } = useAuth() // Correctly destructuring refreshAuth
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +35,7 @@ export default function LoginPage() {
       }
 
       if (user) {
-        await refreshAuth()
+        await refreshAuth() // Call refreshAuth to update context state
 
         const {
           data: { user: currentUser },

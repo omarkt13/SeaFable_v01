@@ -4,7 +4,7 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { getClientSupabase } from "@/lib/client-supabase" // Correct import
+import { getClientSupabase } from "@/lib/client-supabase"
 import type { User, Session } from "@supabase/supabase-js"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
@@ -16,6 +16,7 @@ interface AuthContextType {
   userType: "customer" | "business" | null
   isLoading: boolean
   signOut: () => Promise<void>
+  refreshAuth: () => Promise<void> // Added refreshAuth to the context type
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const supabase = getClientSupabase() // Correct usage
+  const supabase = getClientSupabase()
 
   const fetchUserProfile = useCallback(
     async (userId: string) => {
@@ -60,13 +61,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase],
   )
 
-  useEffect(() => {
+  const refreshAuth = useCallback(async () => {
+    setIsLoading(true)
     const {
-      data: { subscription: authListenerSubscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      data: { session: currentSession },
+      error,
+    } = await supabase.auth.getSession()
+
+    if (error) {
+      console.error("Error refreshing session:", error)
+      setSession(null)
+      setUser(null)
+      setUserProfile(null)
+      setBusinessProfile(null)
+      setUserType(null)
+    } else {
       setSession(currentSession)
       setUser(currentSession?.user || null)
-      setIsLoading(true)
 
       if (currentSession?.user) {
         const fetchedUserProfile = await fetchUserProfile(currentSession.user.id)
@@ -81,38 +92,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBusinessProfile(null)
         setUserType(null)
       }
-      setIsLoading(false)
+    }
+    setIsLoading(false)
+  }, [supabase, fetchUserProfile, fetchBusinessProfile])
+
+  useEffect(() => {
+    const {
+      data: { subscription: authListenerSubscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      // Only trigger a full refresh if the session actually changes or is initially set
+      if (currentSession?.user?.id !== user?.id || !session) {
+        await refreshAuth()
+      }
     })
 
-    const getSession = async () => {
-      const {
-        data: { session: initialSession },
-        error,
-      } = await supabase.auth.getSession()
-      if (error) {
-        console.error("Error getting initial session:", error)
-      }
-      setSession(initialSession)
-      setUser(initialSession?.user || null)
-
-      if (initialSession?.user) {
-        const fetchedUserProfile = await fetchUserProfile(initialSession.user.id)
-        if (fetchedUserProfile?.user_type === "business") {
-          await fetchBusinessProfile(initialSession.user.id)
-          setUserType("business")
-        } else {
-          setUserType("customer")
-        }
-      }
-      setIsLoading(false)
+    // Initial session check on mount
+    if (!session && !user) {
+      refreshAuth()
     }
-
-    getSession()
 
     return () => {
       authListenerSubscription.unsubscribe()
     }
-  }, [supabase, fetchUserProfile, fetchBusinessProfile])
+  }, [supabase, refreshAuth, session, user]) // Added session and user to dependencies
 
   const signOut = useCallback(async () => {
     setIsLoading(true)
@@ -138,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userType,
     isLoading,
     signOut,
+    refreshAuth, // Exposed refreshAuth
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
