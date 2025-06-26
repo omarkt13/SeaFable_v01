@@ -1,11 +1,16 @@
-"use client" // Mark as client component
-
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@supabase/supabase-js"
 import type { User as SupabaseUser } from "@supabase/supabase-js" // Import User type from core supabase-js
 
-// Directly create and export the Supabase client for simplicity in this environment.
-// In a full Next.js app, you might use a global singleton pattern for HMR robustness.
-export const supabase = createClientComponentClient()
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+})
 
 // Database types based on the schema (kept for completeness)
 export interface User {

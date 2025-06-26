@@ -6,7 +6,6 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
   if (error) {
     console.error("Error in getUserProfile:", error)
-    // Do not throw error here, return null to allow AuthProvider to handle missing profile gracefully
     return null
   }
   return data
@@ -17,7 +16,6 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 
   if (error) {
     console.error("Error in getBusinessProfile:", error)
-    // Do not throw error here, return null to allow AuthProvider to handle missing profile gracefully
     return null
   }
   return data

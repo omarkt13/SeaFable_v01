@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import type { User } from "@supabase/supabase-js"
+import { createContext, useContext, useEffect, useState } from "react"
+import type { User } from "@supabase/supabase-js" // Import User type from core supabase-js
 import { supabase, getUserProfile, getBusinessProfile, signOut } from "@/lib/auth-utils"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
