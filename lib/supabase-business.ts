@@ -3,11 +3,19 @@ import { createClient as createBrowserClient } from "@/lib/supabase/client"
 import type { Database } from "@/types/database"
 import { cache } from "react"
 
-const serverSupabase = createServerClient()
-const browserSupabase = createBrowserClient()
+// Get server client only when needed
+function getServerSupabase() {
+  return createServerClient()
+}
+
+// Get browser client only when needed
+function getBrowserSupabase() {
+  return createBrowserClient()
+}
 
 export async function getHostProfile(userId: string) {
-  const { data, error } = await serverSupabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
 
   if (error) throw error
   if (!data) return null
@@ -17,7 +25,8 @@ export async function getHostProfile(userId: string) {
 export async function getBusinessSettings(
   hostProfileId: string,
 ): Promise<{ data: Database["public"]["Tables"]["host_business_settings"]["Row"] | null; error: any }> {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_business_settings")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -32,7 +41,8 @@ export async function updateBusinessSettings(
   hostProfileId: string,
   settings: Partial<Database["public"]["Tables"]["host_business_settings"]["Row"]>,
 ) {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_business_settings")
     .upsert({
       host_profile_id: hostProfileId,
@@ -47,7 +57,8 @@ export async function updateBusinessSettings(
 }
 
 export async function getHostEarnings(hostProfileId: string, startDate?: string, endDate?: string) {
-  let query = serverSupabase
+  const supabase = getServerSupabase()
+  let query = supabase
     .from("host_earnings")
     .select(`
       *,
@@ -73,7 +84,8 @@ export async function getHostEarnings(hostProfileId: string, startDate?: string,
 }
 
 export async function getHostAvailability(hostProfileId: string, startDate?: string, endDate?: string) {
-  let query = serverSupabase
+  const supabase = getServerSupabase()
+  let query = supabase
     .from("host_availability")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -93,7 +105,8 @@ export async function getHostAvailability(hostProfileId: string, startDate?: str
 }
 
 export async function setHostAvailability(hostProfileId: string, availability: any[]) {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_availability")
     .upsert(
       availability.map((a) => ({
@@ -116,7 +129,8 @@ export async function setHostAvailability(hostProfileId: string, availability: a
 }
 
 export async function getHostTeamMembers(hostProfileId: string) {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_team_members")
     .select(`
       *,
@@ -136,10 +150,11 @@ export async function getHostTeamMembers(hostProfileId: string) {
 }
 
 export async function getHostAnalytics(hostProfileId: string, days = 30) {
+  const supabase = getServerSupabase()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
 
-  const { data, error } = await serverSupabase
+  const { data, error } = await supabase
     .from("host_analytics")
     .select("*")
     .eq("host_profile_id", hostProfileId)
@@ -152,7 +167,8 @@ export async function getHostAnalytics(hostProfileId: string, days = 30) {
 
 // Cache frequently accessed data
 export const getCachedHostProfile = cache(async (hostId: string) => {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_profiles")
     .select(`
       *,
@@ -170,7 +186,8 @@ export const getCachedHostProfile = cache(async (hostId: string) => {
 
 // Optimized experience creation with transaction-like behavior
 export async function createExperience(experienceData: any) {
-  const { data: experience, error: experienceError } = await browserSupabase
+  const supabase = getBrowserSupabase()
+  const { data: experience, error: experienceError } = await supabase
     .from("experiences")
     .insert([experienceData])
     .select()
@@ -179,7 +196,7 @@ export async function createExperience(experienceData: any) {
   if (experienceError) throw experienceError
 
   // Update host statistics
-  const { error: statsError } = await browserSupabase.rpc("increment_host_experience_count", {
+  const { error: statsError } = await supabase.rpc("increment_host_experience_count", {
     host_id: experienceData.host_id,
   })
 
@@ -193,8 +210,9 @@ export async function createExperience(experienceData: any) {
 
 // Batch operations for better performance
 export async function batchUpdateExperiences(updates: Array<{ id: string; data: any }>) {
+  const supabase = getBrowserSupabase()
   const results = await Promise.allSettled(
-    updates.map(({ id, data }) => browserSupabase.from("experiences").update(data).eq("id", id).select().single()),
+    updates.map(({ id, data }) => supabase.from("experiences").update(data).eq("id", id).select().single()),
   )
 
   const successful = results
@@ -211,8 +229,9 @@ export async function batchUpdateExperiences(updates: Array<{ id: string; data: 
 // Optimized availability setting with conflict detection
 export async function setHostAvailabilityWithConflictCheck(hostId: string, availabilitySlots: any[]) {
   try {
+    const supabase = getBrowserSupabase()
     // Check for conflicts first
-    const existingSlots = await browserSupabase
+    const existingSlots = await supabase
       .from("host_availability")
       .select("date, start_time, end_time")
       .eq("host_profile_id", hostId)
@@ -238,7 +257,7 @@ export async function setHostAvailabilityWithConflictCheck(hostId: string, avail
     }
 
     // Insert new availability slots
-    const { data, error } = await browserSupabase
+    const { data, error } = await supabase
       .from("host_availability")
       .insert(
         availabilitySlots.map((slot) => ({
@@ -268,7 +287,8 @@ export async function updateBusinessProfile(
   hostProfileId: string,
   updates: Partial<Database["public"]["Tables"]["host_profiles"]["Row"]>,
 ) {
-  const { data, error } = await serverSupabase
+  const supabase = getServerSupabase()
+  const { data, error } = await supabase
     .from("host_profiles")
     .update({
       ...updates,
