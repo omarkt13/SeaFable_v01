@@ -4,9 +4,9 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { getClientSupabase } from "@/lib/client-supabase"
+import { getClientSupabase } from "@/lib/client-supabase" // Correct import
 import type { User, Session } from "@supabase/supabase-js"
-import type { UserProfile, BusinessProfile } from "@/types/auth" // Assuming these types exist
+import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
   user: User | null
@@ -28,15 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const supabase = getClientSupabase()
+  const supabase = getClientSupabase() // Correct usage
 
   const fetchUserProfile = useCallback(
     async (userId: string) => {
-      const { data, error } = await supabase
-        .from("users") // Use the correct table name from your image
-        .select("*")
-        .eq("id", userId)
-        .single()
+      const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
       if (error) {
         console.error("Error fetching user profile:", error)
@@ -51,11 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchBusinessProfile = useCallback(
     async (userId: string) => {
-      const { data, error } = await supabase
-        .from("host_profiles") // Use the correct table name from your image
-        .select("*")
-        .eq("user_id", userId)
-        .single()
+      const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
 
       if (error) {
         console.error("Error fetching business profile:", error)
@@ -74,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession)
       setUser(currentSession?.user || null)
-      setIsLoading(true) // Set loading true when auth state changes
+      setIsLoading(true)
 
       if (currentSession?.user) {
         const fetchedUserProfile = await fetchUserProfile(currentSession.user.id)
@@ -89,10 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBusinessProfile(null)
         setUserType(null)
       }
-      setIsLoading(false) // Set loading false after all data is fetched
+      setIsLoading(false)
     })
 
-    // Initial session check
     const getSession = async () => {
       const {
         data: { session: initialSession },
@@ -134,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(null)
       setBusinessProfile(null)
       setUserType(null)
-      router.push("/login") // Redirect to login page after sign out
+      router.push("/login")
     }
     setIsLoading(false)
   }, [supabase, router])
