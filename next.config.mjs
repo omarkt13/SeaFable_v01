@@ -93,6 +93,9 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Reduce memory usage during build
+    workerThreads: false,
+    cpus: 1,
   },
 
   // Webpack optimizations
@@ -107,8 +110,20 @@ const nextConfig = {
             name: 'vendors',
             chunks: 'all',
           },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            enforce: true,
+          },
         },
       }
+    }
+
+    // Resolve alias for better performance
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname),
     }
 
     return config
@@ -125,6 +140,12 @@ const nextConfig = {
   // Output configuration for better caching
   generateEtags: true,
   compress: true,
+  
+  // Add custom page extensions optimization
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  
+  // Reduce build output
+  output: 'standalone',
 }
 
 export default withBundleAnalyzer(nextConfig)
