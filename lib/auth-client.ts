@@ -1,20 +1,62 @@
-"use client"
-
-import { supabase } from "@/lib/supabase/client" // Import the directly exported supabase client
+import { supabase } from "@/lib/supabase/client" // Use the directly exported supabase client
 import type { UserProfile, BusinessProfile } from "@/types/auth"
-import { redirect } from "next/navigation"
 
-export async function signInUser(email: string, password?: string) {
-  if (password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
-    return data
-  } else {
-    // Handle passwordless sign-in if applicable
-    throw new Error("Passwordless sign-in not implemented yet.")
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+
+  if (error) {
+    console.error("Error in getUserProfile:", error)
+    return null
+  }
+  return data
+}
+
+export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
+  const { data, error } = await supabase
+    .from("host_profiles")
+    .select(`
+    *,
+    host_business_settings (
+      onboarding_completed,
+      marketplace_enabled
+    )
+  `)
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    console.error("Error in getBusinessProfile:", error)
+    return null
+  }
+
+  // Flatten the host_business_settings into the main profile object
+  const businessProfile = data
+    ? {
+        ...data,
+        onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+        marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+      }
+    : null
+
+  return businessProfile
+}
+
+export async function signInUser(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error) {
+    console.error("Error signing in:", error)
+    throw error
+  }
+  return data
+}
+
+export async function signOutUser() {
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    console.error("Error signing out:", error)
+    throw error
   }
 }
 
@@ -28,60 +70,48 @@ export async function signUpUser(email: string, password: string, userType: "cus
       },
     },
   })
-  if (error) throw error
+
+  if (error) {
+    console.error("Error signing up:", error)
+    throw error
+  }
   return data
 }
 
-export async function signOutUser() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
-  // Redirect to home page after sign out
-  redirect("/")
-}
+export async function resetPasswordForEmail(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/update-password`,
+  })
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
-    if (error) {
-      console.error("Error fetching user profile:", error)
-      return null
-    }
-    return data as UserProfile
-  } catch (error) {
-    console.error("Exception fetching user profile:", error)
-    return null
+  if (error) {
+    console.error("Error sending password reset email:", error)
+    throw error
   }
 }
 
-export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
+export async function updatePassword(password: string) {
+  const { data, error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    console.error("Error updating password:", error)
+    throw error
+  }
+  return data
+}
+
+export async function signOutAndRedirect(userType: "customer" | "business") {
   try {
-    const { data, error } = await supabase
-      .from("host_profiles")
-      .select(
-        `
-        *,
-        host_business_settings (
-          onboarding_completed,
-          marketplace_enabled
-        )
-      `,
-      )
-      .eq("id", userId)
-      .single()
+    await signOutUser() // Use the signOutUser function from this file
 
-    if (error) {
-      console.error("Error fetching business profile:", error)
-      return null
+    // Redirect based on user type
+    if (userType === "business") {
+      window.location.href = "/business/login"
+    } else {
+      window.location.href = "/login"
     }
-
-    const profile = {
-      ...data,
-      onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-      marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
-    }
-    return profile as BusinessProfile
   } catch (error) {
-    console.error("Exception fetching business profile:", error)
-    return null
+    console.error("Error during sign out and redirect:", error)
+    // Still redirect even if sign out fails
+    window.location.href = "/"
   }
 }

@@ -7,21 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
+// Removed import for signOutAndRedirect as it's now handled by useAuth().signOut
 
 export function MainNavbar() {
-  const { user, userProfile, businessProfile, userType, isLoading, signOut } = useAuth() // Destructure signOut
+  const { user, userProfile, businessProfile, userType, isLoading, signOut } = useAuth() // Get signOut from useAuth
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = useCallback(async () => {
     try {
-      await signOut() // Use signOut from context
-      // Redirect after sign out, if necessary. The AuthProvider should handle session changes.
-      // For example, if you want to redirect to the home page after sign out:
-      // window.location.href = "/";
+      await signOut() // Use signOut directly from useAuth
+      // The signOut function in AuthContext should handle redirection or state clearing
     } catch (error) {
       console.error("Error signing out:", error)
     }
-  }, [signOut]) // Dependency on signOut from context
+  }, [signOut]) // Depend on signOut from context
 
   const handleMobileMenuToggle = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev)

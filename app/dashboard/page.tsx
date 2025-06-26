@@ -216,6 +216,7 @@ const OverviewTab = ({ userProfile, bookings, reviews, userEmail }: OverviewTabP
                             booking.experiences?.primary_image_url ||
                             "/placeholder.svg?height=200&width=300&text=Experience" ||
                             "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={booking.experiences?.title || "Experience Image"}
@@ -451,6 +452,7 @@ const BookingsTab = ({ bookings, reviews }: BookingsTabProps) => {
                         src={
                           booking.experiences?.primary_image_url ||
                           "/placeholder.svg?height=200&width=300&text=Experience" ||
+                          "/placeholder.svg" ||
                           "/placeholder.svg" ||
                           "/placeholder.svg"
                         }
@@ -834,7 +836,7 @@ const SettingsTab = () => {
 // Main Customer Dashboard Component
 export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { user, userProfile, isLoading } = useAuth()
+  const { user, userProfile, businessProfile, userType, isLoading, signOut } = useAuth()
   const router = useRouter()
   const [dashboardData, setDashboardData] = useState<{
     user: UserProfile | null
@@ -980,7 +982,32 @@ export default function CustomerDashboard() {
               {navigationItems.find((item) => item.id === activeTab)?.name}
             </h1>
           </header>
-          <div className="flex-1 p-4 sm:p-6 overflow-auto">{renderTabContent()}</div>
+          <div className="flex-1 p-4 sm:p-6 overflow-auto">
+            {userType === "customer" && (
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                  Welcome to your Dashboard, {userProfile?.first_name || user?.email}!
+                </h1>
+                <p className="text-lg text-gray-600 mb-6">
+                  You are logged in as a customer. Explore your bookings and reviews.
+                </p>
+              </div>
+            )}
+            {userType === "business" && (
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                  Welcome to your Dashboard, {userProfile?.first_name || user?.email}!
+                </h1>
+                <p className="text-lg text-gray-600 mb-6">
+                  You are logged in as a business. Manage your experiences and bookings.
+                </p>
+              </div>
+            )}
+            {renderTabContent()}
+            <Button onClick={signOut} className="bg-red-500 hover:bg-red-600 text-white mt-4">
+              Sign Out
+            </Button>
+          </div>
         </div>
       </SidebarProvider>
     </CustomerLayout>
