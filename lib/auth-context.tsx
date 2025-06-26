@@ -24,11 +24,7 @@ interface AuthContextType {
     email: string,
     password: string,
     expectedUserType?: "customer" | "business",
-  ) => Promise<{
-    success: boolean
-    error?: string
-    userType?: "customer" | "business"
-  }>
+  ) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -144,85 +140,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchBusinessProfile, fetchUserProfile])
 
-  // Login function that handles both customer and business authentication
   const login = useCallback(
     async (email: string, password: string, expectedUserType?: "customer" | "business") => {
       try {
         setIsLoading(true)
         setError(null)
-        console.log("Attempting login for:", email, "Expected type:", expectedUserType)
 
-        // Sign in with Supabase
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
-        if (signInError) {
-          console.error("Supabase signInWithPassword error:", signInError)
-          throw signInError
-        }
+        if (signInError) throw signInError
 
-        if (!data.user) {
-          console.error("Authentication failed: No user data returned.")
-          throw new Error("Authentication failed")
-        }
-        console.log("User signed in:", data.user.id)
+        if (data.user) {
+          // Check user type matches expected
+          const businessProfile = await fetchBusinessProfile(data.user.id)
+          const isBusinessUser = !!businessProfile
 
-        // Check user type by querying database tables
-        const [businessCheck, userCheck] = await Promise.all([
-          supabase.from("host_profiles").select("id").eq("id", data.user.id).maybeSingle(),
-          supabase.from("users").select("id").eq("id", data.user.id).maybeSingle(),
-        ])
-
-        console.log("Business check result:", businessCheck)
-        console.log("User check result:", userCheck)
-
-        const isBusiness = !businessCheck.error && businessCheck.data
-        const isUser = !userCheck.error && userCheck.data
-
-        let actualUserType: "customer" | "business"
-
-        if (isBusiness) {
-          actualUserType = "business"
-        } else if (isUser) {
-          actualUserType = "customer"
-        } else {
-          // Sign out if user is not in either table
-          await supabase.auth.signOut()
-          console.error("Account not found in system for user ID:", data.user.id)
-          throw new Error("Account not found in system")
-        }
-        console.log("Determined actual user type:", actualUserType)
-
-        // If expectedUserType is specified, validate it matches
-        if (expectedUserType && expectedUserType !== actualUserType) {
-          await supabase.auth.signOut()
-          console.error("User type mismatch. Expected:", expectedUserType, "Actual:", actualUserType)
-
-          if (expectedUserType === "business") {
-            throw new Error("This account is not registered as a business. Please use customer login.")
-          } else {
-            throw new Error("This account is registered as a business. Please use business login.")
+          if (expectedUserType === "business" && !isBusinessUser) {
+            await supabase.auth.signOut()
+            return { success: false, error: "This account is not registered as a business. Please use customer login." }
           }
-        }
-        console.log("Login successful for user type:", actualUserType)
 
-        return {
-          success: true,
-          userType: actualUserType,
+          if (expectedUserType === "customer" && isBusinessUser) {
+            await supabase.auth.signOut()
+            return { success: false, error: "This account is registered as a business. Please use business login." }
+          }
+
+          return { success: true }
         }
+
+        return { success: false, error: "No user data returned" }
       } catch (error: any) {
-        console.error("Login error caught in AuthContext:", error)
-        return {
-          success: false,
-          error: error.message || "Login failed",
-        }
+        console.error("Login error:", error)
+        return { success: false, error: error.message || "Login failed" }
       } finally {
-        setIsLoading(false)
+        if (mountedRef.current) {
+          setIsLoading(false)
+        }
       }
     },
-    [supabase],
+    [supabase, fetchBusinessProfile],
   )
 
   const signOut = useCallback(async () => {
