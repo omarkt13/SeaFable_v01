@@ -1,85 +1,95 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
-declare global {
-  var supabaseClientInstance: ReturnType<typeof createClientComponentClient> | undefined
-}
-
-export const supabase = (() => {
-  if (!globalThis.supabaseClientInstance) {
-    globalThis.supabaseClientInstance = createClientComponentClient()
-  }
-  return globalThis.supabaseClientInstance
-})()
-
-export async function getCurrentUser() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) return null
-  return user
-}
-
-export async function getSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
-  if (error || !session) return null
-  return session
+// Server-side Supabase client
+const getSupabaseServer = () => {
+  const cookieStore = cookies()
+  return createSupabaseServerClient(cookieStore)
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
-
-  if (error || !data) return null
-  return data
+  try {
+    const supabaseServer = getSupabaseServer()
+    const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).maybeSingle()
+    if (error) {
+      console.error("Error fetching user profile (server):", error)
+      return null
+    }
+    return data as UserProfile
+  } catch (error) {
+    console.error("Network error fetching user profile (server):", error)
+    return null
+  }
 }
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
-  const { data, error } = await supabase
-    .from("host_profiles")
-    .select(`
-      *,
-      host_business_settings (
-        onboarding_completed,
-        marketplace_enabled
-      )
-    `)
-    .eq("id", userId)
-    .single()
+  try {
+    const supabaseServer = getSupabaseServer()
+    const { data, error } = await supabaseServer
+      .from("host_profiles")
+      .select(`
+        *,
+        host_business_settings (
+          onboarding_completed,
+          marketplace_enabled
+        )
+      `)
+      .eq("user_id", userId) // Ensure it's user_id
+      .maybeSingle()
 
-  if (error || !data) return null
+    if (error) {
+      console.error("Error fetching business profile (server):", error)
+      return null
+    }
 
-  return {
-    ...data,
-    onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-    marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+    const profile = data
+      ? {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
+      : null
+    return profile as BusinessProfile
+  } catch (error) {
+    console.error("Network error fetching business profile (server):", error)
+    return null
   }
 }
 
-export async function determineUserType(userId: string): Promise<"customer" | "business" | null> {
-  // Check business profile first
-  const businessProfile = await getBusinessProfile(userId)
-  if (businessProfile) return "business"
-
-  // Check user profile
-  const userProfile = await getUserProfile(userId)
-  if (userProfile) return "customer"
-
-  return null
-}
-
-export async function isBusinessUser(userId: string): Promise<boolean> {
-  const { data, error } = await supabase.from("host_profiles").select("id").eq("id", userId).single()
-  return !error && !!data
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
+export async function signOutAndRedirect(redirectTo = "/login") {
+  const supabaseServer = getSupabaseServer()
+  const { error } = await supabaseServer.auth.signOut()
   if (error) {
-    console.error("Error signing out:", error)
-    throw error
+    console.error("Error signing out (server):", error)
   }
+  redirect(redirectTo)
+}
+
+export async function getSessionAndUser() {
+  const supabaseServer = getSupabaseServer()
+  const {
+    data: { session },
+    error,
+  } = await supabaseServer.auth.getSession()
+
+  if (error) {
+    console.error("Error getting session (server):", error)
+    return { session: null, user: null }
+  }
+
+  return { session, user: session?.user || null }
+}
+
+export async function getAuthenticatedUserType(): Promise<"customer" | "business" | null> {
+  const { user } = await getSessionAndUser()
+  if (!user) return null
+
+  const businessProfile = await getBusinessProfile(user.id) // Use the getBusinessProfile function
+  if (businessProfile) {
+    return "business"
+  }
+
+  return "customer"
 }
