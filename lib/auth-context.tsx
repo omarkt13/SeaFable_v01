@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface ExtendedBusinessProfile extends BusinessProfile {
@@ -39,11 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const mountedRef = useRef(true)
-  const supabase = createClient()
-
   const clearAuthState = useCallback(() => {
-    if (!mountedRef.current) return
     setUser(null)
     setSession(null)
     setUserProfile(null)
@@ -52,67 +48,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
   }, [])
 
-  const fetchUserProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
 
-        if (error) {
-          console.error("Error fetching user profile:", error)
-          return null
-        }
-
-        if (mountedRef.current && data) {
-          setUserProfile(data)
-          setUserType("customer")
-        }
-        return data
-      } catch (error) {
-        console.error("Network error fetching user profile:", error)
+      if (error) {
+        console.error("Error fetching user profile:", error)
         return null
       }
-    },
-    [supabase],
-  )
 
-  const fetchBusinessProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from("host_profiles")
-          .select(`
-          *,
-          host_business_settings (
-            onboarding_completed,
-            marketplace_enabled
-          )
-        `)
-          .eq("id", userId)
-          .maybeSingle()
+      if (data) {
+        setUserProfile(data)
+        setUserType("customer")
+      }
+      return data
+    } catch (error) {
+      console.error("Network error fetching user profile:", error)
+      return null
+    }
+  }, [])
 
-        if (error) {
-          console.error("Error fetching business profile:", error)
-          return null
-        }
+  const fetchBusinessProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("host_profiles")
+        .select(`
+        *,
+        host_business_settings (
+          onboarding_completed,
+          marketplace_enabled
+        )
+      `)
+        .eq("id", userId)
+        .maybeSingle()
 
-        if (mountedRef.current && data) {
-          const profile: ExtendedBusinessProfile = {
-            ...data,
-            onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-            marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
-          }
-          setBusinessProfile(profile)
-          setUserType("business")
-          return profile
-        }
-        return null
-      } catch (error) {
-        console.error("Network error fetching business profile:", error)
+      if (error) {
+        console.error("Error fetching business profile:", error)
         return null
       }
-    },
-    [supabase],
-  )
+
+      if (data) {
+        const profile: ExtendedBusinessProfile = {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
+        setBusinessProfile(profile)
+        setUserType("business")
+        return profile
+      }
+      return null
+    } catch (error) {
+      console.error("Network error fetching business profile:", error)
+      return null
+    }
+  }, [])
 
   const determineUserType = useCallback(
     async (userId: string) => {
@@ -139,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true)
         setError(null)
 
-        // Sign in with Supabase
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -177,12 +166,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Login error:", error)
         return { success: false, error: error.message || "Login failed" }
       } finally {
-        if (mountedRef.current) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     },
-    [supabase, determineUserType],
+    [determineUserType],
   )
 
   const refreshProfile = useCallback(async () => {
@@ -195,13 +182,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await determineUserType(user.id)
     } catch (error) {
       console.error("Error refreshing profile:", error)
-      if (mountedRef.current) {
-        setError("Failed to refresh profile")
-      }
+      setError("Failed to refresh profile")
     } finally {
-      if (mountedRef.current) {
-        setIsLoading(false)
-      }
+      setIsLoading(false)
     }
   }, [user, determineUserType])
 
@@ -213,19 +196,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearAuthState()
     } catch (error) {
       console.error("Error signing out:", error)
-      if (mountedRef.current) {
-        setError("Failed to sign out")
-      }
+      setError("Failed to sign out")
     } finally {
-      if (mountedRef.current) {
-        setIsLoading(false)
-      }
+      setIsLoading(false)
     }
-  }, [supabase, clearAuthState])
+  }, [clearAuthState])
 
   useEffect(() => {
     let mounted = true
-    mountedRef.current = true
 
     const initializeAuth = async () => {
       try {
@@ -275,10 +253,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false
-      mountedRef.current = false
       subscription.unsubscribe()
     }
-  }, [supabase, determineUserType, clearAuthState])
+  }, [determineUserType, clearAuthState])
 
   const value: AuthContextType = {
     user,

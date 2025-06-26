@@ -14,12 +14,7 @@ async function isBusinessUser(supabase: any, userId: string): Promise<boolean> {
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
-  // Security headers
-  res.headers.set("X-Frame-Options", "DENY")
-  res.headers.set("X-Content-Type-Options", "nosniff")
-  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-
-  // Handle auth routes
+  // Handle auth routes only
   if (req.nextUrl.pathname.startsWith("/business") || req.nextUrl.pathname.startsWith("/dashboard")) {
     const supabase = createMiddlewareClient({ req, res })
 
