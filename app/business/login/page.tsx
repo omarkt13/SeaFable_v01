@@ -2,13 +2,13 @@
 import { useState } from "react"
 import type React from "react"
 
-import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Building, Mail, Lock, ArrowRight } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 export default function BusinessLoginPage() {
-  const { login } = useAuth()
+  const { login, isLoading: authLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -91,9 +91,9 @@ export default function BusinessLoginPage() {
             <button
               type="submit"
               className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
-              disabled={loading}
+              disabled={loading || authLoading}
             >
-              {loading ? (
+              {loading || authLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 </div>
@@ -107,7 +107,7 @@ export default function BusinessLoginPage() {
 
           {/* Footer Links */}
           <div className="mt-6 text-sm">
-            <Link href="/forgot-password" className="text-teal-600 hover:underline">
+            <Link href="/business/forgot-password" className="text-teal-600 hover:underline">
               Forgot Password?
             </Link>
             <p className="mt-2">

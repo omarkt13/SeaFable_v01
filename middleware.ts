@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr"
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
@@ -20,6 +20,12 @@ function rateLimit(identifier: string, limit = 100, windowMs = 60000): boolean {
 
   userLimit.count++
   return true
+}
+
+async function isBusinessUser(supabase: any, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.from("host_profiles").select("id").eq("id", userId).single()
+
+  return !error && !!data
 }
 
 export async function middleware(req: NextRequest) {
@@ -58,23 +64,7 @@ export async function middleware(req: NextRequest) {
     req.nextUrl.pathname.startsWith("/business") ||
     req.nextUrl.pathname.startsWith("/dashboard")
   ) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return req.cookies.get(name)?.value
-          },
-          set(name: string, value: string, options: any) {
-            res.cookies.set({ name, value, ...options })
-          },
-          remove(name: string, options: any) {
-            res.cookies.set({ name, value: "", ...options })
-          },
-        },
-      },
-    )
+    const supabase = createMiddlewareClient({ req, res })
 
     const {
       data: { session },
@@ -82,8 +72,8 @@ export async function middleware(req: NextRequest) {
 
     // Protect business routes
     if (req.nextUrl.pathname.startsWith("/business")) {
-      // Skip login page itself
-      if (req.nextUrl.pathname === "/business/login") {
+      // Allow access to /business/login and /business/register without auth
+      if (req.nextUrl.pathname === "/business/login" || req.nextUrl.pathname === "/business/register") {
         return res
       }
 
@@ -91,15 +81,9 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/business/login", req.url))
       }
 
-      // Check if user is in host_profiles table (business user)
-      const { data: hostProfile, error } = await supabase
-        .from("host_profiles")
-        .select("id")
-        .eq("id", session.user.id)
-        .single()
-
-      if (error || !hostProfile) {
-        // Not a business user, redirect to home
+      // Check if user is actually a business user
+      const isBusiness = await isBusinessUser(supabase, session.user.id)
+      if (!isBusiness) {
         return NextResponse.redirect(new URL("/", req.url))
       }
     }
@@ -110,25 +94,10 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url))
       }
 
-      // Check if user is a business user (should redirect to business dashboard)
-      const { data: hostProfile } = await supabase.from("host_profiles").select("id").eq("id", session.user.id).single()
-
-      if (hostProfile) {
-        // Business user trying to access customer dashboard
+      // Redirect business users to their dashboard
+      const isBusiness = await isBusinessUser(supabase, session.user.id)
+      if (isBusiness) {
         return NextResponse.redirect(new URL("/business/home", req.url))
-      }
-
-      // Check if user exists in users table
-      const { data: userProfile, error: userError } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", session.user.id)
-        .single()
-
-      if (userError || !userProfile) {
-        // User not found in users table, sign out and redirect
-        await supabase.auth.signOut()
-        return NextResponse.redirect(new URL("/login", req.url))
       }
     }
   }
