@@ -33,6 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mountedRef = useRef(true)
   const profileCacheRef = useRef<{ [key: string]: UserProfile | BusinessProfile }>({})
 
+  // The problematic line `const supabase = useMemo(() => createClient(), [])` has been removed.
+  // The 'supabase' instance is now directly imported from "@/lib/supabase/client".
+
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return
     setUser(null)
