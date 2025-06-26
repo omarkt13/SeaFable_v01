@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import type { cookies } from "next/headers"
 
 export function createSupabaseServerClient(cookieStore: ReturnType<typeof cookies>) {
@@ -7,22 +7,20 @@ export function createSupabaseServerClient(cookieStore: ReturnType<typeof cookie
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value, ...options })
         } catch (error) {
-          // The `cookies().set()` method can only be called in a Server Context.
-          // We're only interested in this for logging purposes.
-          console.warn("Failed to set cookie in server context:", error)
+          // The `cookies().set()` method can only be called from a Server Component or Route Handler
+          // This error is typically ignored if we're within a Client Component
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: "", ...options })
         } catch (error) {
-          // The `cookies().delete()` method can only be called in a Server Context.
-          // We're only interested in this for logging purposes.
-          console.warn("Failed to remove cookie in server context:", error)
+          // The `cookies().set()` method can only be called from a Server Component or Route Handler
+          // This error is typically ignored if we're within a Client Component
         }
       },
     },
