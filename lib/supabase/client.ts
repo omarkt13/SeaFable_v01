@@ -27,5 +27,7 @@ export function createClient() {
   return supabaseInstance
 }
 
-// Export singleton instance for direct use
-export const supabase = createClient()
+// Export a getter function instead of direct instance
+export function getSupabase() {
+  return createClient()
+}
