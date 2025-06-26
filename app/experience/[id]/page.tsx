@@ -169,7 +169,7 @@ export default function ExperienceDetailPage() {
   }
 
   const images = [
-    experience.primary_image_url || "/placeholder.svg?height=400&width=600",
+    experience.primary_image_url || "/placeholder.svg", // Changed to static placeholder
     ...(experience.experience_images?.map((img) => img.image_url) || []),
   ].filter(Boolean)
 
@@ -225,7 +225,7 @@ export default function ExperienceDetailPage() {
             <div className="relative mb-8">
               <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 relative">
                 <Image
-                  src={images[currentImageIndex] || "/placeholder.svg?height=400&width=600&text=Experience Image"}
+                  src={images[currentImageIndex] || "/placeholder.svg"} // Changed to static placeholder
                   alt={experience.title}
                   fill
                   style={{ objectFit: "cover" }}
@@ -322,7 +322,7 @@ export default function ExperienceDetailPage() {
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-16 w-16">
                         <Image
-                          src={hostProfile.avatar_url || "/placeholder.svg?height=64&width=64&text=Host Avatar"}
+                          src={hostProfile.avatar_url || "/placeholder.svg"} // Changed to static placeholder
                           alt={hostProfile.name}
                           width={64}
                           height={64}

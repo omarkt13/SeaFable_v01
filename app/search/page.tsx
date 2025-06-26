@@ -37,10 +37,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
 import { ErrorBoundary } from "@/components/error-boundary"
-// Add this import at the top of the file
 import Image from "next/image"
-
-// ... (rest of your imports)
 
 // Enhanced search filters
 const initialFilters = {
@@ -114,10 +111,10 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
     // Transform database experience to match UI expectations
     return {
       ...experience,
-      primaryImage: experience.primary_image_url || "/placeholder.svg?height=350&width=500",
+      primaryImage: experience.primary_image_url || "/placeholder.svg", // Changed to static placeholder
       hostProfile: {
         name: experience.host_profiles?.name || "Host",
-        avatar: experience.host_profiles?.avatar_url || "/placeholder.svg?height=50&width=50",
+        avatar: experience.host_profiles?.avatar_url || "/placeholder.svg", // Changed to static placeholder
         rating: experience.host_profiles?.rating || 0,
         responseRate: 95, // Default value
         responseTime: "within 2 hours", // Default value
@@ -144,9 +141,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
           <div className="flex">
             <div className="relative w-80 h-48 flex-shrink-0">
               <Image
-                src={
-                  transformedExperience.primaryImage || "/placeholder.svg?height=192&width=320&text=Experience Image"
-                }
+                src={transformedExperience.primaryImage || "/placeholder.svg"} // Changed to static placeholder
                 alt={experience.title}
                 fill
                 style={{ objectFit: "cover" }}
@@ -190,10 +185,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex items-center space-x-2">
                       <Image
-                        src={
-                          transformedExperience.hostProfile.avatar ||
-                          "/placeholder.svg?height=32&width=32&text=Host Avatar"
-                        }
+                        src={transformedExperience.hostProfile.avatar || "/placeholder.svg"} // Changed to static placeholder
                         alt={transformedExperience.hostProfile.name}
                         width={32}
                         height={32}
@@ -272,7 +264,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
         <div className="relative">
           <Image
-            src={transformedExperience.primaryImage || "/placeholder.svg?height=192&width=384&text=Experience Image"}
+            src={transformedExperience.primaryImage || "/placeholder.svg"} // Changed to static placeholder
             alt={experience.title}
             fill
             style={{ objectFit: "cover" }}
@@ -307,7 +299,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <Image
-                src={transformedExperience.hostProfile.avatar || "/placeholder.svg?height=24&width=24&text=Host Avatar"}
+                src={transformedExperience.hostProfile.avatar || "/placeholder.svg"} // Changed to static placeholder
                 alt={transformedExperience.hostProfile.name}
                 width={24}
                 height={24}
