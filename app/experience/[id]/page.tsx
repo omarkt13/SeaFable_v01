@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Info,
   CheckCircle,
+  CalendarDays,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -32,53 +33,35 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { getExperienceById, getExperienceReviews, createBooking, type Experience, type Review } from "@/lib/database"
-import { supabase } from "@/lib/supabase"
+import { getExperienceById, getExperienceReviews, type Experience } from "@/lib/database"
+import { createBooking } from "@/app/actions/booking" // Import the new Server Action
+import { supabase } from "@/lib/supabase" // Keep for auth.getUser()
 
-export default function ExperienceDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { user } = useAuth()
-  const [experience, setExperience] = useState<Experience | null>(null)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+// Client component for the interactive booking form
+function BookingForm({ experience, user, router }: { experience: Experience; user: any; router: any }) {
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [bookingData, setBookingData] = useState({
     date: "",
+    time: "", // New state for selected time
     guests: 1,
     specialRequests: "",
     dietaryRequirements: "",
   })
   const [isBooking, setIsBooking] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (params.id) {
-      loadExperienceData(params.id as string)
-    }
-  }, [params.id])
-
-  const loadExperienceData = async (experienceId: string) => {
-    setIsLoading(true)
-    try {
-      // Load experience details
-      const experienceResult = await getExperienceById(experienceId)
-      if (experienceResult.success) {
-        setExperience(experienceResult.data)
-      }
-
-      // Load reviews
-      const reviewsResult = await getExperienceReviews(experienceId)
-      if (reviewsResult.success) {
-        setReviews(reviewsResult.data)
-      }
-    } catch (error) {
-      console.error("Error loading experience:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Filter available slots based on selected date
+  const availableTimeSlots = useMemo(() => {
+    if (!experience?.host_availability || !bookingData.date) return []
+    return experience.host_availability
+      .filter(
+        (slot) =>
+          slot.date === bookingData.date &&
+          slot.available_capacity >= bookingData.guests &&
+          new Date(`${slot.date}T${slot.start_time}`) > new Date(), // Only future slots
+      )
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [experience?.host_availability, bookingData.date, bookingData.guests])
 
   const handleBooking = async () => {
     if (!user || !experience) {
@@ -86,7 +69,14 @@ export default function ExperienceDetailPage() {
       return
     }
 
+    if (!bookingData.date || !bookingData.time || bookingData.guests < 1) {
+      setBookingError("Please select a date, time, and number of guests.")
+      return
+    }
+
     setIsBooking(true)
+    setBookingError(null)
+
     try {
       // Get the current user's ID from Supabase auth
       const {
@@ -98,57 +88,236 @@ export default function ExperienceDetailPage() {
         return
       }
 
-      const booking = {
+      const bookingPayload = {
         user_id: authUser.id,
         experience_id: experience.id,
         host_id: experience.host_id,
         booking_date: bookingData.date,
+        departure_time: bookingData.time, // Pass selected time
         number_of_guests: bookingData.guests,
         special_requests: bookingData.specialRequests,
         dietary_requirements: bookingData.dietaryRequirements ? [bookingData.dietaryRequirements] : [],
         total_price: experience.price_per_person * bookingData.guests,
       }
 
-      const result = await createBooking(booking)
+      const result = await createBooking(bookingPayload) // Call the Server Action
       if (result.success) {
         router.push(`/dashboard?booking=${result.data.id}`)
       } else {
-        alert("Booking failed: " + result.error)
+        setBookingError(result.error || "Booking failed. Please try again.")
       }
     } catch (error) {
       console.error("Booking error:", error)
-      alert("Booking failed. Please try again.")
+      setBookingError("Booking failed. Please try again.")
     } finally {
       setIsBooking(false)
     }
   }
 
+  return (
+    <Card className="sticky top-24">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-2xl font-bold">€{experience.price_per_person}</div>
+            <div className="text-sm text-gray-600">per person</div>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+            <span className="font-medium">{experience.rating || 0}</span>
+            <span className="text-gray-600">({experience.total_reviews || 0})</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!showBookingForm ? (
+          <Button className="w-full" size="lg" onClick={() => setShowBookingForm(true)}>
+            Book Now
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            {bookingError && <div className="text-red-500 text-sm text-center">{bookingError}</div>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={bookingData.date}
+                  onChange={(e) => {
+                    setBookingData({ ...bookingData, date: e.target.value, time: "" }) // Reset time on date change
+                    setBookingError(null)
+                  }}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+              <div>
+                <Label htmlFor="guests">Guests</Label>
+                <Select
+                  value={bookingData.guests.toString()}
+                  onValueChange={(value) => {
+                    setBookingData({ ...bookingData, guests: Number.parseInt(value), time: "" }) // Reset time on guests change
+                    setBookingError(null)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: experience.max_guests }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} guest{num > 1 ? "s" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {bookingData.date && (
+              <div>
+                <Label htmlFor="time">Available Times</Label>
+                {availableTimeSlots.length > 0 ? (
+                  <Select
+                    value={bookingData.time}
+                    onValueChange={(value) => {
+                      setBookingData({ ...bookingData, time: value })
+                      setBookingError(null)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTimeSlots.map((slot) => (
+                        <SelectItem key={slot.id} value={slot.start_time}>
+                          {slot.start_time} ({slot.available_capacity} spots left)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-sm text-gray-500 flex items-center mt-2">
+                    <CalendarDays className="h-4 w-4 mr-1" /> No available slots for this date and guest count.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="special-requests">Special Requests (Optional)</Label>
+              <Input
+                id="special-requests"
+                placeholder="Any special requests?"
+                value={bookingData.specialRequests}
+                onChange={(e) => setBookingData({ ...bookingData, specialRequests: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dietary">Dietary Requirements (Optional)</Label>
+              <Input
+                id="dietary"
+                placeholder="Any dietary restrictions?"
+                value={bookingData.dietaryRequirements}
+                onChange={(e) => setBookingData({ ...bookingData, dietaryRequirements: e.target.value })}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>
+                  €{experience.price_per_person} × {bookingData.guests} guests
+                </span>
+                <span>€{experience.price_per_person * bookingData.guests}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Total</span>
+                <span>€{experience.price_per_person * bookingData.guests}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleBooking}
+                disabled={!bookingData.date || !bookingData.time || isBooking || availableTimeSlots.length === 0}
+              >
+                {isBooking ? "Booking..." : "Confirm Booking"}
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => setShowBookingForm(false)}>
+                Cancel
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-600 text-center">
+              You won't be charged yet. Complete your booking to confirm.
+            </p>
+          </div>
+        )}
+
+        <Separator />
+
+        <div className="space-y-3 text-sm">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span>Free cancellation up to 24 hours before</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Shield className="h-4 w-4 text-blue-500" />
+            <span>Safety equipment provided</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Zap className="h-4 w-4 text-yellow-500" />
+            <span>Instant confirmation</span>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="text-center">
+          <Button variant="ghost" size="sm">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Contact Host
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Main Server Component for the Experience Detail Page
+export default async function ExperienceDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params
+  const router = useRouter() // useRouter is a client-side hook, so it needs to be used in a client component or passed down.
+  const { user } = useAuth() // useAuth is a client-side hook
+
+  // Fetch data on the server
+  const experienceResult = await getExperienceById(id)
+  const reviewsResult = await getExperienceReviews(id)
+
+  const experience = experienceResult.success ? experienceResult.data : null
+  const reviews = reviewsResult.success ? reviewsResult.data : []
+
+  const images = [
+    experience.primary_image_url || "/placeholder.svg?height=400&width=600",
+    ...(experience.experience_images?.map((img) => img.image_url) || []),
+  ].filter(Boolean)
+
+  const averageRating = experience.rating || 0
+  const totalReviews = experience.total_reviews || 0
+  const hostProfile = experience.host_profiles
+
+  // Client-side state for image gallery and wishlist
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isWishlisted, setIsWishlisted] = useState(false)
+
   const toggleWishlist = () => {
     setIsWishlisted(!isWishlisted)
     // TODO: Implement wishlist API call
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <div className="h-96 bg-gray-200 rounded-lg mb-6"></div>
-                <div className="space-y-4">
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-20 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   if (!experience) {
@@ -166,15 +335,6 @@ export default function ExperienceDetailPage() {
       </div>
     )
   }
-
-  const images = [
-    experience.primary_image_url || "/placeholder.svg?height=400&width=600",
-    ...(experience.experience_images?.map((img) => img.image_url) || []),
-  ].filter(Boolean)
-
-  const averageRating = experience.rating || 0
-  const totalReviews = experience.total_reviews || 0
-  const hostProfile = experience.host_profiles
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -462,142 +622,9 @@ export default function ExperienceDetailPage() {
             </div>
           </div>
 
-          {/* Booking Sidebar */}
+          {/* Booking Sidebar - Now a Client Component */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-2xl font-bold">€{experience.price_per_person}</div>
-                    <div className="text-sm text-gray-600">per person</div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="font-medium">{averageRating}</span>
-                    <span className="text-gray-600">({totalReviews})</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!showBookingForm ? (
-                  <Button className="w-full" size="lg" onClick={() => setShowBookingForm(true)}>
-                    Book Now
-                  </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="date">Date</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={bookingData.date}
-                          onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                          min={new Date().toISOString().split("T")[0]}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="guests">Guests</Label>
-                        <Select
-                          value={bookingData.guests.toString()}
-                          onValueChange={(value) => setBookingData({ ...bookingData, guests: Number.parseInt(value) })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.from({ length: experience.max_guests }, (_, i) => i + 1).map((num) => (
-                              <SelectItem key={num} value={num.toString()}>
-                                {num} guest{num > 1 ? "s" : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="special-requests">Special Requests (Optional)</Label>
-                      <Input
-                        id="special-requests"
-                        placeholder="Any special requests?"
-                        value={bookingData.specialRequests}
-                        onChange={(e) => setBookingData({ ...bookingData, specialRequests: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="dietary">Dietary Requirements (Optional)</Label>
-                      <Input
-                        id="dietary"
-                        placeholder="Any dietary restrictions?"
-                        value={bookingData.dietaryRequirements}
-                        onChange={(e) => setBookingData({ ...bookingData, dietaryRequirements: e.target.value })}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>
-                          €{experience.price_per_person} × {bookingData.guests} guests
-                        </span>
-                        <span>€{experience.price_per_person * bookingData.guests}</span>
-                      </div>
-                      <div className="flex justify-between font-semibold text-lg">
-                        <span>Total</span>
-                        <span>€{experience.price_per_person * bookingData.guests}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Button
-                        className="w-full"
-                        size="lg"
-                        onClick={handleBooking}
-                        disabled={!bookingData.date || isBooking}
-                      >
-                        {isBooking ? "Booking..." : "Confirm Booking"}
-                      </Button>
-                      <Button variant="outline" className="w-full" onClick={() => setShowBookingForm(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-
-                    <p className="text-xs text-gray-600 text-center">
-                      You won't be charged yet. Complete your booking to confirm.
-                    </p>
-                  </div>
-                )}
-
-                <Separator />
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Free cancellation up to 24 hours before</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4 text-blue-500" />
-                    <span>Safety equipment provided</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Zap className="h-4 w-4 text-yellow-500" />
-                    <span>Instant confirmation</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="text-center">
-                  <Button variant="ghost" size="sm">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Contact Host
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <BookingForm experience={experience} user={user} router={router} />
           </div>
         </div>
       </div>

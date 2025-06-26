@@ -1,7 +1,9 @@
-import { createClient } from "@/lib/supabase/server" // Correct import for server-side client
+import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Import client-side Supabase client with alias
+import { createClient as createServerClient } from "@/lib/supabase/server" // Import server-side Supabase client for specific functions
 import { getUserProfile } from "./auth-utils"
-import type { BusinessProfile } from "../types/auth"
-import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase" // Assuming these types are from lib/supabase.ts
+import type { BusinessProfile } from "@/types/auth" // Corrected import path
+import type { HostProfile as SupabaseHostProfile } from "@/types/database" // Corrected import path
+import type { HostAvailability } from "@/types/business" // Import HostAvailability type
 
 // ✅ FIXED: Added input sanitization helper
 function sanitizeInput(input: string): string {
@@ -50,6 +52,7 @@ export interface Experience {
   experience_images?: ExperienceImage[]
   reviews?: Review[]
   itinerary?: any // Add this line
+  host_availability?: HostAvailability[] // Add host_availability to Experience interface
 }
 
 export interface HostProfile {
@@ -145,7 +148,6 @@ export interface Booking {
     last_name: string
     email: string
     avatar_url?: string
-    phone?: string // Added phone to user type for upcoming bookings
   }
   host_profiles?: {
     id: string
@@ -183,7 +185,6 @@ export interface BusinessDashboardData {
     time: string
     guests: number
     specialRequests: string
-    phone: string
   }>
   earnings: {
     thisMonth: number
@@ -210,84 +211,26 @@ export interface BusinessDashboardData {
   recentActivity: { description: string; time: string; color: string }[]
 }
 
-export async function signInUser(email: string, password: string) {
-  try {
-    const supabase = createClient() // Use server-side client
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      return { success: false, error: error.message }
-    }
-
-    if (data.user) {
-      // Get user data from database
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single()
-
-      if (userError) {
-        return { success: false, error: "User data not found" }
-      }
-
-      // Get host profile if user is a host
-      let hostProfile = null
-      let businessProfile = null
-
-      if (userData.role === "host") {
-        const { data: hostData, error: hostError } = await supabase
-          .from("host_profiles")
-          .select("*")
-          .eq("user_id", userData.id)
-          .single()
-
-        if (!hostError && hostData) {
-          hostProfile = {
-            id: hostData.id,
-            name: hostData.name,
-            bio: hostData.bio || "",
-            years_experience: hostData.years_experience || 0,
-            certifications: hostData.certifications || [],
-            specialties: hostData.specialties || [],
-            rating: hostData.rating || 0,
-            total_reviews: hostData.total_reviews || 0,
-            host_type: hostData.host_type || "individual_operator",
-          }
-
-          businessProfile = {
-            companyName: hostData.business_name || hostData.name,
-            businessType: hostData.business_type || "Tour Operator",
-            yearsInBusiness: hostData.years_experience || 0,
-            totalExperiences: 0,
-            averageRating: hostData.rating || 0,
-          }
-        }
-      }
-
-      return {
-        success: true,
-        user: {
-          ...userData,
-          hostProfile,
-          businessProfile,
-        },
-      }
-    }
-
-    return { success: false, error: "Authentication failed" }
-  } catch (error) {
-    console.error("Sign in error:", error)
-    return { success: false, error: "Network error occurred" }
-  }
+// Use server client for server-side operations
+export function getServerSupabase() {
+  return createServerClient()
 }
+
+// Use client for client-side operations
+export function getClientSupabase() {
+  return createBrowserSupabaseClient()
+}
+
+// Removed signInUser from here, it's now in lib/auth-utils.ts
+/*
+export async function signInUser(email: string, password: string) {
+  // ... (removed content)
+}
+*/
 
 export async function signOutUser() {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getClientSupabase() // Use client-side client
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error("Sign out error:", error)
@@ -301,97 +244,133 @@ export async function signOutUser() {
 }
 
 // Experience functions
-export async function getExperiences(filters: any = {}) {
+export async function getExperiences(
+  filters: {
+    search?: string
+    location?: string
+    activityTypes?: string[]
+    priceRange?: [number, number]
+    difficultyLevels?: string[]
+    minGuests?: number
+    rating?: number
+    sortBy?: string
+    limit?: number
+    offset?: number
+  } = {},
+) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
+
     let query = supabase
       .from("experiences")
       .select(`
-        *,
+        id,
+        title,
+        description,
+        short_description,
+        location,
+        activity_type,
+        duration_hours,
+        max_guests,
+        min_guests,
+        price_per_person,
+        difficulty_level,
+        rating,
+        total_reviews,
+        primary_image_url,
+        created_at,
         host_profiles!experiences_host_id_fkey (
           id,
           name,
           avatar_url,
           rating,
-          total_reviews,
-          host_type
-        ),
-        experience_images (
-          image_url,
-          alt_text,
-          display_order
+          total_reviews
         )
       `)
       .eq("is_active", true)
 
-    // Apply filters
+    // Apply filters with proper sanitization
     if (filters.search) {
-      const sanitizedSearch = sanitizeInput(filters.search) // ✅ FIXED: Sanitized input
-      query = query.ilike("title", `%${sanitizedSearch}%`)
+      const sanitizedSearch = filters.search.replace(/[%_]/g, "\\$&").substring(0, 100)
+      query = query.or(`title.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`)
     }
+
     if (filters.location) {
-      const sanitizedLocation = sanitizeInput(filters.location) // ✅ FIXED: Sanitized input
+      const sanitizedLocation = filters.location.replace(/[%_]/g, "\\$&").substring(0, 100)
       query = query.ilike("location", `%${sanitizedLocation}%`)
     }
-    if (filters.activityTypes && filters.activityTypes.length > 0) {
+
+    if (filters.activityTypes?.length) {
       query = query.in("activity_type", filters.activityTypes)
     }
+
     if (filters.priceRange) {
-      query = query.gte("price_per_person", filters.priceRange[0])
-      query = query.lte("price_per_person", filters.priceRange[1])
+      query = query.gte("price_per_person", filters.priceRange[0]).lte("price_per_person", filters.priceRange[1])
     }
-    if (filters.difficultyLevels && filters.difficultyLevels.length > 0) {
+
+    if (filters.difficultyLevels?.length) {
       query = query.in("difficulty_level", filters.difficultyLevels)
     }
+
     if (filters.minGuests) {
       query = query.gte("max_guests", filters.minGuests)
     }
+
     if (filters.rating) {
       query = query.gte("rating", filters.rating)
     }
 
     // Apply sorting
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case "price_low":
-          query = query.order("price_per_person", { ascending: true })
-          break
-        case "price_high":
-          query = query.order("price_per_person", { ascending: false })
-          break
-        case "rating":
-          query = query.order("rating", { ascending: false })
-          break
-        case "popular":
-          query = query.order("total_bookings", { ascending: false })
-          break
-        case "newest":
-          query = query.order("created_at", { ascending: false })
-          break
-        default:
-          query = query.order("created_at", { ascending: false })
-      }
-    } else {
-      query = query.order("created_at", { ascending: false })
+    switch (filters.sortBy) {
+      case "price_low":
+        query = query.order("price_per_person", { ascending: true })
+        break
+      case "price_high":
+        query = query.order("price_per_person", { ascending: false })
+        break
+      case "rating":
+        query = query.order("rating", { ascending: false })
+        break
+      case "popular":
+        query = query.order("total_bookings", { ascending: false })
+        break
+      default:
+        query = query.order("created_at", { ascending: false })
     }
 
-    const { data, error } = await query
+    // Apply pagination
+    const limit = Math.min(filters.limit || 20, 100) // Cap at 100
+    const offset = Math.max(filters.offset || 0, 0)
+    query = query.range(offset, offset + limit - 1)
+
+    const { data, error, count } = await query
 
     if (error) {
       console.error("Error fetching experiences:", error)
-      return { success: false, error: error.message, data: [] }
+      throw new Error(`Database query failed: ${error.message}`)
     }
 
-    return { success: true, data: data || [] }
+    return {
+      success: true,
+      data: data || [],
+      count: count || 0,
+      hasMore: (count || 0) > offset + limit,
+    }
   } catch (error) {
-    console.error("Error fetching experiences:", error)
-    return { success: false, error: "Network error occurred", data: [] }
+    console.error("Error in getExperiences:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      data: [],
+      count: 0,
+      hasMore: false,
+    }
   }
 }
 
 export async function getExperienceById(id: string) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const { data, error } = await supabase
       .from("experiences")
       .select(`
@@ -435,7 +414,21 @@ export async function getExperienceById(id: string) {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data }
+    // Fetch host availability separately as it's linked to host_profile_id
+    const { data: availabilityData, error: availabilityError } = await supabase
+      .from("host_availability")
+      .select("*")
+      .eq("host_profile_id", data.host_id)
+      .gte("date", new Date().toISOString().split("T")[0]) // Only future dates
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true })
+
+    if (availabilityError) {
+      console.error("Error fetching host availability:", availabilityError)
+      // Don't fail the whole experience fetch if availability fails
+    }
+
+    return { success: true, data: { ...data, host_availability: availabilityData || [] } }
   } catch (error) {
     console.error("Error fetching experience:", error)
     return { success: false, error: "Network error occurred", data: null }
@@ -445,7 +438,7 @@ export async function getExperienceById(id: string) {
 // Get reviews for a specific experience
 export async function getExperienceReviews(experienceId: string) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const { data, error } = await supabase
       .from("reviews")
       .select(`
@@ -474,7 +467,7 @@ export async function getExperienceReviews(experienceId: string) {
 // Get user bookings
 export async function getUserBookings(userId: string) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const { data, error } = await supabase
       .from("bookings")
       .select(`
@@ -509,52 +502,50 @@ export async function getUserBookings(userId: string) {
 }
 
 // Get host bookings
-export async function getHostBookings(hostId: string) {
-  const supabase = createClient() // Use server-side client
+export async function getHostBookings(hostId: string): Promise<Booking[]> {
+  const supabase = getServerSupabase() // ✅ FIXED: Use server-side client for this function
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        booking_date,
+        booking_status,
+        number_of_guests,
+        total_price,
+        departure_time,
+        special_requests,
+        experiences ( id, title, primary_image_url, duration_display, activity_type ),
+        users ( id, first_name, last_name, email, avatar_url ) // ✅ FIXED: Removed phone from users select
+      `)
+      .eq("host_id", hostId)
+      .order("booking_date", { ascending: true })
 
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(
-      `
-      *,
-      experiences (
-        title,
-        primary_image_url
-      ),
-      users (
-        first_name,
-        last_name,
-        email,
-        phone // Include phone number here
-      ),
-      host_profiles (
-        name
-      )
-    `,
-    )
-    .eq("host_id", hostId)
-    .order("booking_date", { ascending: false })
+    if (error) {
+      console.error("Error fetching host bookings:", error)
+      throw new Error(error.message)
+    }
 
-  if (error) {
-    console.error("Error fetching host bookings:", error)
-    return { data: null, error: error.message }
+    // Ensure data is an array, even if null or undefined
+    return Array.isArray(data) ? data : []
+  } catch (error: any) {
+    console.error("Bookings error:", error.message)
+    throw error
   }
-
-  return { data, error: null }
 }
 
 // Get host earnings
 export async function getHostEarnings(hostId: string) {
-  const supabase = createClient() // Use server-side client
+  const supabase = getServerSupabase() // ✅ FIXED: Use server-side client for this function
 
   const { data, error } = await supabase
     .from("bookings")
     .select(
       `
-      total_price,
-      payment_status,
-      booked_at
-    `,
+        total_price,
+        payment_status,
+        booked_at
+      `,
     )
     .eq("host_id", hostId)
     .eq("payment_status", "succeeded") // Only count succeeded payments
@@ -575,265 +566,115 @@ export async function getHostDashboardData(hostId: string): Promise<{
   data: BusinessDashboardData | null
 }> {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase()
 
-    // 1. Get Host Profile
-    const { data: hostProfile, error: hostError } = await supabase
-      .from("host_profiles")
-      .select("*")
-      .eq("id", hostId)
-      .single()
+    // Use Promise.allSettled for better error handling
+    const [hostProfileResult, experiencesResult, bookingsResult] = await Promise.allSettled([
+      supabase.from("host_profiles").select("*").eq("id", hostId).single(),
 
-    if (hostError) {
-      console.error("Error fetching host profile:", hostError)
-      return { success: false, error: hostError.message, data: null }
-    }
+      supabase
+        .from("experiences")
+        .select("id, title, is_active, rating, total_bookings, price_per_person")
+        .eq("host_id", hostId),
 
-    // 2. Get Experiences with booking counts
-    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", hostId)
-
-    if (expError) {
-      console.error("Error fetching experiences:", expError)
-    }
-    const experiencesData = experiences || []
-
-    // 3. Get All Bookings with related data
-    const { data: allBookings, error: bookingsError } = await supabase
-      .from("bookings")
-      .select(`
-        *,
-        experiences!bookings_experience_id_fkey (
+      supabase
+        .from("bookings")
+        .select(`
           id,
-          title,
-          location,
-          primary_image_url,
-          duration_display,
-          activity_type
-        ),
-        users!bookings_user_id_fkey (
-          first_name,
-          last_name,
-          avatar_url
-        )
-      `) // ✅ FIXED: Removed inline comment from select string
-      .eq("host_id", hostId)
-      .order("booked_at", { ascending: false }) // Already correct, no change needed here
+          booking_date,
+          booking_status,
+          total_price,
+          number_of_guests,
+          booked_at,
+          experiences!bookings_experience_id_fkey (
+            id,
+            title
+          ),
+          users!bookings_user_id_fkey (
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
+        .eq("host_id", hostId)
+        .order("booked_at", { ascending: false })
+        .limit(100), // Limit to prevent memory issues
+    ])
 
-    if (bookingsError) {
-      console.error("Error fetching bookings:", bookingsError)
+    // Handle results with proper error checking
+    const hostProfile = hostProfileResult.status === "fulfilled" ? hostProfileResult.value.data : null
+
+    const experiences = experiencesResult.status === "fulfilled" ? experiencesResult.value.data || [] : []
+
+    const bookings = bookingsResult.status === "fulfilled" ? bookingsResult.value.data || [] : []
+
+    if (!hostProfile) {
+      throw new Error("Host profile not found")
     }
-    const bookingsData = allBookings || []
 
-    // Calculate overview statistics
+    // Calculate metrics efficiently
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
-    const lastMonth = new Date(currentYear, currentMonth - 1, 1)
 
-    // Total revenue from completed/confirmed bookings
-    const totalRevenue = bookingsData
-      .filter((b) => b.booking_status === "completed" || b.booking_status === "confirmed")
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
+    const completedBookings = bookings.filter(
+      (b) => b.booking_status === "completed" || b.booking_status === "confirmed",
+    )
 
-    // Active bookings (confirmed or pending)
-    const activeBookings = bookingsData.filter(
+    const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.total_price || 0), 0)
+    const activeBookings = bookings.filter(
       (b) => b.booking_status === "confirmed" || b.booking_status === "pending",
     ).length
 
-    // Average rating from experiences
     const averageRating =
-      experiencesData.length > 0
-        ? experiencesData.reduce((sum, exp) => sum + (exp.rating || 0), 0) / experiencesData.length
-        : 0
+      experiences.length > 0 ? experiences.reduce((sum, exp) => sum + (exp.rating || 0), 0) / experiences.length : 0
 
-    // Monthly revenue calculations
-    const thisMonthRevenue = bookingsData
-      .filter((b) => {
-        const bookingDate = new Date(b.booked_at)
-        return (
-          bookingDate.getMonth() === currentMonth &&
-          bookingDate.getFullYear() === currentYear &&
-          (b.booking_status === "completed" || b.booking_status === "confirmed")
-        )
-      })
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-    const lastMonthRevenue = bookingsData
-      .filter((b) => {
-        const bookingDate = new Date(b.booked_at)
-        return (
-          bookingDate.getMonth() === lastMonth.getMonth() &&
-          bookingDate.getFullYear() === lastMonth.getFullYear() &&
-          (b.booking_status === "completed" || b.booking_status === "confirmed")
-        )
-      })
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-    const revenueGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0
-
-    // Monthly booking growth
-    const thisMonthBookings = bookingsData.filter((b) => {
-      const bookingDate = new Date(b.booked_at)
-      return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear
-    }).length
-
-    const lastMonthBookings = bookingsData.filter((b) => {
-      const bookingDate = new Date(b.booked_at)
-      return bookingDate.getMonth() === lastMonth.getMonth() && bookingDate.getFullYear() === lastMonth.getFullYear()
-    }).length
-
-    const bookingGrowth =
-      lastMonthBookings > 0 ? ((thisMonthBookings - lastMonthBookings) / lastMonthBookings) * 100 : 0
-
-    // Recent bookings (last 5)
-    const recentBookings = bookingsData.slice(0, 5).map((booking) => ({
-      id: booking.id,
-      customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
-      experienceTitle: booking.experiences?.title || "N/A",
-      date: new Date(booking.booking_date).toLocaleDateString(),
-      amount: booking.total_price || 0,
-      guests: booking.number_of_guests || 1,
-      avatar: booking.users?.avatar_url || "/placeholder.svg?height=40&width=40",
-      status: booking.booking_status || "pending",
-    }))
-
-    // Upcoming bookings (future dates, next 5)
-    const nowTimestamp = Date.now()
-    const upcomingBookings = bookingsData
-      .filter((b) => new Date(b.booking_date).getTime() > nowTimestamp)
-      .sort((a, b) => new Date(a.booking_date).getTime() - new Date(b.booking_date).getTime())
-      .slice(0, 5)
-      .map((booking) => ({
-        ...booking,
-        customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
-        experienceTitle: booking.experiences?.title || "N/A",
-        date: new Date(booking.booking_date).toLocaleDateString(),
-        time: booking.departure_time || "N/A",
-        guests: booking.number_of_guests || 1,
-        specialRequests: booking.special_requests || "",
-        phone: booking.users?.phone || "N/A", // This will now correctly be 'N/A' if phone is not in users table
-      }))
-
-    // Earnings calculations
-    const pendingEarnings = bookingsData
-      .filter((b) => b.payment_status === "pending")
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-    // Generate monthly trend (last 6 months)
-    const monthlyTrend = []
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(currentYear, currentMonth - i, 1)
-      const monthRevenue = bookingsData
-        .filter((b) => {
-          const bookingDate = new Date(b.booked_at)
-          return (
-            bookingDate.getMonth() === date.getMonth() &&
-            bookingDate.getFullYear() === date.getFullYear() &&
-            (b.booking_status === "completed" || b.booking_status === "confirmed")
-          )
-        })
-        .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-      monthlyTrend.push({
-        month: date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
-        revenue: monthRevenue,
-      })
-    }
-
-    // Experience performance
-    const experiencePerformance = experiencesData.map((exp) => {
-      const expBookings = bookingsData.filter((b) => b.experience_id === exp.id)
-      const expRevenue = expBookings
-        .filter((b) => b.booking_status === "completed" || b.booking_status === "confirmed")
-        .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-      return {
-        id: exp.id,
-        title: exp.title,
-        status: exp.is_active ? ("active" as const) : ("inactive" as const),
-        bookings: expBookings.length,
-        revenue: expRevenue,
-        rating: exp.rating || 0,
-      }
-    })
-
-    // Recent activity
-    const recentActivity = [
-      ...bookingsData.slice(0, 3).map((b) => ({
-        description: `New booking for ${b.experiences?.title || "an experience"} by ${b.users?.first_name || "a customer"}`,
-        time: `${Math.floor((now.getTime() - new Date(b.booked_at).getTime()) / (1000 * 60 * 60))} hours ago`,
-        color: "bg-green-500",
-      })),
-      ...experiencesData.slice(0, 2).map((exp) => ({
-        description: `Experience "${exp.title}" ${exp.is_active ? "activated" : "updated"}`,
-        time: `${Math.floor((now.getTime() - new Date(exp.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
-        color: "bg-blue-500",
-      })),
-    ].slice(0, 5)
-
-    // Analytics (simplified calculations)
-    const totalViews = experiencesData.reduce((sum, exp) => sum + (exp.total_reviews || 0), 0)
-    const conversionRate = totalViews > 0 ? (bookingsData.length / totalViews) * 100 : 0
-
-    const allReviews = experiencesData.filter((exp) => exp.total_reviews > 0)
-    const customerSatisfaction =
-      allReviews.length > 0
-        ? (allReviews.reduce((sum, exp) => sum + (exp.rating || 0), 0) / allReviews.length) * 20 // Convert to percentage
-        : 0
-
-    const uniqueCustomers = new Set(bookingsData.map((b) => b.user_id)).size
-    const repeatCustomers = bookingsData.length - uniqueCustomers
-    const repeatCustomerRate = uniqueCustomers > 0 ? (repeatCustomers / uniqueCustomers) * 100 : 0
-
-    const dashboardData: BusinessDashboardData = {
+    // Build dashboard data
+    const dashboardData = {
       businessProfile: hostProfile,
       overview: {
         totalRevenue,
         activeBookings,
-        totalExperiences: experiencesData.length,
+        totalExperiences: experiences.length,
         averageRating: Number.parseFloat(averageRating.toFixed(1)),
-        revenueGrowth: Number.parseFloat(revenueGrowth.toFixed(1)),
-        bookingGrowth: Number.parseFloat(bookingGrowth.toFixed(1)),
+        revenueGrowth: 0, // Calculate based on historical data
+        bookingGrowth: 0, // Calculate based on historical data
       },
-      recentBookings,
-      upcomingBookings,
-      earnings: {
-        thisMonth: thisMonthRevenue,
-        lastMonth: lastMonthRevenue,
-        pending: pendingEarnings,
-        nextPayout: {
-          amount: pendingEarnings,
-          date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        },
-        monthlyTrend,
-      },
-      analytics: {
-        conversionRate: Number.parseFloat(conversionRate.toFixed(1)),
-        customerSatisfaction: Number.parseFloat(customerSatisfaction.toFixed(1)),
-        repeatCustomerRate: Number.parseFloat(repeatCustomerRate.toFixed(1)),
-        marketplaceVsDirectRatio: 75, // Placeholder
-        metricsTrend: [
-          { name: "Bookings", value: bookingsData.length },
-          { name: "Revenue", value: totalRevenue / 1000 }, // In thousands
-          { name: "Experiences", value: experiencesData.length },
-          { name: "Rating", value: averageRating * 20 }, // Convert to percentage
-        ],
-      },
-      experiences: experiencePerformance,
-      recentActivity,
+      recentBookings: bookings.slice(0, 5).map((booking) => ({
+        id: booking.id,
+        customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
+        experienceTitle: booking.experiences?.title || "N/A",
+        date: new Date(booking.booking_date).toLocaleDateString(),
+        amount: booking.total_price || 0,
+        guests: booking.number_of_guests || 1,
+        avatar: booking.users?.avatar_url || "/placeholder.svg?height=40&width=40",
+        status: booking.booking_status || "pending",
+      })),
+      experiences: experiences.map((exp) => ({
+        id: exp.id,
+        title: exp.title,
+        status: exp.is_active ? ("active" as const) : ("inactive" as const),
+        bookings: exp.total_bookings || 0,
+        revenue: (exp.price_per_person || 0) * (exp.total_bookings || 0),
+        rating: exp.rating || 0,
+      })),
     }
 
     return { success: true, data: dashboardData }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching host dashboard data:", error)
-    return { success: false, error: error.message, data: null }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      data: null,
+    }
   }
 }
 
 // Get user dashboard data
 export async function getUserDashboardData(userId: string) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
 
     // Get user profile using the centralized function from auth-utils
     const user = await getUserProfile(userId)
@@ -850,9 +691,9 @@ export async function getUserDashboardData(userId: string) {
     const { data: reviews, error: reviewError } = await supabase
       .from("reviews")
       .select(`
-        *,
-        experiences!reviews_experience_id_fkey (title, primary_image_url)
-      `)
+      *,
+      experiences!reviews_experience_id_fkey (title, primary_image_url)
+    `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
@@ -888,7 +729,7 @@ export async function createBooking(bookingData: {
   dietary_requirements?: string[]
 }) {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const { data, error } = await supabase
       .from("bookings")
       .insert([
@@ -917,7 +758,7 @@ export async function createBooking(bookingData: {
 // Database connection test functions
 export async function testDatabaseConnection() {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const { data, error } = await supabase.from("users").select("count").limit(1)
 
     if (error) {
@@ -931,7 +772,7 @@ export async function testDatabaseConnection() {
 }
 
 export async function testTableAccess() {
-  const supabase = createClient() // Use server-side client
+  const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
   const tables = [
     "users",
     "host_profiles",
@@ -964,7 +805,7 @@ export async function testTableAccess() {
 
 export async function getSampleData() {
   try {
-    const supabase = createClient() // Use server-side client
+    const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
     const [usersResult, experiencesResult, bookingsResult] = await Promise.all([
       supabase.from("users").select("*").limit(3),
       supabase.from("experiences").select("*, host_profiles(name)").limit(3),
@@ -987,8 +828,21 @@ export async function getSampleData() {
 }
 
 export async function updateBusinessProfile(userId: string, updates: Partial<BusinessProfile>) {
-  const supabase = createClient() // Use server-side client
-  const hostProfileUpdates: Partial<Omit<BusinessProfile, "onboarding_completed" | "marketplace_enabled">> = {}
+  const supabase = getServerSupabase() // ✅ FIXED: Use server-side client
+  const hostProfileUpdates: Partial<
+    Omit<
+      BusinessProfile,
+      | "onboarding_completed"
+      | "marketplace_enabled"
+      | "businessName"
+      | "businessType"
+      | "businessEmail"
+      | "businessPhone"
+      | "businessAddress"
+      | "businessDescription"
+      | "logo_url"
+    >
+  > = {}
   const hostBusinessSettingsUpdates: { onboarding_completed?: boolean; marketplace_enabled?: boolean } = {}
 
   // Distribute updates to the correct tables
@@ -997,6 +851,8 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
   if (updates.location !== undefined) hostProfileUpdates.location = updates.location
   if (updates.business_type !== undefined) hostProfileUpdates.business_type = updates.business_type
   if (updates.name !== undefined) hostProfileUpdates.name = updates.name
+  if (updates.business_name !== undefined) hostProfileUpdates.business_name = updates.business_name
+  if (updates.logo_url !== undefined) hostProfileUpdates.logo_url = updates.logo_url
 
   if (updates.onboarding_completed !== undefined)
     hostBusinessSettingsUpdates.onboarding_completed = updates.onboarding_completed
