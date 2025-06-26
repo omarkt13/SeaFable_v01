@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import {
   ArrowLeft,
   Star,
@@ -222,11 +223,14 @@ export default function ExperienceDetailPage() {
           <div className="lg:col-span-2">
             {/* Image Gallery */}
             <div className="relative mb-8">
-              <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-                <img
-                  src={images[currentImageIndex] || "/placeholder.svg"}
+              <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 relative">
+                <Image
+                  src={images[currentImageIndex] || "/placeholder.svg?height=400&width=600&text=Experience Image"}
                   alt={experience.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  priority={currentImageIndex === 0} // Prioritize the first image
+                  sizes="(max-width: 1024px) 100vw, 66vw"
                 />
               </div>
 
@@ -317,7 +321,13 @@ export default function ExperienceDetailPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={hostProfile.avatar_url || "/placeholder.svg"} />
+                        <Image
+                          src={hostProfile.avatar_url || "/placeholder.svg?height=64&width=64&text=Host Avatar"}
+                          alt={hostProfile.name}
+                          width={64}
+                          height={64}
+                          className="rounded-full"
+                        />
                         <AvatarFallback>{hostProfile.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">

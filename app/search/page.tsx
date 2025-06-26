@@ -10,7 +10,6 @@ import {
   Star,
   Clock,
   SlidersHorizontal,
-  Heart,
   Share2,
   Eye,
   X,
@@ -38,6 +37,10 @@ import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
 import { ErrorBoundary } from "@/components/error-boundary"
+// Add this import at the top of the file
+import Image from "next/image"
+
+// ... (rest of your imports)
 
 // Enhanced search filters
 const initialFilters = {
@@ -140,42 +143,16 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
           <div className="flex">
             <div className="relative w-80 h-48 flex-shrink-0">
-              <img
-                src={transformedExperience.primaryImage || "/placeholder.svg"}
+              <Image
+                src={
+                  transformedExperience.primaryImage || "/placeholder.svg?height=192&width=320&text=Experience Image"
+                }
                 alt={experience.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                fill
+                style={{ objectFit: "cover" }}
+                className="group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, 33vw"
               />
-              <div className="absolute top-3 left-3 flex flex-col space-y-2">
-                {transformedExperience.isPremium && (
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300">
-                    <Award className="h-3 w-3 mr-1" />
-                    Premium
-                  </Badge>
-                )}
-                {transformedExperience.isSuperhost && <Badge variant="secondary">Superhost</Badge>}
-                {transformedExperience.isInstantBook && (
-                  <Badge variant="default" className="bg-green-600">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Instant Book
-                  </Badge>
-                )}
-                {hasDiscount && <Badge variant="destructive">{discountPercentage}% OFF</Badge>}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onToggleWishlist()
-                }}
-                className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-              >
-                <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-              </button>
-              {transformedExperience.availableToday && (
-                <div className="absolute bottom-3 left-3">
-                  <Badge className="bg-green-500 text-white">Available Today</Badge>
-                </div>
-              )}
             </div>
 
             <CardContent className="flex-1 p-6">
@@ -212,10 +189,15 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+                      <Image
+                        src={
+                          transformedExperience.hostProfile.avatar ||
+                          "/placeholder.svg?height=32&width=32&text=Host Avatar"
+                        }
                         alt={transformedExperience.hostProfile.name}
-                        className="w-8 h-8 rounded-full"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
                       />
                       <div>
                         <span className="text-sm font-medium text-gray-900">
@@ -289,55 +271,14 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
     <Link href={`/experience/${experience.id}`} className="block">
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
         <div className="relative">
-          <img
-            src={transformedExperience.primaryImage || "/placeholder.svg"}
+          <Image
+            src={transformedExperience.primaryImage || "/placeholder.svg?height=192&width=384&text=Experience Image"}
             alt={experience.title}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            style={{ objectFit: "cover" }}
+            className="group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
-          <div className="absolute top-3 left-3 flex flex-col space-y-1">
-            {transformedExperience.isPremium && (
-              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 text-xs">
-                <Award className="h-3 w-3 mr-1" />
-                Premium
-              </Badge>
-            )}
-            {transformedExperience.isSuperhost && (
-              <Badge variant="secondary" className="text-xs">
-                Superhost
-              </Badge>
-            )}
-            {transformedExperience.isInstantBook && (
-              <Badge variant="default" className="bg-green-600 text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                Instant
-              </Badge>
-            )}
-            {hasDiscount && (
-              <Badge variant="destructive" className="text-xs">
-                {discountPercentage}% OFF
-              </Badge>
-            )}
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onToggleWishlist()
-            }}
-            className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-          >
-            <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-          </button>
-          {transformedExperience.availableToday && (
-            <div className="absolute bottom-3 left-3">
-              <Badge className="bg-green-500 text-white text-xs">Available Today</Badge>
-            </div>
-          )}
-          {transformedExperience.isPopular && (
-            <div className="absolute bottom-3 right-3">
-              <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
-            </div>
-          )}
         </div>
 
         <CardContent className="p-4">
@@ -365,10 +306,12 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <img
-                src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+              <Image
+                src={transformedExperience.hostProfile.avatar || "/placeholder.svg?height=24&width=24&text=Host Avatar"}
                 alt={transformedExperience.hostProfile.name}
-                className="w-6 h-6 rounded-full"
+                width={24}
+                height={24}
+                className="rounded-full"
               />
               <span className="text-sm text-gray-600 truncate">{transformedExperience.hostProfile.name}</span>
             </div>
