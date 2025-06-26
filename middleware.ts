@@ -81,11 +81,12 @@ export async function middleware(req: NextRequest) {
     } = await supabase.auth.getSession()
 
     // Protect business routes
-    if (
-      req.nextUrl.pathname.startsWith("/business") &&
-      !req.nextUrl.pathname.startsWith("/business/login") &&
-      !req.nextUrl.pathname.startsWith("/business/register")
-    ) {
+    if (req.nextUrl.pathname.startsWith("/business")) {
+      // Skip login page itself
+      if (req.nextUrl.pathname === "/business/login") {
+        return res
+      }
+
       if (!session) {
         return NextResponse.redirect(new URL("/business/login", req.url))
       }

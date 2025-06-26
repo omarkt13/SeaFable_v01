@@ -6,11 +6,17 @@ import type { User, Session } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
+// Extended BusinessProfile interface to include business settings
+interface ExtendedBusinessProfile extends BusinessProfile {
+  onboarding_completed?: boolean
+  marketplace_enabled?: boolean
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
   userProfile: UserProfile | null
-  businessProfile: BusinessProfile | null
+  businessProfile: ExtendedBusinessProfile | null
   userType: "customer" | "business" | null
   isLoading: boolean
   error: string | null
@@ -33,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
+  const [businessProfile, setBusinessProfile] = useState<ExtendedBusinessProfile | null>(null)
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) throw error
 
-        const profile = {
+        const profile: ExtendedBusinessProfile = {
           ...data,
           onboarding_completed: data.host_business_settings?.onboarding_completed || false,
           marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
@@ -138,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchBusinessProfile, fetchUserProfile])
 
-  // NEW: Login function that handles both customer and business authentication
+  // Login function that handles both customer and business authentication
   const login = useCallback(
     async (email: string, password: string, expectedUserType?: "customer" | "business") => {
       try {
@@ -289,7 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error,
     signOut,
     refreshProfile,
-    login, // Now exported
+    login,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
