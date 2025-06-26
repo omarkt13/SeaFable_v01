@@ -1,7 +1,7 @@
 "use server" // Add this line to make the file a Server Action
 
 import { getClientSupabase as getClientSupabaseBrowser } from "@/lib/client-supabase" // Corrected import name
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server" // Correct import
 import { cookies } from "next/headers" // Import cookies
 import { getUserProfile } from "./auth-utils" // This will be updated below
 import type { BusinessProfile } from "@/types/auth"
