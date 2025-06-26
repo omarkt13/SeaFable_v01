@@ -6,7 +6,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client"
-import { getClientSupabase } from "@/lib/client-supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +18,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { refreshAuth } = useAuth() // Correctly destructuring refreshAuth
+  const { refreshAuth } = useAuth() // Get refreshAuth from AuthContext
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,27 +30,24 @@ export default function LoginPage() {
 
       if (signInError) {
         setError(signInError.message || "Login failed. Please check your credentials.")
+        setIsLoading(false)
         return
       }
 
       if (user) {
-        await refreshAuth() // Call refreshAuth to update context state
+        // Force AuthContext to refresh its state with the new user
+        await refreshAuth()
 
-        const {
-          data: { user: currentUser },
-        } = await getClientSupabase().auth.getUser()
-        if (currentUser) {
-          const businessProfile = await getClientBusinessProfile(currentUser.id)
-          if (businessProfile) {
-            router.push("/business/home")
-          } else {
-            router.push("/dashboard")
-          }
+        // After successful login and AuthContext refresh,
+        // explicitly check the user's type for immediate redirection.
+        const businessProfile = await getClientBusinessProfile(user.id)
+        if (businessProfile) {
+          router.push("/business/home")
         } else {
-          router.push("/login")
+          router.push("/dashboard")
         }
       } else {
-        setError("Login failed. Please check your credentials.")
+        setError("Login failed. No user data returned.")
       }
     } catch (err: any) {
       console.error("Login error:", err)

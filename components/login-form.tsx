@@ -11,8 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client"
-import { getClientSupabase } from "@/lib/client-supabase"
-import { useAuth } from "@/lib/auth-context" // Import useAuth
+import { useAuth } from "@/lib/auth-context"
 
 interface LoginFormProps {
   userType: string // This prop is no longer strictly needed for redirection logic within the component, but kept for compatibility if other parts rely on it.
@@ -26,7 +25,7 @@ export function LoginForm({ userType, onSuccess }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [loginAttempts, setLoginAttempts] = useState(0)
   const router = useRouter()
-  const { refreshAuth } = useAuth() // Correctly destructuring refreshAuth
+  const { refreshAuth } = useAuth()
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -60,19 +59,11 @@ export function LoginForm({ userType, onSuccess }: LoginFormProps) {
       if (result.user) {
         await refreshAuth() // Call refreshAuth to update context state
 
-        const {
-          data: { user: currentUser },
-        } = await getClientSupabase().auth.getUser()
-        if (currentUser) {
-          const businessProfile = await getClientBusinessProfile(currentUser.id)
-          if (businessProfile) {
-            router.push("/business/home")
-          } else {
-            router.push("/dashboard")
-          }
+        const businessProfile = await getClientBusinessProfile(result.user.id)
+        if (businessProfile) {
+          router.push("/business/home")
         } else {
-          // Fallback if user somehow disappears after refresh
-          router.push("/login")
+          router.push("/dashboard")
         }
         onSuccess?.(result.user) // Call onSuccess if provided
       } else {
