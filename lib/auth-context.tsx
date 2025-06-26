@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User } from "@supabase/auth-helpers-nextjs"
-import { supabase, getUserProfile, getBusinessProfile } from "@/lib/auth-utils"
+import { supabase, getUserProfile, getBusinessProfile, signOut } from "@/lib/auth-utils"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
@@ -11,6 +11,7 @@ interface AuthContextType {
   businessProfile: BusinessProfile | null
   userType: "customer" | "business" | null
   isLoading: boolean
+  signOut: typeof signOut // Expose signOut function through context
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("AuthContext: fetchUserAndProfiles started. Current user:", currentUser?.id)
-    setIsLoading(true) // Ensure loading is true at the start of fetching
+    setIsLoading(true)
 
     setUser(currentUser)
     setUserProfile(null) // Reset profiles
@@ -81,10 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log("AuthContext: useEffect mounted. Initial session check.")
+    // Add defensive checks for supabase client and auth object
+    if (!supabase || !supabase.auth) {
+      console.error("AuthContext: Supabase client or auth object is undefined. Cannot proceed with auth listeners.")
+      setIsLoading(false)
+      return // Exit if supabase is not ready
+    }
+
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchUserAndProfiles(session?.user || null)
-    })
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        fetchUserAndProfiles(session?.user || null)
+      })
+      .catch((error) => {
+        console.error("AuthContext: Error getting session:", error)
+        setIsLoading(false)
+      })
 
     // Listen for auth state changes
     const {
@@ -101,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []) // Empty dependency array ensures this runs once on mount
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading }}>
+    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   )
