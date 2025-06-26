@@ -1,15 +1,5 @@
-import { createClient } from "@supabase/supabase-js"
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-})
+// This file provides database types and interfaces
+// Actual Supabase client should be imported from @/lib/supabase/client
 
 // Database types based on the schema
 export interface User {
@@ -141,3 +131,6 @@ export interface Review {
   users?: User
   experiences?: Experience
 }
+
+// Re-export the client creation functions for convenience
+export { createClient } from "@/lib/supabase/client"
