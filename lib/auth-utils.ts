@@ -12,8 +12,7 @@ const getSupabaseServer = () => {
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
     const supabaseServer = getSupabaseServer()
-    // Assuming a user always has one user profile, but using maybeSingle for robustness
-    const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).maybeSingle() // Changed from .single()
+    const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).maybeSingle()
     if (error) {
       console.error("Error fetching user profile (server):", error)
       return null
@@ -28,7 +27,6 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
   try {
     const supabaseServer = getSupabaseServer()
-    // Use maybeSingle to handle cases where a user might not have a business profile
     const { data, error } = await supabaseServer
       .from("host_profiles")
       .select(`
@@ -38,8 +36,8 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
           marketplace_enabled
         )
       `)
-      .eq("id", userId)
-      .maybeSingle() // Changed from .single()
+      .eq("user_id", userId) // Changed from .eq("id", userId) to .eq("user_id", userId)
+      .maybeSingle()
 
     if (error) {
       console.error("Error fetching business profile (server):", error)
@@ -91,11 +89,10 @@ export async function getAuthenticatedUserType(): Promise<"customer" | "business
   const { data: businessProfile, error: businessError } = await supabaseServer
     .from("host_profiles")
     .select("id")
-    .eq("id", user.id)
-    .maybeSingle() // Changed from .single()
+    .eq("user_id", user.id) // Changed from .eq("id", user.id) to .eq("user_id", user.id)
+    .maybeSingle()
 
   if (businessError && businessError.code !== "PGRST116") {
-    // PGRST116 means no rows found, which is expected for customers
     console.error("Error checking business profile:", businessError)
   }
 
