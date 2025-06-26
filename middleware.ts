@@ -2,27 +2,17 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-async function isBusinessUser(supabase: any, userId: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase.from("host_profiles").select("id").eq("id", userId).single()
-    return !error && !!data
-  } catch {
-    return false
-  }
-}
-
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
-  // Handle auth routes only
+  // Only handle auth routes
   if (req.nextUrl.pathname.startsWith("/business") || req.nextUrl.pathname.startsWith("/dashboard")) {
     const supabase = createMiddlewareClient({ req, res })
-
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
-    // Protect business routes
+    // Business routes
     if (req.nextUrl.pathname.startsWith("/business")) {
       if (req.nextUrl.pathname === "/business/login" || req.nextUrl.pathname === "/business/register") {
         return res
@@ -32,21 +22,31 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/business/login", req.url))
       }
 
-      const isBusiness = await isBusinessUser(supabase, session.user.id)
-      if (!isBusiness) {
+      // Check if user is business
+      try {
+        const { data } = await supabase.from("host_profiles").select("id").eq("id", session.user.id).single()
+        if (!data) {
+          return NextResponse.redirect(new URL("/", req.url))
+        }
+      } catch {
         return NextResponse.redirect(new URL("/", req.url))
       }
     }
 
-    // Protect customer dashboard routes
+    // Customer dashboard routes
     if (req.nextUrl.pathname.startsWith("/dashboard")) {
       if (!session) {
         return NextResponse.redirect(new URL("/login", req.url))
       }
 
-      const isBusiness = await isBusinessUser(supabase, session.user.id)
-      if (isBusiness) {
-        return NextResponse.redirect(new URL("/business/home", req.url))
+      // Check if user is business (redirect to business dashboard)
+      try {
+        const { data } = await supabase.from("host_profiles").select("id").eq("id", session.user.id).single()
+        if (data) {
+          return NextResponse.redirect(new URL("/business/home", req.url))
+        }
+      } catch {
+        // User is not business, continue to customer dashboard
       }
     }
   }

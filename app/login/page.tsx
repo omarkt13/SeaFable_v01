@@ -5,12 +5,6 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import Link from "next/link"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,78 +20,73 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
-    try {
-      const result = await login(email, password, "customer")
+    const result = await login(email, password, "customer")
 
-      if (result.success) {
-        router.push("/dashboard")
-      } else {
-        setError(result.error || "Login failed")
-      }
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred")
-    } finally {
-      setIsLoading(false)
+    if (result.success) {
+      router.push("/dashboard")
+    } else {
+      setError(result.error || "Login failed")
     }
+    setIsLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Customer Login</CardTitle>
-          <CardDescription className="text-center">Sign in to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-2xl font-bold text-center mb-6">Customer Login</h1>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-3">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-
-          <div className="mt-4 text-center text-sm">
-            <Link href="/register" className="text-blue-600 hover:underline">
-              Don't have an account? Register here
-            </Link>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+              disabled={isLoading}
+            />
           </div>
 
-          <div className="mt-2 text-center text-sm">
-            <Link href="/business/login" className="text-gray-600 hover:underline">
-              Business login
-            </Link>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+              disabled={isLoading}
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center text-sm">
+          <a href="/business/login" className="text-blue-600 hover:underline">
+            Business login
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
