@@ -1,6 +1,6 @@
 "use server" // Add this line to make the file a Server Action
 
-import { getClientSupabase as getClientSupabaseBrowser } from "@/lib/client-supabase" // Corrected import name
+import { supabase } from "@/lib/supabase"
 import { createSupabaseServerClient } from "@/lib/supabase/server" // Correct import
 import { cookies } from "next/headers" // Import cookies
 import { getUserProfile } from "./auth-utils" // This will be updated below
@@ -222,12 +222,11 @@ export function getServerSupabase() {
 
 // Use client for client-side operations
 export function getClientSupabase() {
-  return getClientSupabaseBrowser() // Use the renamed import from lib/client-supabase
+  return supabase // Use the main supabase client
 }
 
 export async function signOutUser() {
   try {
-    const supabase = getClientSupabase() // Use client-side client
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error("Sign out error:", error)
