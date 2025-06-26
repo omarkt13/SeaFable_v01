@@ -1,13 +1,13 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server" // Corrected import path
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 import type { BusinessSettings, HostAvailability } from "@/types/business"
-import type { Experience } from "@/lib/database" // Import Experience type from database.ts
+import type { Experience } from "@/lib/database"
 
 // This client is specifically for server-side operations related to business logic.
 export function createBusinessSupabaseServerClient() {
   const cookieStore = cookies()
 
-  return createSupabaseServerClient(cookieStore) // Use the helper from lib/supabase/server
+  return createSupabaseServerClient(cookieStore)
 }
 
 // Helper to get the server-side Supabase client
@@ -17,7 +17,8 @@ function getSupabase() {
 
 export async function getHostProfile(userId: string) {
   const supabase = getSupabase()
-  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
+  // Use maybeSingle to handle cases where a user might not have a host profile yet
+  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle() // Changed from .single()
 
   if (error) {
     console.error("Error in getHostProfile:", error)

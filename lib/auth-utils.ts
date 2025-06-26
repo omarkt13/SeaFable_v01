@@ -1,10 +1,9 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server" // Corrected import path
-import { cookies } from "next/headers" // Import cookies
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 // Server-side Supabase client
-// Modified to get cookieStore and pass it
 const getSupabaseServer = () => {
   const cookieStore = cookies()
   return createSupabaseServerClient(cookieStore)
@@ -12,8 +11,9 @@ const getSupabaseServer = () => {
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const supabaseServer = getSupabaseServer() // Use the function to get the client
-    const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).single()
+    const supabaseServer = getSupabaseServer()
+    // Assuming a user always has one user profile, but using maybeSingle for robustness
+    const { data, error } = await supabaseServer.from("users").select("*").eq("id", userId).maybeSingle() // Changed from .single()
     if (error) {
       console.error("Error fetching user profile (server):", error)
       return null
@@ -27,7 +27,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
   try {
-    const supabaseServer = getSupabaseServer() // Use the function to get the client
+    const supabaseServer = getSupabaseServer()
+    // Use maybeSingle to handle cases where a user might not have a business profile
     const { data, error } = await supabaseServer
       .from("host_profiles")
       .select(`
@@ -38,7 +39,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
         )
       `)
       .eq("id", userId)
-      .single()
+      .maybeSingle() // Changed from .single()
 
     if (error) {
       console.error("Error fetching business profile (server):", error)
@@ -47,8 +48,8 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 
     const profile = {
       ...data,
-      onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-      marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+      onboarding_completed: data?.host_business_settings?.onboarding_completed || false,
+      marketplace_enabled: data?.host_business_settings?.marketplace_enabled || false,
     }
     return profile as BusinessProfile
   } catch (error) {
@@ -58,17 +59,16 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 }
 
 export async function signOutAndRedirect(redirectTo = "/login") {
-  const supabaseServer = getSupabaseServer() // Use the function to get the client
+  const supabaseServer = getSupabaseServer()
   const { error } = await supabaseServer.auth.signOut()
   if (error) {
     console.error("Error signing out (server):", error)
-    // Handle error, maybe show a toast or log
   }
   redirect(redirectTo)
 }
 
 export async function getSessionAndUser() {
-  const supabaseServer = getSupabaseServer() // Use the function to get the client
+  const supabaseServer = getSupabaseServer()
   const {
     data: { session },
     error,
@@ -87,15 +87,15 @@ export async function getAuthenticatedUserType(): Promise<"customer" | "business
   if (!user) return null
 
   // Check if user is a business host
-  const supabaseServer = getSupabaseServer() // Use the function to get the client
+  const supabaseServer = getSupabaseServer()
   const { data: businessProfile, error: businessError } = await supabaseServer
     .from("host_profiles")
     .select("id")
     .eq("id", user.id)
-    .single()
+    .maybeSingle() // Changed from .single()
 
   if (businessError && businessError.code !== "PGRST116") {
-    // PGRST116 means no rows found
+    // PGRST116 means no rows found, which is expected for customers
     console.error("Error checking business profile:", businessError)
   }
 

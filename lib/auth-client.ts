@@ -29,7 +29,8 @@ export async function signInUser(
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+  // Assuming a user always has one user profile, but using maybeSingle for robustness
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
   if (error) {
     console.error("Error fetching user profile:", error)
     return null
@@ -38,11 +39,12 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 }
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
+  // Use maybeSingle to handle cases where a user might not have a business profile
   const { data, error } = await supabase
     .from("host_profiles")
     .select("*, host_business_settings(*)")
     .eq("user_id", userId)
-    .single()
+    .maybeSingle() // Changed from .single()
   if (error) {
     console.error("Error fetching business profile:", error)
     return null
