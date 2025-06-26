@@ -1,14 +1,43 @@
-import { createClient as createServerClient } from "@/lib/supabase/server" // ✅ FIXED: Import server-side client
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 import type { BusinessSettings, HostAvailability } from "@/types/business"
 import type { Experience } from "@/lib/database" // Import Experience type from database.ts
 
+// This client is specifically for server-side operations related to business logic.
+export function createBusinessSupabaseServerClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value
+      },
+      set(name: string, value: string, options: any) {
+        try {
+          cookieStore.set({ name, value, ...options })
+        } catch (error) {
+          // This error is expected if called from a client component, but should not happen in server components/route handlers
+          console.warn("Could not set cookie from server component in business client:", error)
+        }
+      },
+      remove(name: string, options: any) {
+        try {
+          cookieStore.set({ name, value: "", ...options })
+        } catch (error) {
+          console.warn("Could not remove cookie from server component in business client:", error)
+        }
+      },
+    },
+  })
+}
+
 // Helper to get the server-side Supabase client
 function getSupabase() {
-  return createServerClient()
+  return createBusinessSupabaseServerClient()
 }
 
 export async function getHostProfile(userId: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
 
   if (error) {
@@ -19,7 +48,7 @@ export async function getHostProfile(userId: string) {
 }
 
 export async function getBusinessSettings(hostProfileId: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_business_settings")
     .select("*")
@@ -34,7 +63,7 @@ export async function getBusinessSettings(hostProfileId: string) {
 }
 
 export async function updateBusinessSettings(hostProfileId: string, settings: Partial<BusinessSettings>) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_business_settings")
     .upsert({
@@ -53,7 +82,7 @@ export async function updateBusinessSettings(hostProfileId: string, settings: Pa
 }
 
 export async function getHostEarnings(hostProfileId: string, startDate?: string, endDate?: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   let query = supabase
     .from("host_earnings")
     .select(`
@@ -83,7 +112,7 @@ export async function getHostEarnings(hostProfileId: string, startDate?: string,
 }
 
 export async function getHostAvailability(hostProfileId: string, startDate?: string, endDate?: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   let query = supabase
     .from("host_availability")
     .select("*")
@@ -107,7 +136,7 @@ export async function getHostAvailability(hostProfileId: string, startDate?: str
 }
 
 export async function setHostAvailability(hostProfileId: string, availability: HostAvailability[]) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   // Delete existing availability for the dates
   const dates = availability.map((a) => a.date)
   await supabase.from("host_availability").delete().eq("host_profile_id", hostProfileId).in("date", dates)
@@ -139,7 +168,7 @@ export async function setHostAvailability(hostProfileId: string, availability: H
 }
 
 export async function getHostTeamMembers(hostProfileId: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_team_members")
     .select(`
@@ -163,7 +192,7 @@ export async function getHostTeamMembers(hostProfileId: string) {
 }
 
 export async function getHostAnalytics(hostProfileId: string, days = 30) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
 
@@ -211,7 +240,7 @@ export async function createExperience(experienceData: {
   is_active?: boolean
   itinerary?: any // Include itinerary
 }) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("experiences")
     .insert([
@@ -264,7 +293,7 @@ export async function updateExperience(
     itinerary: any // Include itinerary
   }>,
 ) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("experiences")
     .update({
@@ -283,7 +312,7 @@ export async function updateExperience(
 }
 
 export async function getHostExperiences(hostId: string): Promise<Experience[]> {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase.from("experiences").select("*").eq("host_id", hostId).eq("is_active", true)
 
   if (error) {
@@ -294,7 +323,7 @@ export async function getHostExperiences(hostId: string): Promise<Experience[]> 
 }
 
 export async function getHostBookings(hostId: string) {
-  const supabase = getSupabase() // ✅ FIXED: Use server-side client
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("bookings")
     .select(`

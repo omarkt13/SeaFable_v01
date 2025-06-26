@@ -1,4 +1,7 @@
+"use client" // Mark as client component
+
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import type { User as SupabaseUser } from "@supabase/supabase-js" // Import User type from core supabase-js
 
 // Use globalThis to ensure a single instance across the entire client-side application.
 // This is robust against hot module reloading in development.
@@ -14,7 +17,7 @@ export const supabase = (() => {
   return globalThis.supabaseClientInstance
 })()
 
-// Database types based on the schema
+// Database types based on the schema (kept for completeness)
 export interface User {
   id: string
   first_name: string
@@ -119,7 +122,7 @@ export interface Booking {
   booked_at: string
   updated_at: string
   experiences?: Experience
-  users?: User
+  users?: SupabaseUser
   host_profiles?: HostProfile
 }
 
@@ -141,6 +144,6 @@ export interface Review {
   response_from_host_at?: string
   created_at: string
   updated_at: string
-  users?: User
+  users?: SupabaseUser
   experiences?: Experience
 }
