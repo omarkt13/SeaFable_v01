@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { User, Session } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
@@ -29,9 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Use ref to prevent memory leaks
+  // Use ref to prevent memory leaks and track component mount state
   const mountedRef = useRef(true)
-  const supabase = createClient()
+  const profileCacheRef = useRef<{ [key: string]: UserProfile | BusinessProfile }>({})
+  
+  // Create client instance once and reuse
+  const supabase = useMemo(() => createClient(), [])
 
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return
@@ -41,14 +44,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBusinessProfile(null)
     setUserType(null)
     setError(null)
+    // Clear profile cache
+    profileCacheRef.current = {}
   }, [])
 
   const fetchUserProfile = useCallback(
     async (userId: string) => {
+      // Check cache first
+      const cached = profileCacheRef.current[`user_${userId}`] as UserProfile
+      if (cached) {
+        if (mountedRef.current) {
+          setUserProfile(cached)
+          setUserType("customer")
+        }
+        return cached
+      }
+
       try {
         const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
         if (error) throw error
+
+        // Cache the result
+        profileCacheRef.current[`user_${userId}`] = data
 
         if (mountedRef.current) {
           setUserProfile(data)
@@ -68,6 +86,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchBusinessProfile = useCallback(
     async (userId: string) => {
+      // Check cache first
+      const cached = profileCacheRef.current[`business_${userId}`] as BusinessProfile
+      if (cached) {
+        if (mountedRef.current) {
+          setBusinessProfile(cached)
+          setUserType("business")
+        }
+        return cached
+      }
+
       try {
         const { data, error } = await supabase
           .from("host_profiles")
@@ -89,6 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
         }
 
+        // Cache the result
+        profileCacheRef.current[`business_${userId}`] = profile
+
         if (mountedRef.current) {
           setBusinessProfile(profile)
           setUserType("business")
@@ -106,12 +137,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const refreshProfile = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
 
     setIsLoading(true)
     setError(null)
 
     try {
+      // Clear cache for this user
+      delete profileCacheRef.current[`user_${user.id}`]
+      delete profileCacheRef.current[`business_${user.id}`]
+
       // Try business profile first
       const businessProfile = await fetchBusinessProfile(user.id)
       if (businessProfile) return
@@ -128,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-  }, [user, fetchBusinessProfile, fetchUserProfile])
+  }, [user?.id, fetchBusinessProfile, fetchUserProfile])
 
   const signOut = useCallback(async () => {
     try {
@@ -188,14 +223,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
+      console.log("Auth state change:", event, !!session?.user)
+
       setSession(session)
       setUser(session?.user || null)
 
       if (event === "SIGNED_OUT" || !session?.user) {
         clearAuthState()
         setIsLoading(false)
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      } else if (event === "SIGNED_IN") {
+        // Only refresh on actual sign in, not token refresh
         await refreshProfile()
+      } else if (event === "TOKEN_REFRESHED") {
+        // Don't refetch profile on token refresh to prevent excessive API calls
+        setIsLoading(false)
       }
     })
 
@@ -206,17 +247,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, refreshProfile, clearAuthState])
 
-  const value: AuthContextType = {
-    user,
-    session,
-    userProfile,
-    businessProfile,
-    userType,
-    isLoading,
-    error,
-    signOut,
-    refreshProfile,
-  }
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      session,
+      userProfile,
+      businessProfile,
+      userType,
+      isLoading,
+      error,
+      signOut,
+      refreshProfile,
+    }),
+    [user, session, userProfile, businessProfile, userType, isLoading, error, signOut, refreshProfile]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
