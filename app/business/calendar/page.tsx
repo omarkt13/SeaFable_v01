@@ -55,14 +55,14 @@ export default function BusinessCalendarPage() {
         formattedDate,
       )
       if (availabilityError) {
-        throw new Error(availabilityError.message)
+        throw new Error(availabilityError.message || "Failed to fetch availability")
       }
       setHostAvailability(availabilityData || [])
 
       // Fetch bookings for the selected date
       const { data: bookingsData, error: bookingsError } = await getHostBookings(hostId)
       if (bookingsError) {
-        throw new Error(bookingsError)
+        throw new Error(bookingsError.message || "Failed to fetch bookings")
       }
       const filteredBookings = (bookingsData || []).filter(
         (b) => format(new Date(b.booking_date), "yyyy-MM-dd") === (formattedDate || format(new Date(), "yyyy-MM-dd")),
