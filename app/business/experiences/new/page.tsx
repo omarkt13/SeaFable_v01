@@ -1,102 +1,66 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { format } from "date-fns"
+import { CalendarIcon, PlusIcon, TrashIcon, Loader2 } from "lucide-react"
+
 import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/lib/auth-context"
-import { createExperience } from "@/lib/supabase-business"
-import { Loader2, PlusCircle, XCircle, Save } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { setHostAvailability } from "@/lib/supabase-business"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 const itineraryItemSchema = z.object({
-  time: z.string().min(1, "Time is required."),
-  activity: z.string().min(1, "Activity is required."),
+  title: z.string().min(1, "Itinerary item title is required"),
+  description: z.string().min(1, "Itinerary item description is required"),
 })
 
 const availabilitySlotSchema = z.object({
-  date: z.string().min(1, "Date is required."),
-  startTime: z.string().min(1, "Start time is required."),
-  endTime: z.string().min(1, "End time is required."),
-  availableCapacity: z.coerce.number().min(1, "Capacity must be at least 1."),
-  priceOverride: z.coerce.number().min(0, "Price override cannot be negative.").optional().nullable(),
-  notes: z.string().optional(),
-  weatherDependent: z.boolean().default(false),
-  isRecurring: z.boolean().default(false),
-  recurringPattern: z.string().optional(),
+  available_date: z.date({ required_error: "Date is required" }),
+  start_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid start time format (HH:MM)"),
+  end_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid end time format (HH:MM)"),
+  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
+  price_override: z.coerce.number().nullable().optional(),
 })
 
-const experienceSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters.").max(100, "Title cannot exceed 100 characters."),
-  description: z.string().min(20, "Description must be at least 20 characters."),
-  short_description: z.string().max(250, "Short description cannot exceed 250 characters.").optional(),
-  location: z.string().min(3, "Location is required."),
-  specific_location: z.string().optional(),
-  country: z.string().optional(),
-  activity_type: z.string().min(1, "Activity type is required."),
-  category: z.array(z.string()).min(1, "At least one category is required."),
-  duration_hours: z.coerce.number().min(0.5, "Duration must be at least 0.5 hours."),
-  duration_display: z.string().optional(),
-  max_guests: z.coerce.number().min(1, "Maximum guests must be at least 1."),
-  min_guests: z.coerce.number().min(1, "Minimum guests must be at least 1."),
-  price_per_person: z.coerce.number().min(0, "Price cannot be negative."),
-  difficulty_level: z.string().min(1, "Difficulty level is required."),
-  primary_image_url: z.string().url("Must be a valid URL.").optional().or(z.literal("")),
-  weather_contingency: z.string().optional(),
-  included_amenities: z.array(z.string()).optional(),
-  what_to_bring: z.array(z.string()).optional(),
-  min_age: z.coerce.number().min(0, "Minimum age cannot be negative.").optional().nullable(),
-  max_age: z.coerce.number().min(0, "Maximum age cannot be negative.").optional().nullable(),
-  age_restriction_details: z.string().optional(),
-  activity_specific_details: z.any().optional(), // Consider a more specific schema if structure is known
-  tags: z.array(z.string()).optional(),
-  seasonal_availability: z.array(z.string()).optional(),
-  is_active: z.boolean().default(true),
-  itinerary: z.array(itineraryItemSchema).optional(),
-  availability: z.array(availabilitySlotSchema).optional(),
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  location: z.string().min(1, "Location is required"),
+  price: z.coerce.number().min(0, "Price must be non-negative"),
+  duration: z.coerce.number().min(1, "Duration must be at least 1 minute"),
+  itinerary: z.array(itineraryItemSchema).min(1, "At least one itinerary item is required"),
+  availability: z.array(availabilitySlotSchema).min(1, "At least one availability slot is required"),
 })
 
-type ExperienceFormValues = z.infer<typeof experienceSchema>
+type ExperienceFormValues = z.infer<typeof formSchema>
 
 export default function NewExperiencePage() {
-  const { user, businessProfile, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<ExperienceFormValues>({
-    resolver: zodResolver(experienceSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      short_description: "",
       location: "",
-      activity_type: "",
-      category: [],
-      duration_hours: 1,
-      max_guests: 1,
-      min_guests: 1,
-      price_per_person: 0,
-      difficulty_level: "",
-      primary_image_url: "",
-      included_amenities: [],
-      what_to_bring: [],
-      tags: [],
-      seasonal_availability: [],
-      is_active: true,
-      itinerary: [],
-      availability: [],
-      min_age: null, // Explicitly set to null for number fields that can be empty
-      max_age: null, // Explicitly set to null for number fields that can be empty
+      price: 0,
+      duration: 60,
+      itinerary: [{ title: "", description: "" }],
+      availability: [
+        { available_date: new Date(), start_time: "09:00", end_time: "10:00", capacity: 1, price_override: null },
+      ],
     },
   })
 
@@ -118,77 +82,61 @@ export default function NewExperiencePage() {
     name: "availability",
   })
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        title: "Authentication Required",
-        description: "You must be logged in to create a new experience.",
-        variant: "destructive",
-      })
-      router.push("/business/login")
-    } else if (!authLoading && user && !businessProfile) {
-      toast({
-        title: "Business Profile Required",
-        description: "Please complete your business profile before creating experiences.",
-        variant: "destructive",
-      })
-      router.push("/business/onboarding") // Redirect to onboarding if business profile is missing
-    }
-  }, [authLoading, user, businessProfile, router, toast])
-
-  const onSubmit = async (values: ExperienceFormValues) => {
-    if (!businessProfile?.id) {
-      toast({
-        title: "Error",
-        description: "Business profile not found. Cannot create experience.",
-        variant: "destructive",
-      })
-      return
-    }
-
+  async function onSubmit(values: ExperienceFormValues) {
     setIsSubmitting(true)
     try {
-      // Destructure availability from values before passing to createExperience
-      const { availability, ...experienceDataToCreate } = values
-
-      const newExperience = await createExperience({
-        host_id: businessProfile.id,
-        ...experienceDataToCreate,
-        // Ensure arrays are not undefined if optional
-        category: experienceDataToCreate.category || [],
-        included_amenities: experienceDataToCreate.included_amenities || [],
-        what_to_bring: experienceDataToCreate.what_to_bring || [],
-        tags: experienceDataToCreate.tags || [],
-        seasonal_availability: experienceDataToCreate.seasonal_availability || [],
-        itinerary: experienceDataToCreate.itinerary || [],
-        // Ensure nullable number fields are correctly passed as null if empty string
-        min_age: experienceDataToCreate.min_age === null ? null : experienceDataToCreate.min_age,
-        max_age: experienceDataToCreate.max_age === null ? null : experienceDataToCreate.max_age,
+      // 1. Create the experience
+      const experienceResponse = await fetch("/api/business/experiences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: values.title,
+          description: values.description,
+          location: values.location,
+          price: values.price,
+          duration: values.duration,
+          itinerary: values.itinerary,
+        }),
       })
 
-      // If availability is provided, set it for the new experience
-      if (availability && availability.length > 0) {
-        const mappedAvailability = availability.map((slot) => ({
-          ...slot,
-          host_profile_id: businessProfile.id,
-          experience_id: newExperience.id, // Link availability to the newly created experience
-        }))
-        await setHostAvailability(businessProfile.id, mappedAvailability)
+      if (!experienceResponse.ok) {
+        const errorData = await experienceResponse.json()
+        throw new Error(errorData.error || "Failed to create experience")
+      }
+
+      const { experienceId } = await experienceResponse.json()
+
+      // 2. Set availability for the new experience
+      const formattedAvailability = values.availability.map((slot) => ({
+        experience_id: experienceId,
+        available_date: format(slot.available_date, "yyyy-MM-dd"),
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        capacity: slot.capacity,
+        price_override: slot.price_override,
+      }))
+
+      const availabilityResponse = await fetch("/api/business/availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ availabilitySlots: formattedAvailability }),
+      })
+
+      if (!availabilityResponse.ok) {
+        const errorData = await availabilityResponse.json()
+        throw new Error(errorData.error || "Failed to set availability")
       }
 
       toast({
-        title: "Success",
-        description: `Experience "${newExperience.title}" created successfully!`,
+        title: "Experience Created!",
+        description: "Your new experience and its availability have been successfully added.",
         variant: "default",
       })
-      router.push(`/business/experiences`) // Redirect to experiences list
+      router.push("/business/experiences") // Redirect to experiences list
     } catch (error: any) {
-      console.error("Error creating experience:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to create experience.",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       })
     } finally {
@@ -196,758 +144,306 @@ export default function NewExperiencePage() {
     }
   }
 
-  if (authLoading || (!user && !authLoading) || (!businessProfile && user && !authLoading)) {
-    return (
-      <BusinessLayout>
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-          <span className="ml-2 text-gray-500">Loading...</span>
-        </div>
-      </BusinessLayout>
-    )
-  }
-
   return (
     <BusinessLayout>
-      <div>
+      <div className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Create New Experience</h1>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-                <CardDescription>Details about your experience.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Sunset Kayaking Tour" {...field} value={String(field.value || "")} />
-                      </FormControl>
-                      <FormDescription>A catchy and descriptive title for your experience.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="short_description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Short Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="A brief summary of the experience..."
-                          {...field}
-                          value={String(field.value || "")}
-                        />
-                      </FormControl>
-                      <FormDescription>A concise summary (max 250 characters).</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Provide a detailed description of what participants will do, see, and experience."
-                          className="min-h-[120px]"
-                          {...field}
-                          value={String(field.value || "")}
-                        />
-                      </FormControl>
-                      <FormDescription>A comprehensive overview of your experience.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Experience Details</CardTitle>
+            <CardDescription>Fill in the details for your new experience listing.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Sunset Kayaking Tour" {...field} />
+                        </FormControl>
+                        <FormDescription>A catchy title for your experience.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>General Location</FormLabel>
+                        <FormLabel>Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Miami, Florida" {...field} value={String(field.value || "")} />
+                          <Input placeholder="e.g., Miami Beach" {...field} />
                         </FormControl>
-                        <FormDescription>City, State/Region where the experience takes place.</FormDescription>
+                        <FormDescription>Where does this experience take place?</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
-                    name="specific_location"
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe your experience in detail..."
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>Provide a comprehensive description for your customers.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Specific Meeting Point</FormLabel>
+                        <FormLabel>Base Price ($)</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., South Beach Marina" {...field} value={String(field.value || "")} />
+                          <Input type="number" placeholder="e.g., 50.00" {...field} />
                         </FormControl>
-                        <FormDescription>Exact address or meeting instructions.</FormDescription>
+                        <FormDescription>The base price per person for this experience.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="e.g., 60" {...field} />
+                        </FormControl>
+                        <FormDescription>How long does the experience last?</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="activity_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Activity Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an activity type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="water_sport">Water Sport</SelectItem>
-                            <SelectItem value="land_adventure">Land Adventure</SelectItem>
-                            <SelectItem value="cultural">Cultural</SelectItem>
-                            <SelectItem value="food_tour">Food Tour</SelectItem>
-                            <SelectItem value="wildlife">Wildlife</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>The primary type of activity.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="difficulty_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Difficulty Level</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select difficulty" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="easy">easy</SelectItem>
-                            <SelectItem value="moderate">moderate</SelectItem>
-                            <SelectItem value="challenging">challenging</SelectItem>
-                            <SelectItem value="expert">expert</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>How challenging is this experience?</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Categories</FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {["Kayaking", "Snorkeling", "Diving", "Fishing", "Hiking", "City Tour", "Cooking Class"].map(
-                          (category) => (
-                            <FormField
-                              key={category}
-                              control={form.control}
-                              name="category"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem key={category} className="flex flex-row items-start space-x-2 space-y-0">
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(category)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, category])
-                                            : field.onChange(field.value?.filter((value) => value !== category))
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">{category}</FormLabel>
-                                  </FormItem>
-                                )
-                              }}
-                            />
-                          ),
-                        )}
-                      </div>
-                      <FormDescription>Select all relevant categories for your experience.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing & Capacity</CardTitle>
-                <CardDescription>Set the price and guest limits.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="price_per_person"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price per Person (€)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0.00"
-                            {...field}
-                            value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                            onChange={(e) =>
-                              field.onChange(e.target.value === "" ? null : Number.parseFloat(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="min_guests"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Minimum Guests</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="1"
-                            {...field}
-                            value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                            onChange={(e) =>
-                              field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="max_guests"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Maximum Guests</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="10"
-                            {...field}
-                            value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                            onChange={(e) =>
-                              field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="duration_hours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration (Hours)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          placeholder="1.0"
-                          {...field}
-                          value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                          onChange={(e) =>
-                            field.onChange(e.target.value === "" ? null : Number.parseFloat(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormDescription>How long does the experience last?</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="duration_display"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration Display Text (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 3-4 hours, Full day" {...field} value={String(field.value || "")} />
-                      </FormControl>
-                      <FormDescription>Custom text for displaying duration on your listing.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Itinerary</CardTitle>
-                <CardDescription>Outline the schedule of activities for your experience.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {itineraryFields.map((item, index) => (
-                  <div key={item.id} className="flex items-end gap-4">
-                    <FormField
-                      control={form.control}
-                      name={`itinerary.${index}.time`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Time</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., 9:00 AM" {...field} value={String(field.value || "")} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`itinerary.${index}.activity`}
-                      render={({ field }) => (
-                        <FormItem className="flex-2">
-                          <FormLabel>Activity</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g., Meet at marina, Kayak to island"
-                              {...field}
-                              value={String(field.value || "")}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="button" variant="destructive" size="icon" onClick={() => removeItinerary(index)}>
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={() => appendItinerary({ time: "", activity: "" })}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Itinerary Item
-                </Button>
-                <FormField
-                  control={form.control}
-                  name="itinerary"
-                  render={() => (
-                    <FormItem>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Availability & Capacity Slots</CardTitle>
-                <CardDescription>Define specific dates, times, and capacities for your experience.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {availabilityFields.map((item, index) => (
-                  <div key={item.id} className="border p-4 rounded-md space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`availability.${index}.date`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} value={String(field.value || "")} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`availability.${index}.startTime`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Start Time</FormLabel>
-                            <FormControl>
-                              <Input type="time" {...field} value={String(field.value || "")} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`availability.${index}.endTime`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>End Time</FormLabel>
-                            <FormControl>
-                              <Input type="time" {...field} value={String(field.value || "")} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`availability.${index}.availableCapacity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Available Capacity</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="10"
-                                {...field}
-                                value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                                onChange={(e) =>
-                                  field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`availability.${index}.priceOverride`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Price Override (€)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Optional"
-                                {...field}
-                                value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                                onChange={(e) =>
-                                  field.onChange(e.target.value === "" ? null : Number.parseFloat(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription>Override default price for this slot.</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name={`availability.${index}.notes`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Notes (Optional)</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Any specific notes for this slot..."
-                              {...field}
-                              value={String(field.value || "")}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <FormField
-                          control={form.control}
-                          name={`availability.${index}.weatherDependent`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                              <FormLabel className="font-normal">Weather Dependent</FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`availability.${index}.isRecurring`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                              <FormLabel className="font-normal">Is Recurring</FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <Button type="button" variant="destructive" size="sm" onClick={() => removeAvailability(index)}>
-                        Remove Slot
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    appendAvailability({
-                      date: "",
-                      startTime: "",
-                      endTime: "",
-                      availableCapacity: 1,
-                      weatherDependent: false,
-                      isRecurring: false,
-                      priceOverride: null, // Ensure default is null for optional number fields
-                    })
-                  }
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Availability Slot
-                </Button>
-                <FormField
-                  control={form.control}
-                  name="availability"
-                  render={() => (
-                    <FormItem>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Details</CardTitle>
-                <CardDescription>Other important information for participants.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="primary_image_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Primary Image URL</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/image.jpg"
-                          {...field}
-                          value={String(field.value || "")}
-                        />
-                      </FormControl>
-                      <FormDescription>URL of the main image for your experience.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="weather_contingency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Weather Contingency</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="What happens if there's bad weather?"
-                          className="min-h-[80px]"
-                          {...field}
-                          value={String(field.value || "")}
-                        />
-                      </FormControl>
-                      <FormDescription>Plan for adverse weather conditions.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="included_amenities"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Included Amenities</FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {["Equipment", "Snacks", "Drinks", "Guide", "Transportation"].map((amenity) => (
+                {/* Itinerary Builder */}
+                <Card className="mt-8">
+                  <CardHeader>
+                    <CardTitle>Itinerary</CardTitle>
+                    <CardDescription>Outline the steps or activities involved in your experience.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {itineraryFields.map((field, index) => (
+                      <div key={field.id} className="flex items-end gap-4 border p-4 rounded-md">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
                           <FormField
-                            key={amenity}
                             control={form.control}
-                            name="included_amenities"
-                            render={({ field }) => {
-                              return (
-                                <FormItem key={amenity} className="flex flex-row items-start space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(amenity)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...field.value, amenity])
-                                          : field.onChange(field.value?.filter((value) => value !== amenity))
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">{amenity}</FormLabel>
-                                </FormItem>
-                              )
-                            }}
+                            name={`itinerary.${index}.title`}
+                            render={({ field: itemField }) => (
+                              <FormItem>
+                                <FormLabel>Step {index + 1} Title</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Meet & Greet" {...itemField} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        ))}
-                      </div>
-                      <FormDescription>What is provided during the experience?</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="what_to_bring"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>What to Bring</FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {["Swimsuit", "Towel", "Sunscreen", "Water Bottle", "Camera", "Comfortable Shoes"].map(
-                          (item) => (
-                            <FormField
-                              key={item}
-                              control={form.control}
-                              name="what_to_bring"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem key={item} className="flex flex-row items-start space-x-2 space-y-0">
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(item)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, item])
-                                            : field.onChange(field.value?.filter((value) => value !== item))
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">{item}</FormLabel>
-                                  </FormItem>
-                                )
-                              }}
-                            />
-                          ),
-                        )}
-                      </div>
-                      <FormDescription>Items participants should bring.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="min_age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Minimum Age</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            {...field}
-                            value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                            onChange={(e) =>
-                              field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value))
-                            }
+                          <FormField
+                            control={form.control}
+                            name={`itinerary.${index}.description`}
+                            render={({ field: itemField }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel>Step {index + 1} Description</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="What happens during this step?" {...itemField} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="max_age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Maximum Age</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="99"
-                            {...field}
-                            value={field.value == null ? "" : String(field.value)} // Ensure value is always a string
-                            onChange={(e) =>
-                              field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="age_restriction_details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Age Restriction Details</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g., Children under 12 must be accompanied by an adult."
-                          className="min-h-[80px]"
-                          {...field}
-                          value={String(field.value || "")}
-                        />
-                      </FormControl>
-                      <FormDescription>Any specific rules regarding age.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="is_active"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Active Experience</FormLabel>
-                        <FormDescription>If checked, this experience will be visible to customers.</FormDescription>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeItinerary(index)}
+                          disabled={itineraryFields.length === 1}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          <span className="sr-only">Remove itinerary item</span>
+                        </Button>
                       </div>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => appendItinerary({ title: "", description: "" })}
+                    >
+                      <PlusIcon className="mr-2 h-4 w-4" /> Add Itinerary Item
+                    </Button>
+                    <FormMessage>{form.formState.errors.itinerary?.message}</FormMessage>
+                  </CardContent>
+                </Card>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" /> Create Experience
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+                {/* Availability Configuration */}
+                <Card className="mt-8">
+                  <CardHeader>
+                    <CardTitle>Availability</CardTitle>
+                    <CardDescription>Define the dates, times, and capacity for your experience.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {availabilityFields.map((field, index) => (
+                      <div key={field.id} className="flex items-end gap-4 border p-4 rounded-md">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-grow">
+                          <FormField
+                            control={form.control}
+                            name={`availability.${index}.available_date`}
+                            render={({ field: dateField }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel>Date</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "w-full pl-3 text-left font-normal",
+                                          !dateField.value && "text-muted-foreground",
+                                        )}
+                                      >
+                                        {dateField.value ? format(dateField.value, "PPP") : <span>Pick a date</span>}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={dateField.value}
+                                      onSelect={dateField.onChange}
+                                      disabled={(date) => date < new Date()}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`availability.${index}.start_time`}
+                            render={({ field: timeField }) => (
+                              <FormItem>
+                                <FormLabel>Start Time</FormLabel>
+                                <FormControl>
+                                  <Input type="time" {...timeField} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`availability.${index}.end_time`}
+                            render={({ field: timeField }) => (
+                              <FormItem>
+                                <FormLabel>End Time</FormLabel>
+                                <FormControl>
+                                  <Input type="time" {...timeField} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`availability.${index}.capacity`}
+                            render={({ field: capacityField }) => (
+                              <FormItem>
+                                <FormLabel>Capacity</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="e.g., 10" {...capacityField} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`availability.${index}.price_override`}
+                            render={({ field: priceField }) => (
+                              <FormItem>
+                                <FormLabel>Price Override ($)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    placeholder="Optional"
+                                    {...priceField}
+                                    value={priceField.value ?? ""}
+                                    onChange={(e) =>
+                                      priceField.onChange(e.target.value === "" ? null : Number(e.target.value))
+                                    }
+                                  />
+                                </FormControl>
+                                <FormDescription>Leave blank for base price.</FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeAvailability(index)}
+                          disabled={availabilityFields.length === 1}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          <span className="sr-only">Remove availability slot</span>
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        appendAvailability({
+                          available_date: new Date(),
+                          start_time: "09:00",
+                          end_time: "10:00",
+                          capacity: 1,
+                          price_override: null,
+                        })
+                      }
+                    >
+                      <PlusIcon className="mr-2 h-4 w-4" /> Add Availability Slot
+                    </Button>
+                    <FormMessage>{form.formState.errors.availability?.message}</FormMessage>
+                  </CardContent>
+                </Card>
+
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Experience...
+                    </>
+                  ) : (
+                    "Create Experience"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
     </BusinessLayout>
   )

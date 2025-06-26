@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/lib/auth-context"
+import { signInUser } from "@/lib/auth-client" // Corrected import
 
 interface LoginFormProps {
   userType: string
@@ -17,7 +17,6 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ userType, onSuccess }: LoginFormProps) {
-  const { login } = useAuth()
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -51,17 +50,19 @@ export function LoginForm({ userType, onSuccess }: LoginFormProps) {
     setErrors({})
 
     try {
-      const result = await login(formData.email, formData.password, userType)
+      const result = await signInUser(formData.email, formData.password) // Use signInUser
 
-      if (result.success && result.user) {
+      if (result.user) {
         onSuccess?.(result.user)
       } else {
-        setErrors({ general: result.error || "Login failed" })
+        setErrors({ general: "Login failed: No user data returned." })
         setLoginAttempts((prev) => prev + 1)
         setFormData({ ...formData, password: "" })
       }
-    } catch (error) {
-      setErrors({ general: "Network error occurred" })
+    } catch (error: any) {
+      setErrors({ general: error.message || "Login failed due to network or server error." })
+      setLoginAttempts((prev) => prev + 1)
+      setFormData({ ...formData, password: "" })
     } finally {
       setIsLoading(false)
     }
@@ -148,16 +149,6 @@ export function LoginForm({ userType, onSuccess }: LoginFormProps) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{errors.general}</AlertDescription>
-        </Alert>
-      )}
-
-      {errors.general === "Invalid login credentials" && (
-        <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertDescription>
-            Please ensure you've run the database seeding scripts and are using the correct test credentials. You can
-            use the "Fill Test Credentials" button below.
-          </AlertDescription>
         </Alert>
       )}
 

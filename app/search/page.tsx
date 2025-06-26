@@ -10,7 +10,6 @@ import {
   Star,
   Clock,
   SlidersHorizontal,
-  Heart,
   Share2,
   Eye,
   X,
@@ -24,7 +23,6 @@ import {
   MessageCircle,
   ShieldCheck,
   FilterX,
-  CalendarDays,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,7 +36,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
-import { ErrorBoundary } from "@/components/error-boundary" // ✅ FIXED: Added ErrorBoundary import
+import { ErrorBoundary } from "@/components/error-boundary"
+import Image from "next/image"
 
 // Enhanced search filters
 const initialFilters = {
@@ -85,6 +84,7 @@ const difficultyLevels = [
   { value: "beginner", label: "Beginner" },
   { value: "intermediate", label: "Intermediate" },
   { value: "advanced", label: "Advanced" },
+  { value: "all_levels", label: "All Levels" },
 ]
 
 // Quick filter options
@@ -95,7 +95,6 @@ const quickFilters = [
   { label: "Superhost", key: "superhostOnly", icon: ShieldCheck },
 ]
 
-// ✅ FIXED: Defined ExperienceCardProps interface for type safety
 interface ExperienceCardProps {
   experience: Experience
   viewMode: "grid" | "list" | "map"
@@ -105,37 +104,17 @@ interface ExperienceCardProps {
 
 // Enhanced Experience Card Component
 function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }: ExperienceCardProps) {
-  // ✅ FIXED: Applied ExperienceCardProps
-  // ✅ FIXED: Used useMemo to optimize transformedExperience object creation
   const transformedExperience = useMemo(() => {
     const hasDiscount = experience.total_bookings > 50 // Simple discount logic
     const discountPercentage = hasDiscount ? 15 : 0
 
-    // Determine general availability status for the search page
-    let availabilityStatus: "Available" | "Fully Booked" | "Limited Availability" = "Available"
-    if (experience.host_availability && experience.host_availability.length > 0) {
-      const totalAvailableCapacity = experience.host_availability.reduce(
-        (sum, slot) => sum + slot.available_capacity,
-        0,
-      )
-      if (totalAvailableCapacity === 0) {
-        availabilityStatus = "Fully Booked"
-      } else if (totalAvailableCapacity < experience.max_guests * 2) {
-        // Arbitrary threshold for "limited"
-        availabilityStatus = "Limited Availability"
-      }
-    } else {
-      // If no specific availability data, assume available if active
-      availabilityStatus = experience.is_active ? "Available" : "Fully Booked"
-    }
-
     // Transform database experience to match UI expectations
     return {
       ...experience,
-      primaryImage: experience.primary_image_url || "/placeholder.svg?height=350&width=500",
+      primaryImage: experience.primary_image_url || "/placeholder.svg", // Changed to static placeholder
       hostProfile: {
         name: experience.host_profiles?.name || "Host",
-        avatar: experience.host_profiles?.avatar_url || "/placeholder.svg?height=50&width=50",
+        avatar: experience.host_profiles?.avatar_url || "/placeholder.svg", // Changed to static placeholder
         rating: experience.host_profiles?.rating || 0,
         responseRate: 95, // Default value
         responseTime: "within 2 hours", // Default value
@@ -149,7 +128,6 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
       isPopular: experience.total_bookings > 20,
       lastBooked: experience.total_bookings > 0 ? "2 hours ago" : null,
       discount: discountPercentage,
-      availabilityStatus: availabilityStatus, // Add availability status
     }
   }, [experience])
 
@@ -162,42 +140,14 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
           <div className="flex">
             <div className="relative w-80 h-48 flex-shrink-0">
-              <img
-                src={transformedExperience.primaryImage || "/placeholder.svg"}
+              <Image
+                src={transformedExperience.primaryImage || "/placeholder.svg"} // Changed to static placeholder
                 alt={experience.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                fill
+                style={{ objectFit: "cover" }}
+                className="group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, 33vw"
               />
-              <div className="absolute top-3 left-3 flex flex-col space-y-2">
-                {transformedExperience.isPremium && (
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300">
-                    <Award className="h-3 w-3 mr-1" />
-                    Premium
-                  </Badge>
-                )}
-                {transformedExperience.isSuperhost && <Badge variant="secondary">Superhost</Badge>}
-                {transformedExperience.isInstantBook && (
-                  <Badge variant="default" className="bg-green-600">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Instant Book
-                  </Badge>
-                )}
-                {hasDiscount && <Badge variant="destructive">{discountPercentage}% OFF</Badge>}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onToggleWishlist()
-                }}
-                className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-              >
-                <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-              </button>
-              {transformedExperience.availableToday && (
-                <div className="absolute bottom-3 left-3">
-                  <Badge className="bg-green-500 text-white">Available Today</Badge>
-                </div>
-              )}
             </div>
 
             <CardContent className="flex-1 p-6">
@@ -234,10 +184,12 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+                      <Image
+                        src={transformedExperience.hostProfile.avatar || "/placeholder.svg"} // Changed to static placeholder
                         alt={transformedExperience.hostProfile.name}
-                        className="w-8 h-8 rounded-full"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
                       />
                       <div>
                         <span className="text-sm font-medium text-gray-900">
@@ -277,7 +229,6 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
                   </div>
 
                   <div className="space-y-2">
-                    {/* Removed asChild and Link here */}
                     <Button className="w-full">
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
@@ -312,55 +263,14 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
     <Link href={`/experience/${experience.id}`} className="block">
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
         <div className="relative">
-          <img
-            src={transformedExperience.primaryImage || "/placeholder.svg"}
+          <Image
+            src={transformedExperience.primaryImage || "/placeholder.svg"} // Changed to static placeholder
             alt={experience.title}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            style={{ objectFit: "cover" }}
+            className="group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
-          <div className="absolute top-3 left-3 flex flex-col space-y-1">
-            {transformedExperience.isPremium && (
-              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 text-xs">
-                <Award className="h-3 w-3 mr-1" />
-                Premium
-              </Badge>
-            )}
-            {transformedExperience.isSuperhost && (
-              <Badge variant="secondary" className="text-xs">
-                Superhost
-              </Badge>
-            )}
-            {transformedExperience.isInstantBook && (
-              <Badge variant="default" className="bg-green-600 text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                Instant
-              </Badge>
-            )}
-            {hasDiscount && (
-              <Badge variant="destructive" className="text-xs">
-                {discountPercentage}% OFF
-              </Badge>
-            )}
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onToggleWishlist()
-            }}
-            className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors shadow-md"
-          >
-            <Heart className={`h-4 w-4 ${isWishlisted ? "text-red-500 fill-current" : "text-gray-600"}`} />
-          </button>
-          {transformedExperience.availableToday && (
-            <div className="absolute bottom-3 left-3">
-              <Badge className="bg-green-500 text-white text-xs">Available Today</Badge>
-            </div>
-          )}
-          {transformedExperience.isPopular && (
-            <div className="absolute bottom-3 right-3">
-              <Badge className="bg-orange-100 text-orange-800 text-xs">Popular</Badge>
-            </div>
-          )}
         </div>
 
         <CardContent className="p-4">
@@ -388,10 +298,12 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <img
-                src={transformedExperience.hostProfile.avatar || "/placeholder.svg"}
+              <Image
+                src={transformedExperience.hostProfile.avatar || "/placeholder.svg"} // Changed to static placeholder
                 alt={transformedExperience.hostProfile.name}
-                className="w-6 h-6 rounded-full"
+                width={24}
+                height={24}
+                className="rounded-full"
               />
               <span className="text-sm text-gray-600 truncate">{transformedExperience.hostProfile.name}</span>
             </div>
@@ -407,28 +319,10 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
               <span className="text-lg font-bold text-gray-900">€{experience.price_per_person}</span>
               <span className="text-sm text-gray-500"> / person</span>
             </div>
-            {/* Removed asChild and Link here */}
             <Button size="sm">
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>
-          </div>
-
-          {/* Availability Status */}
-          <div className="mt-2 flex items-center text-sm">
-            {transformedExperience.availabilityStatus === "Fully Booked" ? (
-              <Badge variant="destructive" className="flex items-center">
-                <CalendarDays className="h-3 w-3 mr-1" /> Fully Booked
-              </Badge>
-            ) : transformedExperience.availabilityStatus === "Limited Availability" ? (
-              <Badge className="bg-yellow-100 text-yellow-800 flex items-center">
-                <CalendarDays className="h-3 w-3 mr-1" /> Limited Availability
-              </Badge>
-            ) : (
-              <Badge className="bg-green-100 text-green-800 flex items-center">
-                <CalendarDays className="h-3 w-3 mr-1" /> Available
-              </Badge>
-            )}
           </div>
 
           {transformedExperience.lastBooked && (
@@ -442,35 +336,28 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
 // Main Search Page Component
 export default function EnhancedExperiencesSearchPage() {
-  const [filters, setFilters] = useState(initialFilters)
+  const searchParams = useSearchParams()
+
+  // Initialize filters from URL params only once
+  const initialFiltersFromParams = useMemo(() => {
+    const service = searchParams.get("service")
+    const location = searchParams.get("location")
+    const date = searchParams.get("date")
+    return {
+      ...initialFilters,
+      search: service || "",
+      location: location || "",
+      date: date || "",
+    }
+  }, [searchParams])
+
+  const [filters, setFilters] = useState(initialFiltersFromParams)
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [viewMode, setViewMode] = useState("grid")
   const [sortBy, setSortBy] = useState("recommended")
   const [showFilters, setShowFilters] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [wishlistItems, setWishlistItems] = useState(new Set())
-  const [hasInitialized, setHasInitialized] = useState(false)
-  const { user } = useAuth()
-  const searchParams = useSearchParams()
-
-  // Initialize filters from URL params only once
-  useEffect(() => {
-    if (!hasInitialized) {
-      const service = searchParams.get("service")
-      const location = searchParams.get("location")
-      const date = searchParams.get("date")
-
-      if (service || location || date) {
-        setFilters((prev) => ({
-          ...prev,
-          search: service || "",
-          location: location || "",
-          date: date || "",
-        }))
-      }
-      setHasInitialized(true)
-    }
-  }, [searchParams, hasInitialized])
 
   // Load experiences function - stable reference
   const loadExperiences = useCallback(async () => {
@@ -512,12 +399,10 @@ export default function EnhancedExperiencesSearchPage() {
     sortBy,
   ])
 
-  // Load experiences on initialization
+  // Load experiences on initial mount and when filters change
   useEffect(() => {
-    if (hasInitialized) {
-      loadExperiences()
-    }
-  }, [hasInitialized, loadExperiences])
+    loadExperiences()
+  }, [filters, sortBy, loadExperiences]) // Depend on filters and sortBy to re-fetch
 
   // Apply client-side filters that aren't handled by the database
   const filteredExperiences = useMemo(() => {
@@ -580,10 +465,10 @@ export default function EnhancedExperiencesSearchPage() {
     }).length
   }, [filters])
 
+  const { user } = useAuth() // Keep useAuth for client-side user context
+
   return (
     <ErrorBoundary>
-      {" "}
-      {/* ✅ FIXED: Wrapped with ErrorBoundary */}
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -841,7 +726,7 @@ export default function EnhancedExperiencesSearchPage() {
                                   } else {
                                     handleFilterChange(
                                       "categories",
-                                      filters.categories.filter((c) => c !== category),
+                                      filters.categories.filter((c) => c !== category.value),
                                     )
                                   }
                                 }}

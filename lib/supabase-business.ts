@@ -1,47 +1,69 @@
-import { createClient as createServerClient } from "@/lib/supabase/server"
-import { createClient as createBrowserClient } from "@/lib/supabase/client"
-import type { Database } from "@/types/database"
-import { cache } from "react"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import type { BusinessSettings, HostAvailability } from "@/types/business"
+import type { Experience } from "@/lib/database" // Import Experience type from database.ts
 
-// Get server client only when needed
-function getServerSupabase() {
-  return createServerClient()
+// This client is specifically for server-side operations related to business logic.
+export function createBusinessSupabaseServerClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value
+      },
+      set(name: string, value: string, options: any) {
+        try {
+          cookieStore.set({ name, value, ...options })
+        } catch (error) {
+          // This error is expected if called from a client component, but should not happen in server components/route handlers
+          console.warn("Could not set cookie from server component in business client:", error)
+        }
+      },
+      remove(name: string, options: any) {
+        try {
+          cookieStore.set({ name, value: "", ...options })
+        } catch (error) {
+          console.warn("Could not remove cookie from server component in business client:", error)
+        }
+      },
+    },
+  })
 }
 
-// Get browser client only when needed
-function getBrowserSupabase() {
-  return createBrowserClient()
+// Helper to get the server-side Supabase client
+function getSupabase() {
+  return createBusinessSupabaseServerClient()
 }
 
 export async function getHostProfile(userId: string) {
-  const supabase = getServerSupabase()
-  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
+  const supabase = getSupabase()
+  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).single()
 
-  if (error) throw error
-  if (!data) return null
+  if (error) {
+    console.error("Error in getHostProfile:", error)
+    throw error
+  }
   return data
 }
 
-export async function getBusinessSettings(
-  hostProfileId: string,
-): Promise<{ data: Database["public"]["Tables"]["host_business_settings"]["Row"] | null; error: any }> {
-  const supabase = getServerSupabase()
+export async function getBusinessSettings(hostProfileId: string) {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_business_settings")
     .select("*")
     .eq("host_profile_id", hostProfileId)
-    .maybeSingle()
+    .single()
 
-  if (error) throw error
-  if (!data) return { data: null, error: null }
+  if (error) {
+    console.error("Error in getBusinessSettings:", error)
+    throw error
+  }
   return data
 }
 
-export async function updateBusinessSettings(
-  hostProfileId: string,
-  settings: Partial<Database["public"]["Tables"]["host_business_settings"]["Row"]>,
-) {
-  const supabase = getServerSupabase()
+export async function updateBusinessSettings(hostProfileId: string, settings: Partial<BusinessSettings>) {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_business_settings")
     .upsert({
@@ -52,12 +74,15 @@ export async function updateBusinessSettings(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in updateBusinessSettings:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostEarnings(hostProfileId: string, startDate?: string, endDate?: string) {
-  const supabase = getServerSupabase()
+  const supabase = getSupabase()
   let query = supabase
     .from("host_earnings")
     .select(`
@@ -79,12 +104,15 @@ export async function getHostEarnings(hostProfileId: string, startDate?: string,
 
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostEarnings:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostAvailability(hostProfileId: string, startDate?: string, endDate?: string) {
-  const supabase = getServerSupabase()
+  const supabase = getSupabase()
   let query = supabase
     .from("host_availability")
     .select("*")
@@ -100,15 +128,23 @@ export async function getHostAvailability(hostProfileId: string, startDate?: str
 
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostAvailability:", error)
+    throw error
+  }
   return data
 }
 
-export async function setHostAvailability(hostProfileId: string, availability: any[]) {
-  const supabase = getServerSupabase()
+export async function setHostAvailability(hostProfileId: string, availability: HostAvailability[]) {
+  const supabase = getSupabase()
+  // Delete existing availability for the dates
+  const dates = availability.map((a) => a.date)
+  await supabase.from("host_availability").delete().eq("host_profile_id", hostProfileId).in("date", dates)
+
+  // Insert new availability
   const { data, error } = await supabase
     .from("host_availability")
-    .upsert(
+    .insert(
       availability.map((a) => ({
         host_profile_id: hostProfileId,
         date: a.date,
@@ -124,12 +160,15 @@ export async function setHostAvailability(hostProfileId: string, availability: a
     )
     .select()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in setHostAvailability:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostTeamMembers(hostProfileId: string) {
-  const supabase = getServerSupabase()
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from("host_team_members")
     .select(`
@@ -145,12 +184,15 @@ export async function getHostTeamMembers(hostProfileId: string) {
     .eq("is_active", true)
     .order("created_at", { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostTeamMembers:", error)
+    throw error
+  }
   return data
 }
 
 export async function getHostAnalytics(hostProfileId: string, days = 30) {
-  const supabase = getServerSupabase()
+  const supabase = getSupabase()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
 
@@ -161,143 +203,148 @@ export async function getHostAnalytics(hostProfileId: string, days = 30) {
     .gte("date", startDate.toISOString().split("T")[0])
     .order("date", { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in getHostAnalytics:", error)
+    throw error
+  }
   return data
 }
 
-// Cache frequently accessed data
-export const getCachedHostProfile = cache(async (hostId: string) => {
-  const supabase = getServerSupabase()
+// Experience Management Functions
+export async function createExperience(experienceData: {
+  host_id: string
+  title: string
+  description: string
+  short_description?: string
+  location: string
+  specific_location?: string
+  country?: string
+  activity_type: string
+  category: string[]
+  duration_hours: number
+  duration_display?: string
+  max_guests: number
+  min_guests: number
+  price_per_person: number
+  difficulty_level: string
+  primary_image_url?: string
+  weather_contingency?: string
+  included_amenities: string[]
+  what_to_bring: string[]
+  min_age?: number
+  max_age?: number
+  age_restriction_details?: string
+  activity_specific_details?: any
+  tags: string[]
+  seasonal_availability: string[]
+  is_active?: boolean
+  itinerary?: any // Include itinerary
+}) {
+  const supabase = getSupabase()
   const { data, error } = await supabase
-    .from("host_profiles")
-    .select(`
-      *,
-      host_business_settings (
-        onboarding_completed,
-        marketplace_enabled
-      )
-    `)
-    .eq("id", hostId)
-    .single()
-
-  if (error) throw error
-  return data
-})
-
-// Optimized experience creation with transaction-like behavior
-export async function createExperience(experienceData: any) {
-  const supabase = getBrowserSupabase()
-  const { data: experience, error: experienceError } = await supabase
     .from("experiences")
-    .insert([experienceData])
+    .insert([
+      {
+        ...experienceData,
+        rating: 0, // Default values for new experiences
+        total_reviews: 0,
+        total_bookings: 0,
+        is_active: experienceData.is_active ?? true, // Default to active if not provided
+      },
+    ])
     .select()
     .single()
 
-  if (experienceError) throw experienceError
-
-  // Update host statistics
-  const { error: statsError } = await supabase.rpc("increment_host_experience_count", {
-    host_id: experienceData.host_id,
-  })
-
-  if (statsError) {
-    console.warn("Failed to update host statistics:", statsError)
-    // Don't fail the entire operation for statistics
-  }
-
-  return experience
-}
-
-// Batch operations for better performance
-export async function batchUpdateExperiences(updates: Array<{ id: string; data: any }>) {
-  const supabase = getBrowserSupabase()
-  const results = await Promise.allSettled(
-    updates.map(({ id, data }) => supabase.from("experiences").update(data).eq("id", id).select().single()),
-  )
-
-  const successful = results
-    .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
-    .map((result) => result.value.data)
-
-  const failed = results
-    .filter((result): result is PromiseRejectedResult => result.status === "rejected")
-    .map((result) => result.reason)
-
-  return { successful, failed }
-}
-
-// Optimized availability setting with conflict detection
-export async function setHostAvailabilityWithConflictCheck(hostId: string, availabilitySlots: any[]) {
-  try {
-    const supabase = getBrowserSupabase()
-    // Check for conflicts first
-    const existingSlots = await supabase
-      .from("host_availability")
-      .select("date, start_time, end_time")
-      .eq("host_profile_id", hostId)
-      .in(
-        "date",
-        availabilitySlots.map((slot) => slot.date),
-      )
-
-    if (existingSlots.error) throw existingSlots.error
-
-    // Filter out conflicting slots
-    const conflicts = availabilitySlots.filter((newSlot) =>
-      existingSlots.data?.some(
-        (existing) =>
-          existing.date === newSlot.date &&
-          ((newSlot.startTime >= existing.start_time && newSlot.startTime < existing.end_time) ||
-            (newSlot.endTime > existing.start_time && newSlot.endTime <= existing.end_time)),
-      ),
-    )
-
-    if (conflicts.length > 0) {
-      throw new Error(`Availability conflicts detected for ${conflicts.length} slots`)
-    }
-
-    // Insert new availability slots
-    const { data, error } = await supabase
-      .from("host_availability")
-      .insert(
-        availabilitySlots.map((slot) => ({
-          host_profile_id: hostId,
-          date: slot.date,
-          start_time: slot.startTime,
-          end_time: slot.endTime,
-          available_capacity: slot.availableCapacity,
-          price_override: slot.priceOverride,
-          notes: slot.notes,
-          weather_dependent: slot.weatherDependent,
-          is_recurring: slot.isRecurring,
-          recurring_pattern: slot.recurringPattern,
-        })),
-      )
-      .select()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error("Error setting host availability:", error)
+  if (error) {
+    console.error("Error in createExperience:", error)
     throw error
   }
+  return data
 }
 
-export async function updateBusinessProfile(
-  hostProfileId: string,
-  updates: Partial<Database["public"]["Tables"]["host_profiles"]["Row"]>,
+export async function updateExperience(
+  experienceId: string,
+  updates: Partial<{
+    title: string
+    description: string
+    short_description: string
+    location: string
+    specific_location: string
+    country: string
+    activity_type: string
+    category: string[]
+    duration_hours: number
+    duration_display: string
+    max_guests: number
+    min_guests: number
+    price_per_person: number
+    difficulty_level: string
+    primary_image_url: string
+    weather_contingency: string
+    included_amenities: string[]
+    what_to_bring: string[]
+    min_age: number
+    max_age: number
+    age_restriction_details: string
+    activity_specific_details: any
+    tags: string[]
+    seasonal_availability: string[]
+    is_active: boolean
+    itinerary: any // Include itinerary
+  }>,
 ) {
-  const supabase = getServerSupabase()
+  const supabase = getSupabase()
   const { data, error } = await supabase
-    .from("host_profiles")
+    .from("experiences")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", hostProfileId)
+    .eq("id", experienceId)
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Error in updateExperience:", error)
+    throw error
+  }
   return data
+}
+
+export async function getHostExperiences(hostId: string): Promise<Experience[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.from("experiences").select("*").eq("host_id", hostId).eq("is_active", true)
+
+  if (error) {
+    console.error("Error in getHostExperiences:", error)
+    throw error
+  }
+  return data || []
+}
+
+export async function getHostBookings(hostId: string) {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(`
+      id,
+      total_price,
+      booking_status,
+      booking_date,
+      number_of_guests,
+      departure_time,
+      special_requests,
+      created_at,
+      payment_status,
+      users!bookings_user_id_fkey(first_name, last_name, phone),
+      experiences!bookings_experience_id_fkey(title)
+    `)
+    .eq("host_id", hostId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error in getHostBookings:", error)
+    throw error
+  }
+  return data || []
 }

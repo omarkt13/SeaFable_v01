@@ -1,33 +1,12 @@
+"use client"
+
 import { createBrowserClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl) {
-  throw new Error("Missing env var: NEXT_PUBLIC_SUPABASE_URL")
+// Create a function that returns a new Supabase client instance for client-side operations
+export function createClient(): SupabaseClient {
+  return createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 }
 
-if (!supabaseAnonKey) {
-  throw new Error("Missing env var: NEXT_PUBLIC_SUPABASE_ANON_KEY")
-}
-
-// Singleton pattern to prevent multiple instances
-let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
-
-export function createClient() {
-  if (!supabaseInstance) {
-    supabaseInstance = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-      },
-    })
-  }
-  return supabaseInstance
-}
-
-// Export a getter function instead of direct instance
-export function getSupabase() {
-  return createClient()
-}
+// Also export a singleton instance for convenience, as used by AuthProvider
+export const supabase = createClient()

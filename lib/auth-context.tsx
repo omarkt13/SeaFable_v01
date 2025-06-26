@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client" // Import the directly exported supabase client
+import { getUserProfile, getBusinessProfile, signOutUser } from "@/lib/auth-client" // Import signOutUser from auth-client
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
@@ -29,9 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Use ref to prevent memory leaks
   const mountedRef = useRef(true)
-  const supabase = createClient()
+  const profileCacheRef = useRef<{ [key: string]: UserProfile | BusinessProfile }>({})
 
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return
@@ -41,82 +41,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBusinessProfile(null)
     setUserType(null)
     setError(null)
+    profileCacheRef.current = {}
   }, [])
 
-  const fetchUserProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
-
-        if (error) throw error
-
-        if (mountedRef.current) {
-          setUserProfile(data)
-          setUserType("customer")
-        }
-        return data
-      } catch (error) {
-        console.error("Error fetching user profile:", error)
-        if (mountedRef.current) {
-          setError("Failed to fetch user profile")
-        }
-        return null
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    const cached = profileCacheRef.current[`user_${userId}`] as UserProfile
+    if (cached) {
+      if (mountedRef.current) {
+        setUserProfile(cached)
+        setUserType("customer")
       }
-    },
-    [supabase],
-  )
+      return cached
+    }
 
-  const fetchBusinessProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from("host_profiles")
-          .select(`
-          *,
-          host_business_settings (
-            onboarding_completed,
-            marketplace_enabled
-          )
-        `)
-          .eq("id", userId)
-          .single()
+    try {
+      const data = await getUserProfile(userId)
+      if (!data) throw new Error("User profile not found")
 
-        if (error) throw error
+      profileCacheRef.current[`user_${userId}`] = data
 
-        const profile = {
-          ...data,
-          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
-        }
-
-        if (mountedRef.current) {
-          setBusinessProfile(profile)
-          setUserType("business")
-        }
-        return profile
-      } catch (error) {
-        console.error("Error fetching business profile:", error)
-        if (mountedRef.current) {
-          setError("Failed to fetch business profile")
-        }
-        return null
+      if (mountedRef.current) {
+        setUserProfile(data)
+        setUserType("customer")
       }
-    },
-    [supabase],
-  )
+      return data
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
+      if (mountedRef.current) {
+        setError("Failed to fetch user profile")
+      }
+      return null
+    }
+  }, [])
+
+  const fetchBusinessProfile = useCallback(async (userId: string) => {
+    const cached = profileCacheRef.current[`business_${userId}`] as BusinessProfile
+    if (cached) {
+      if (mountedRef.current) {
+        setBusinessProfile(cached)
+        setUserType("business")
+      }
+      return cached
+    }
+
+    try {
+      const data = await getBusinessProfile(userId)
+      if (!data) throw new Error("Business profile not found")
+
+      const profile = {
+        ...data,
+        onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+        marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+      }
+
+      profileCacheRef.current[`business_${userId}`] = profile
+
+      if (mountedRef.current) {
+        setBusinessProfile(profile)
+        setUserType("business")
+      }
+      return profile
+    } catch (error) {
+      console.error("Error fetching business profile:", error)
+      if (mountedRef.current) {
+        setError("Failed to fetch business profile")
+      }
+      return null
+    }
+  }, [])
 
   const refreshProfile = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      // Try business profile first
+      delete profileCacheRef.current[`user_${user.id}`]
+      delete profileCacheRef.current[`business_${user.id}`]
+
       const businessProfile = await fetchBusinessProfile(user.id)
       if (businessProfile) return
 
-      // Fallback to user profile
       await fetchUserProfile(user.id)
     } catch (error) {
       console.error("Error refreshing profile:", error)
@@ -128,14 +134,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-  }, [user, fetchBusinessProfile, fetchUserProfile])
+  }, [user?.id, fetchBusinessProfile, fetchUserProfile])
 
   const signOut = useCallback(async () => {
     try {
       setIsLoading(true)
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-
+      await signOutUser() // Use signOutUser from auth-client
       clearAuthState()
     } catch (error) {
       console.error("Error signing out:", error)
@@ -147,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-  }, [supabase, clearAuthState])
+  }, [clearAuthState]) // No dependency on supabase here, as signOutUser handles it
 
   useEffect(() => {
     let mounted = true
@@ -158,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession()
+        } = await supabase.auth.getSession() // Use the imported supabase instance
 
         if (error) throw error
 
@@ -188,14 +192,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
+      console.log("Auth state change:", event, !!session?.user)
+
       setSession(session)
       setUser(session?.user || null)
 
       if (event === "SIGNED_OUT" || !session?.user) {
         clearAuthState()
         setIsLoading(false)
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      } else if (event === "SIGNED_IN") {
         await refreshProfile()
+      } else if (event === "TOKEN_REFRESHED") {
+        setIsLoading(false)
       }
     })
 
@@ -204,19 +212,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false
       subscription.unsubscribe()
     }
-  }, [supabase, refreshProfile, clearAuthState])
+  }, [refreshProfile, clearAuthState]) // Removed supabase from dependencies as it's a stable memoized object
 
-  const value: AuthContextType = {
-    user,
-    session,
-    userProfile,
-    businessProfile,
-    userType,
-    isLoading,
-    error,
-    signOut,
-    refreshProfile,
-  }
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      session,
+      userProfile,
+      businessProfile,
+      userType,
+      isLoading,
+      error,
+      signOut,
+      refreshProfile,
+    }),
+    [user, session, userProfile, businessProfile, userType, isLoading, error, signOut, refreshProfile],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

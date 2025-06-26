@@ -2,13 +2,12 @@
 import { useState } from "react"
 import type React from "react"
 
+import { supabase } from "@/lib/supabase" // ✅ FIXED: Standardized Supabase import
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Anchor, Mail, Lock, ArrowRight } from "lucide-react"
-import { useAuth } from "@/lib/auth-context" // Import useAuth
 
 export default function CustomerLoginPage() {
-  const { login, isLoading: authLoading } = useAuth() // Use login from useAuth
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -20,14 +19,32 @@ export default function CustomerLoginPage() {
     setLoading(true)
     setError("")
 
-    const result = await login(email, password, "customer") // Call login from useAuth
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (result.success) {
-      router.push("/dashboard")
-    } else {
-      setError(result.error || "Login failed.")
+      if (error) throw error
+
+      if (data.user) {
+        // Check if user is actually a business user
+        const { data: hostProfile } = await supabase.from("host_profiles").select("id").eq("id", data.user.id).single()
+
+        if (hostProfile) {
+          // Business user trying to log in on customer page
+          await supabase.auth.signOut()
+          setError("Business accounts should use the business login page.")
+          return
+        }
+
+        router.push("/dashboard")
+      }
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -91,9 +108,9 @@ export default function CustomerLoginPage() {
             <button
               type="submit"
               className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
-              disabled={loading || authLoading}
+              disabled={loading}
             >
-              {loading || authLoading ? (
+              {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 </div>
