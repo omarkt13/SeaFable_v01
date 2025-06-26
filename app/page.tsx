@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -25,6 +25,78 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 
+// Memoized components to prevent unnecessary re-renders
+const StatItem = ({ value, label }: { value: string; label: string }) => (
+  <div className="transform hover:scale-105 transition-transform duration-300">
+    <div className="text-3xl md:text-4xl font-bold">{value}</div>
+    <div className="text-blue-200 text-sm sm:text-base">{label}</div>
+  </div>
+)
+
+const ActivityCard = ({ activity, index }: { activity: any; index: number }) => (
+  <div
+    key={index}
+    className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg card-hover cursor-pointer group flex flex-col items-center text-center"
+  >
+    <div className="text-4xl sm:text-5xl mb-3 sm:mb-4 group-hover:scale-110 smooth-transition">
+      {activity.icon}
+    </div>
+    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{activity.name}</h3>
+    <p className="text-gray-600 text-xs sm:text-sm">{activity.count}</p>
+  </div>
+)
+
+const ExperienceCard = ({ experience }: { experience: any }) => (
+  <Link href={`/experience/${experience.id}`} key={experience.id} className="group">
+    <Card className="rounded-2xl shadow-lg overflow-hidden card-hover focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2">
+      <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+        <Image
+          src={experience.image}
+          alt={experience.title}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority={false}
+        />
+      </div>
+      <CardContent className="p-5 lg:p-6 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-lg lg:text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-teal-600 smooth-transition">
+            {experience.title}
+          </h3>
+          <div className="flex items-center space-x-1 flex-shrink-0">
+            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+            <span className="text-sm font-medium">{experience.rating}</span>
+          </div>
+        </div>
+
+        <p className="text-gray-600 flex items-center text-sm">
+          <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+          <span className="truncate">{experience.location}</span>
+        </p>
+
+        <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-100">
+          <span className="truncate">By {experience.host}</span>
+          <span className="flex items-center flex-shrink-0">
+            <Clock className="h-4 w-4 mr-1" />
+            {experience.duration}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-gray-900">${experience.price}</span>
+            <span className="text-xs text-gray-500">per person</span>
+          </div>
+          <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
+            {experience.reviews} reviews
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  </Link>
+)
+
 export default function LandingPage() {
   const router = useRouter()
   const [searchData, setSearchData] = useState({
@@ -32,42 +104,57 @@ export default function LandingPage() {
     location: "",
     date: "",
   })
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSearching, setIsSearching] = useState(false)
 
-  const validateSearch = () => {
-    const newErrors = {}
+  const validateSearch = useCallback(() => {
+    const newErrors: Record<string, string> = {}
     if (!searchData.service.trim()) newErrors.service = "Please select an activity"
     if (!searchData.location.trim()) newErrors.location = "Please enter a location"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
+  }, [searchData])
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!validateSearch()) return
 
     setIsSearching(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 800))
 
-    const params = new URLSearchParams()
-    if (searchData.service) params.set("service", searchData.service)
-    if (searchData.location) params.set("location", searchData.location)
-    if (searchData.date) params.set("date", searchData.date)
+      const params = new URLSearchParams()
+      if (searchData.service) params.set("service", searchData.service)
+      if (searchData.location) params.set("location", searchData.location)
+      if (searchData.date) params.set("date", searchData.date)
 
-    router.push(`/search?${params.toString()}`)
-    setIsSearching(false)
-  }
+      router.push(`/search?${params.toString()}`)
+    } catch (error) {
+      console.error("Search error:", error)
+    } finally {
+      setIsSearching(false)
+    }
+  }, [validateSearch, searchData, router])
 
-  const activities = [
+  const updateSearchField = useCallback((field: string, value: string) => {
+    setSearchData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }))
+    }
+  }, [errors])
+
+  // Memoize static data to prevent unnecessary re-renders
+  const activities = useMemo(() => [
     { name: "Sailing", icon: "⛵", count: "2,400+ experiences" },
     { name: "Surfing", icon: "🏄", count: "1,800+ experiences" },
     { name: "Diving", icon: "🤿", count: "1,200+ experiences" },
     { name: "Kayaking", icon: "🚣", count: "3,100+ experiences" },
     { name: "Fishing", icon: "🎣", count: "900+ experiences" },
     { name: "Yacht Charter", icon: "🛥️", count: "600+ experiences" },
-  ]
+  ], [])
 
-  const featuredExperiences = [
+  const featuredExperiences = useMemo(() => [
     {
       id: 1,
       title: "Luxury Sunset Sailing",
@@ -101,7 +188,14 @@ export default function LandingPage() {
       duration: "6 hours",
       image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=400&h=300&fit=crop",
     },
-  ]
+  ], [])
+
+  const stats = useMemo(() => [
+    { value: "12,000+", label: "Experiences" },
+    { value: "5,000+", label: "Expert Hosts" },
+    { value: "50+", label: "Destinations" },
+    { value: "4.9★", label: "Average Rating" },
+  ], [])
 
   return (
     <main className="flex-1">
@@ -143,10 +237,7 @@ export default function LandingPage() {
                     type="text"
                     placeholder="What water adventure?"
                     value={searchData.service}
-                    onChange={(e) => {
-                      setSearchData({ ...searchData, service: e.target.value })
-                      if (errors.service) setErrors({ ...errors, service: "" })
-                    }}
+                    onChange={(e) => updateSearchField("service", e.target.value)}
                     className={`w-full pl-12 pr-4 py-3 h-12 border rounded-xl focus-ring smooth-transition ${
                       errors.service ? "border-red-500 ring-1 ring-red-500" : "border-gray-200"
                     }`}
@@ -172,10 +263,7 @@ export default function LandingPage() {
                     type="text"
                     placeholder="Where?"
                     value={searchData.location}
-                    onChange={(e) => {
-                      setSearchData({ ...searchData, location: e.target.value })
-                      if (errors.location) setErrors({ ...errors, location: "" })
-                    }}
+                    onChange={(e) => updateSearchField("location", e.target.value)}
                     className={`w-full pl-12 pr-4 py-3 h-12 border rounded-xl focus-ring smooth-transition ${
                       errors.location ? "border-red-500 ring-1 ring-red-500" : "border-gray-200"
                     }`}
@@ -200,7 +288,7 @@ export default function LandingPage() {
                     id="date"
                     type="date"
                     value={searchData.date}
-                    onChange={(e) => setSearchData({ ...searchData, date: e.target.value })}
+                    onChange={(e) => updateSearchField("date", e.target.value)}
                     className="w-full pl-12 pr-4 py-3 h-12 border border-gray-200 rounded-xl focus-ring smooth-transition"
                   />
                 </div>
@@ -228,22 +316,9 @@ export default function LandingPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-white">
-            <div className="transform hover:scale-105 transition-transform duration-300">
-              <div className="text-3xl md:text-4xl font-bold">12,000+</div>
-              <div className="text-blue-200 text-sm sm:text-base">Experiences</div>
-            </div>
-            <div className="transform hover:scale-105 transition-transform duration-300">
-              <div className="text-3xl md:text-4xl font-bold">5,000+</div>
-              <div className="text-blue-200 text-sm sm:text-base">Expert Hosts</div>
-            </div>
-            <div className="transform hover:scale-105 transition-transform duration-300">
-              <div className="text-3xl md:text-4xl font-bold">50+</div>
-              <div className="text-blue-200 text-sm sm:text-base">Destinations</div>
-            </div>
-            <div className="transform hover:scale-105 transition-transform duration-300">
-              <div className="text-3xl md:text-4xl font-bold">4.9★</div>
-              <div className="text-blue-200 text-sm sm:text-base">Average Rating</div>
-            </div>
+            {stats.map((stat, index) => (
+              <StatItem key={index} value={stat.value} label={stat.label} />
+            ))}
           </div>
         </div>
       </section>
@@ -260,16 +335,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
             {activities.map((activity, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg card-hover cursor-pointer group flex flex-col items-center text-center"
-              >
-                <div className="text-4xl sm:text-5xl mb-3 sm:mb-4 group-hover:scale-110 smooth-transition">
-                  {activity.icon}
-                </div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{activity.name}</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">{activity.count}</p>
-              </div>
+              <ActivityCard key={activity.name} activity={activity} index={index} />
             ))}
           </div>
         </div>
@@ -287,54 +353,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {featuredExperiences.map((experience) => (
-              <Link href={`/experience/${experience.id}`} key={experience.id} className="group">
-                <Card className="rounded-2xl shadow-lg overflow-hidden card-hover focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                    <Image
-                      src={experience.image}
-                      alt={experience.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={false}
-                    />
-                  </div>
-                  <CardContent className="p-5 lg:p-6 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg lg:text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-teal-600 smooth-transition">
-                        {experience.title}
-                      </h3>
-                      <div className="flex items-center space-x-1 flex-shrink-0">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm font-medium">{experience.rating}</span>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 flex items-center text-sm">
-                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="truncate">{experience.location}</span>
-                    </p>
-
-                    <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-100">
-                      <span className="truncate">By {experience.host}</span>
-                      <span className="flex items-center flex-shrink-0">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {experience.duration}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-gray-900">${experience.price}</span>
-                        <span className="text-xs text-gray-500">per person</span>
-                      </div>
-                      <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                        {experience.reviews} reviews
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <ExperienceCard key={experience.id} experience={experience} />
             ))}
           </div>
 
