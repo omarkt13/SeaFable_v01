@@ -1,7 +1,8 @@
 "use client"
-import { useState } from "react"
+
 import type React from "react"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Building, Mail, Lock, ArrowRight } from "lucide-react"
@@ -34,7 +35,6 @@ export default function BusinessLoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <Building className="w-8 h-8 text-teal-600 mr-2" />
@@ -44,14 +44,12 @@ export default function BusinessLoginPage() {
             <p className="text-gray-600">Sign in to your business account</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
@@ -105,7 +103,6 @@ export default function BusinessLoginPage() {
             </button>
           </form>
 
-          {/* Footer Links */}
           <div className="mt-6 text-sm">
             <Link href="/business/forgot-password" className="text-teal-600 hover:underline">
               Forgot Password?
