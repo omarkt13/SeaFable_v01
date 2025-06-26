@@ -148,7 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string, expectedUserType?: "customer" | "business") => {
       try {
+        setIsLoading(true)
         setError(null)
+        console.log("Attempting login for:", email, "Expected type:", expectedUserType)
 
         // Sign in with Supabase
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -156,17 +158,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         })
 
-        if (signInError) throw signInError
+        if (signInError) {
+          console.error("Supabase signInWithPassword error:", signInError)
+          throw signInError
+        }
 
         if (!data.user) {
+          console.error("Authentication failed: No user data returned.")
           throw new Error("Authentication failed")
         }
+        console.log("User signed in:", data.user.id)
 
         // Check user type by querying database tables
         const [businessCheck, userCheck] = await Promise.all([
           supabase.from("host_profiles").select("id").eq("id", data.user.id).maybeSingle(),
           supabase.from("users").select("id").eq("id", data.user.id).maybeSingle(),
         ])
+
+        console.log("Business check result:", businessCheck)
+        console.log("User check result:", userCheck)
 
         const isBusiness = !businessCheck.error && businessCheck.data
         const isUser = !userCheck.error && userCheck.data
@@ -180,12 +190,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Sign out if user is not in either table
           await supabase.auth.signOut()
+          console.error("Account not found in system for user ID:", data.user.id)
           throw new Error("Account not found in system")
         }
+        console.log("Determined actual user type:", actualUserType)
 
         // If expectedUserType is specified, validate it matches
         if (expectedUserType && expectedUserType !== actualUserType) {
           await supabase.auth.signOut()
+          console.error("User type mismatch. Expected:", expectedUserType, "Actual:", actualUserType)
 
           if (expectedUserType === "business") {
             throw new Error("This account is not registered as a business. Please use customer login.")
@@ -193,17 +206,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw new Error("This account is registered as a business. Please use business login.")
           }
         }
+        console.log("Login successful for user type:", actualUserType)
 
         return {
           success: true,
           userType: actualUserType,
         }
       } catch (error: any) {
-        console.error("Login error:", error)
+        console.error("Login error caught in AuthContext:", error)
         return {
           success: false,
           error: error.message || "Login failed",
         }
+      } finally {
+        setIsLoading(false)
       }
     },
     [supabase],
