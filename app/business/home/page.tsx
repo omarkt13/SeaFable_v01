@@ -52,7 +52,6 @@ interface DashboardData {
     time: string
     guests: number
     specialRequests?: string
-    phone?: string
   }>
   earnings: {
     thisMonth: number
@@ -120,13 +119,13 @@ export default function BusinessHomePage() {
         const bookings = await getHostBookings(businessProfile.id)
 
         if (bookings) {
-          // Monthly Stats
-          const currentMonthBookings = bookings.filter((b) => b.created_at >= startOfMonth && b.created_at <= today)
-          bookingsMade = currentMonthBookings.length
-          paymentsReceived = currentMonthBookings
+          // Since we don't have created_at, we'll use booking_date for monthly stats
+          const currentMonthBookings = bookings.filter((b) => b.booking_date >= startOfMonth && b.booking_date <= today)
+          bookingsMade = bookings.length // Total bookings instead of monthly
+          paymentsReceived = bookings
             .filter((b) => b.payment_status === "paid" || b.payment_status === "completed")
             .reduce((sum, b) => sum + (Number(b.total_price) || 0), 0)
-          bookingsFulfilled = currentMonthBookings.filter((b) => b.booking_status === "completed").length
+          bookingsFulfilled = bookings.filter((b) => b.booking_status === "completed").length
 
           // Active bookings (future confirmed/pending)
           activeBookings = bookings.filter(
@@ -143,9 +142,9 @@ export default function BusinessHomePage() {
           // Apply platform fee (approximate net revenue)
           totalRevenue = Math.round(totalRevenue * 0.85) // 15% platform fee
 
-          // Recent bookings
+          // Recent bookings (sorted by booking_date since we don't have created_at)
           recentBookings = bookings
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => new Date(b.booking_date).getTime() - new Date(a.booking_date).getTime())
             .slice(0, 5)
             .map((booking) => ({
               id: booking.id,
@@ -358,34 +357,34 @@ export default function BusinessHomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Bookings Made (This Month)</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{dashboardData.overview.bookingsMade}</div>
-                <p className="text-xs text-muted-foreground">Total new bookings this month</p>
+                <p className="text-xs text-muted-foreground">All time bookings</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Payments Received (This Month)</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">€{dashboardData.overview.paymentsReceived.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Total payments processed this month</p>
+                <div className="text-2xl font-bold">€{dashboardData.overview.totalRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">From confirmed bookings</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Bookings Fulfilled (This Month)</CardTitle>
+                <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.overview.bookingsFulfilled}</div>
-                <p className="text-xs text-muted-foreground">Experiences completed this month</p>
+                <div className="text-2xl font-bold">{dashboardData.overview.activeBookings}</div>
+                <p className="text-xs text-muted-foreground">Upcoming confirmed bookings</p>
               </CardContent>
             </Card>
 

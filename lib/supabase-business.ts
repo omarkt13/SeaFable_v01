@@ -36,7 +36,6 @@ export async function getHostBookings(hostId: string) {
         number_of_guests,
         departure_time,
         special_requests,
-        created_at,
         payment_status,
         users!bookings_user_id_fkey(
           first_name,
@@ -48,7 +47,7 @@ export async function getHostBookings(hostId: string) {
         )
       `)
       .eq("host_id", hostId)
-      .order("created_at", { ascending: false })
+      .order("booking_date", { ascending: false })
 
     if (error) throw error
     return data || []
