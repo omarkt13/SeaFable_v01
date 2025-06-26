@@ -1,141 +1,114 @@
 "use client"
-import { useState } from "react"
+
 import type React from "react"
 
-import { supabase } from "@/lib/supabase" // ✅ FIXED: Standardized Supabase import
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import Link from "next/link"
-import { Anchor, Mail, Lock, ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { signInUser, getBusinessProfile as getClientBusinessProfile } from "@/lib/auth-client" // Import getClientBusinessProfile
+import { getClientSupabase } from "@/lib/client-supabase" // Import getClientSupabase
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context" // Import useAuth to get refreshAuth
 
-export default function CustomerLoginPage() {
+export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { refreshAuth } = useAuth()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError("")
+    setError(null)
+    setIsLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { user, error: signInError } = await signInUser(email, password)
 
-      if (error) throw error
-
-      if (data.user) {
-        // Check if user is actually a business user
-        const { data: hostProfile } = await supabase.from("host_profiles").select("id").eq("id", data.user.id).single()
-
-        if (hostProfile) {
-          // Business user trying to log in on customer page
-          await supabase.auth.signOut()
-          setError("Business accounts should use the business login page.")
-          return
-        }
-
-        router.push("/dashboard")
+      if (signInError) {
+        setError(signInError.message || "Login failed. Please check your credentials.")
+        return
       }
-    } catch (error: any) {
-      setError(error.message)
+
+      if (user) {
+        await refreshAuth()
+
+        const {
+          data: { user: currentUser },
+        } = await getClientSupabase().auth.getUser()
+        if (currentUser) {
+          const businessProfile = await getClientBusinessProfile(currentUser.id)
+          if (businessProfile) {
+            router.push("/business/home")
+          } else {
+            router.push("/dashboard")
+          }
+        } else {
+          router.push("/login")
+        }
+      } else {
+        setError("Login failed. Please check your credentials.")
+      }
+    } catch (err: any) {
+      console.error("Login error:", err)
+      setError(err.message || "An unexpected error occurred during login.")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Anchor className="w-8 h-8 text-teal-600 mr-2" />
-              <span className="text-2xl font-bold text-gray-900">SeaFable</span>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-3xl font-bold">Login</CardTitle>
+          <CardDescription>Enter your email and password to access your account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your customer account</p>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                </div>
-              ) : (
-                <>
-                  Sign In <ArrowRight className="ml-2 h-4 w-4 inline-block" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Footer Links */}
-          <div className="mt-6 text-sm">
-            <Link href="/forgot-password" className="text-teal-600 hover:underline">
-              Forgot Password?
-            </Link>
-            <p className="mt-2">
+            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <div className="text-center text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link href="/register" className="text-teal-600 hover:underline">
-                Sign up
+              <Link href="/register" className="font-medium text-blue-600 hover:underline">
+                Sign Up
               </Link>
-            </p>
-          </div>
-        </div>
-      </div>
+            </div>
+            <div className="text-center text-sm text-gray-600">
+              <Link href="/forgot-password" className="font-medium text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
