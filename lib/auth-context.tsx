@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearAuthState = useCallback(() => {
     if (!mountedRef.current) return
+    console.log("AuthContext: Clearing auth state.")
     setUser(null)
     setSession(null)
     setUserProfile(null)
@@ -52,26 +53,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const fetchUserProfile = useCallback(async (userId: string) => {
+    console.log(`AuthContext: Attempting to fetch customer profile for user ID: ${userId}`)
     try {
       const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
 
       if (error) {
-        console.error("Error fetching user profile:", error)
+        console.error("AuthContext: Error fetching user profile:", error)
         return null
       }
 
       if (mountedRef.current && data) {
+        console.log("AuthContext: Customer profile fetched successfully:", data)
         setUserProfile(data)
         setUserType("customer")
+      } else {
+        console.log("AuthContext: No customer profile found or component unmounted.")
       }
       return data
     } catch (error) {
-      console.error("Network error fetching user profile:", error)
+      console.error("AuthContext: Network error fetching user profile:", error)
       return null
     }
   }, [])
 
   const fetchBusinessProfile = useCallback(async (userId: string) => {
+    console.log(`AuthContext: Attempting to fetch business profile for user ID: ${userId}`)
     try {
       const { data, error } = await supabase
         .from("host_profiles")
@@ -86,11 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle()
 
       if (error) {
-        console.error("Error fetching business profile:", error)
+        console.error("AuthContext: Error fetching business profile:", error)
         return null
       }
 
       if (mountedRef.current && data) {
+        console.log("AuthContext: Business profile fetched successfully:", data)
         const profile: ExtendedBusinessProfile = {
           ...data,
           onboarding_completed: data.host_business_settings?.onboarding_completed || false,
@@ -99,28 +106,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBusinessProfile(profile)
         setUserType("business")
         return profile
+      } else {
+        console.log("AuthContext: No business profile found or component unmounted.")
       }
       return null
     } catch (error) {
-      console.error("Network error fetching business profile:", error)
+      console.error("AuthContext: Network error fetching business profile:", error)
       return null
     }
   }, [])
 
   const determineUserType = useCallback(
     async (userId: string) => {
+      console.log(`AuthContext: Determining user type for user ID: ${userId}`)
       // Try business profile first
       const businessProfile = await fetchBusinessProfile(userId)
       if (businessProfile) {
+        console.log("AuthContext: User identified as 'business'.")
         return "business"
       }
 
       // Fallback to customer profile
       const userProfile = await fetchUserProfile(userId)
       if (userProfile) {
+        console.log("AuthContext: User identified as 'customer'.")
         return "customer"
       }
 
+      console.log("AuthContext: User type could not be determined.")
       return null
     },
     [fetchBusinessProfile, fetchUserProfile],
@@ -128,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, expectedUserType?: "customer" | "business") => {
+      console.log(`AuthContext: Attempting login for email: ${email}, expected type: ${expectedUserType || "any"}`)
       try {
         setIsLoading(true)
         setError(null)
@@ -138,23 +152,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
 
         if (signInError) {
+          console.error("AuthContext: Supabase signInWithPassword error:", signInError)
           throw signInError
         }
 
         if (!data.user) {
+          console.error("AuthContext: No user data returned after signInWithPassword.")
           throw new Error("No user data returned")
         }
 
+        console.log("AuthContext: User signed in with Supabase. User ID:", data.user.id)
+
         // Determine actual user type
         const actualUserType = await determineUserType(data.user.id)
+        console.log("AuthContext: Actual user type determined as:", actualUserType)
 
         if (!actualUserType) {
+          console.log("AuthContext: Account not found in system, signing out.")
           await supabase.auth.signOut()
           throw new Error("Account not found in system")
         }
 
         // Validate expected user type
         if (expectedUserType && expectedUserType !== actualUserType) {
+          console.log(
+            `AuthContext: User type mismatch. Expected: ${expectedUserType}, Actual: ${actualUserType}. Signing out.`,
+          )
           await supabase.auth.signOut()
 
           if (expectedUserType === "business") {
@@ -164,9 +187,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
+        console.log("AuthContext: Login successful.")
         return { success: true }
       } catch (error: any) {
-        console.error("Login error:", error)
+        console.error("AuthContext: Login process failed:", error)
         return { success: false, error: error.message || "Login failed" }
       } finally {
         if (mountedRef.current) {
@@ -178,15 +202,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const refreshProfile = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      console.log("AuthContext: No user to refresh profile for.")
+      return
+    }
 
     setIsLoading(true)
     setError(null)
+    console.log(`AuthContext: Refreshing profile for user ID: ${user.id}`)
 
     try {
       await determineUserType(user.id)
+      console.log("AuthContext: Profile refreshed successfully.")
     } catch (error) {
-      console.error("Error refreshing profile:", error)
+      console.error("AuthContext: Error refreshing profile:", error)
       if (mountedRef.current) {
         setError("Failed to refresh profile")
       }
@@ -198,13 +227,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, determineUserType])
 
   const signOut = useCallback(async () => {
+    console.log("AuthContext: Attempting to sign out.")
     try {
       setIsLoading(true)
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       clearAuthState()
+      console.log("AuthContext: Signed out successfully.")
     } catch (error) {
-      console.error("Error signing out:", error)
+      console.error("AuthContext: Error signing out:", error)
       if (mountedRef.current) {
         setError("Failed to sign out")
       }
@@ -218,6 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true
     mountedRef.current = true
+    console.log("AuthContext: useEffect - Initializing auth.")
 
     const initializeAuth = async () => {
       try {
@@ -231,15 +263,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setSession(session)
           setUser(session?.user || null)
+          console.log("AuthContext: Initial session and user set. User:", session?.user?.id)
 
           if (session?.user) {
             await determineUserType(session.user.id)
           } else {
             setIsLoading(false)
+            console.log("AuthContext: No initial user session, setting isLoading to false.")
           }
         }
       } catch (error) {
-        console.error("Error initializing auth:", error)
+        console.error("AuthContext: Error initializing auth:", error)
         if (mounted) {
           setError("Failed to initialize authentication")
           setIsLoading(false)
@@ -253,6 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
+      console.log(`AuthContext: Auth state changed. Event: ${event}, User: ${session?.user?.id}`)
 
       setSession(session)
       setUser(session?.user || null)
@@ -269,6 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       mountedRef.current = false
       subscription.unsubscribe()
+      console.log("AuthContext: useEffect cleanup - Unsubscribed from auth state changes.")
     }
   }, [determineUserType, clearAuthState])
 
