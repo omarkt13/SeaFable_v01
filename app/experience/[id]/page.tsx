@@ -33,8 +33,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { getExperienceById, getExperienceReviews, createBooking, type Experience, type Review } from "@/lib/database"
-import { supabase } from "@/lib/supabase"
+import {
+  getExperienceById,
+  getExperienceReviews,
+  createBooking,
+  getClientSupabase,
+  type Experience,
+  type Review,
+} from "@/lib/database" // Added getClientSupabase
 
 export default function ExperienceDetailPage() {
   const params = useParams()
@@ -89,10 +95,10 @@ export default function ExperienceDetailPage() {
 
     setIsBooking(true)
     try {
-      // Get the current user's ID from Supabase auth
+      // Get the current user's ID from Supabase auth using the client-side instance
       const {
         data: { user: authUser },
-      } = await supabase.auth.getUser()
+      } = await getClientSupabase().auth.getUser() // Corrected usage
 
       if (!authUser) {
         router.push("/login")

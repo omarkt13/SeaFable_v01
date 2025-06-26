@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/client-supabase"
+import { createClient } from "@/lib/client-supabase" // Corrected import path
 import type { User, Session } from "@supabase/supabase-js"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 

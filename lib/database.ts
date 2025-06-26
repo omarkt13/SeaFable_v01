@@ -1,6 +1,6 @@
 "use server" // Add this line to make the file a Server Action
 
-import { createClient } from "@/lib/client-supabase" // Corrected import path
+import { createClient as createClientBrowser } from "@/lib/client-supabase" // Renamed to avoid conflict
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers" // Import cookies
 import { getUserProfile } from "./auth-utils" // This will be updated below
@@ -222,7 +222,7 @@ export function getServerSupabase() {
 
 // Use client for client-side operations
 export function getClientSupabase() {
-  return createClient()
+  return createClientBrowser() // Use the renamed import
 }
 
 export async function signOutUser() {

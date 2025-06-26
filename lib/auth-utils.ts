@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server" // Corrected import path
 import { cookies } from "next/headers" // Import cookies
 import { redirect } from "next/navigation"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
