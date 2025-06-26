@@ -51,67 +51,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
   }, [])
 
-  const fetchUserProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
 
-        if (error) {
-          console.error("Error fetching user profile:", error)
-          return null
-        }
-
-        if (mountedRef.current && data) {
-          setUserProfile(data)
-          setUserType("customer")
-        }
-        return data
-      } catch (error) {
-        console.error("Network error fetching user profile:", error)
+      if (error) {
+        console.error("Error fetching user profile:", error)
         return null
       }
-    },
-    [], // Remove supabase from dependencies since it's a global constant
-  )
 
-  const fetchBusinessProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from("host_profiles")
-          .select(`
+      if (mountedRef.current && data) {
+        setUserProfile(data)
+        setUserType("customer")
+      }
+      return data
+    } catch (error) {
+      console.error("Network error fetching user profile:", error)
+      return null
+    }
+  }, [])
+
+  const fetchBusinessProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("host_profiles")
+        .select(`
           *,
           host_business_settings (
             onboarding_completed,
             marketplace_enabled
           )
         `)
-          .eq("id", userId)
-          .maybeSingle()
+        .eq("id", userId)
+        .maybeSingle()
 
-        if (error) {
-          console.error("Error fetching business profile:", error)
-          return null
-        }
-
-        if (mountedRef.current && data) {
-          const profile: ExtendedBusinessProfile = {
-            ...data,
-            onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-            marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
-          }
-          setBusinessProfile(profile)
-          setUserType("business")
-          return profile
-        }
-        return null
-      } catch (error) {
-        console.error("Network error fetching business profile:", error)
+      if (error) {
+        console.error("Error fetching business profile:", error)
         return null
       }
-    },
-    [], // Remove supabase from dependencies since it's a global constant
-  )
+
+      if (mountedRef.current && data) {
+        const profile: ExtendedBusinessProfile = {
+          ...data,
+          onboarding_completed: data.host_business_settings?.onboarding_completed || false,
+          marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+        }
+        setBusinessProfile(profile)
+        setUserType("business")
+        return profile
+      }
+      return null
+    } catch (error) {
+      console.error("Network error fetching business profile:", error)
+      return null
+    }
+  }, [])
 
   const determineUserType = useCallback(
     async (userId: string) => {
@@ -180,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [determineUserType], // Remove supabase from dependencies
+    [determineUserType],
   )
 
   const refreshProfile = useCallback(async () => {
@@ -219,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-  }, [clearAuthState]) // Remove supabase from dependencies
+  }, [clearAuthState])
 
   useEffect(() => {
     let mounted = true
@@ -276,7 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false
       subscription.unsubscribe()
     }
-  }, [determineUserType, clearAuthState]) // Remove supabase from dependencies
+  }, [determineUserType, clearAuthState])
 
   const value: AuthContextType = {
     user,
