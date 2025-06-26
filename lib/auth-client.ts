@@ -1,10 +1,32 @@
 "use client"
 
-import { getClientSupabase } from "@/lib/client-supabase" // Correct import
+import { getClientSupabase } from "@/lib/client-supabase"
 import type { User, Session } from "@supabase/supabase-js"
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
-const supabase = getClientSupabase() // Correct usage
+const supabase = getClientSupabase()
+
+export async function signInUser(
+  email: string,
+  password: string,
+): Promise<{ user: User | null; session: Session | null; error: Error | null }> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      console.error("Sign in error:", error.message)
+      return { user: null, session: null, error: new Error(error.message) }
+    }
+
+    return { user: data.user, session: data.session, error: null }
+  } catch (error: any) {
+    console.error("Sign in network error:", error.message)
+    return { user: null, session: null, error: new Error("Network error occurred") }
+  }
+}
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
