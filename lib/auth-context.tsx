@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react"
 import type { User, Session } from "@supabase/supabase-js"
-import { supabase } from "../lib/supabase/client" // Import the directly exported supabase client
+import { supabase } from "../lib/client-supabase" // Import the directly exported supabase client
 import { getUserProfile, getBusinessProfile, signOutUser } from "@/lib/auth-client" // Import signOutUser from auth-client
 import type { UserProfile, BusinessProfile } from "@/types/auth"
 
