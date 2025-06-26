@@ -1,15 +1,18 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Use globalThis to ensure a single instance across the entire client-side application.
+// This is robust against hot module reloading in development.
+declare global {
+  // eslint-disable-next-line no-var
+  var supabaseClientInstance: ReturnType<typeof createClientComponentClient> | undefined
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-})
+export const supabase = (() => {
+  if (!globalThis.supabaseClientInstance) {
+    globalThis.supabaseClientInstance = createClientComponentClient()
+  }
+  return globalThis.supabaseClientInstance
+})()
 
 // Database types based on the schema
 export interface User {
