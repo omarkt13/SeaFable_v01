@@ -151,16 +151,6 @@ export function LoginForm({ userType, onSuccess }: LoginFormProps) {
         </Alert>
       )}
 
-      {errors.general === "Invalid login credentials" && (
-        <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertDescription>
-            Please ensure you've run the database seeding scripts and are using the correct test credentials. You can
-            use the "Fill Test Credentials" button below.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {loginAttempts >= 3 && (
         <Alert>
           <AlertCircle className="h-4 w-4" />

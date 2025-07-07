@@ -1,5 +1,5 @@
 "use client"
-import CustomerRegisterForm from "@/components/customer-register-form"
+import { CustomerRegisterForm } from "@/components/customer-register-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function RegisterPage() {

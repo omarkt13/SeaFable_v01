@@ -1,256 +1,212 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { useAuth } from "@/lib/auth-context"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { User, Mail, Lock, EyeOff, Eye, Loader2, ArrowRight, CheckCircle, AlertCircle } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
-const CustomerRegisterForm: React.FC = () => {
-  const { signUp } = useAuth()
-  const router = useRouter()
+interface CustomerRegisterFormProps {
+  onSuccess?: () => void
+}
+
+export function CustomerRegisterForm({ onSuccess }: CustomerRegisterFormProps) {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.firstName) newErrors.firstName = "First name is required"
-    if (!formData.lastName) newErrors.lastName = "Last name is required"
-
-    if (!formData.email) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateForm()) return
+    setError("")
+    setLoading(true)
 
-    setIsLoading(true)
-    setErrors({})
-    setSuccessMessage(null)
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters")
+      setLoading(false)
+      return
+    }
 
     try {
-      const result = await signUp(formData.email, formData.password, formData.firstName, formData.lastName)
+      const supabase = createClient()
 
-      if (result.success) {
-        setSuccessMessage("Registration successful! Redirecting to dashboard...")
-        // Redirect to dashboard or login page after a short delay
-        setTimeout(() => {
-          router.push("/dashboard")
-        }, 2000)
-      } else {
-        setErrors({ general: result.error || "Registration failed" })
+      // Sign up the user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            role: "customer",
+          },
+        },
+      })
+
+      if (authError) {
+        setError(authError.message)
+        setLoading(false)
+        return
       }
-    } catch (error) {
-      setErrors({ general: "Network error occurred" })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value })
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" })
+      if (authData.user) {
+        // Create user profile in database
+        const { error: profileError } = await supabase.from("users").insert([
+          {
+            id: authData.user.id,
+            email: formData.email,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            role: "customer",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
+
+        if (profileError) {
+          console.error("Error creating user profile:", profileError)
+          // Don't show this error to user as auth was successful
+        }
+
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/dashboard")
+        }
+      }
+    } catch (error: any) {
+      setError(error.message || "An error occurred during registration")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Create Customer Account</CardTitle>
+        <CardDescription>Join SeaFable to book amazing marine experiences</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                required
+                value={formData.firstName}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                value={formData.lastName}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
             <Input
-              id="firstName"
-              type="text"
-              placeholder="John"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className={`pl-10 ${errors.firstName ? "border-red-500" : ""}`}
-              disabled={isLoading}
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              disabled={loading}
             />
           </div>
-          {errors.firstName && (
-            <p className="text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {errors.firstName}
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
             <Input
-              id="lastName"
-              type="text"
-              placeholder="Doe"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className={`pl-10 ${errors.lastName ? "border-red-500" : ""}`}
-              disabled={isLoading}
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              disabled={loading}
             />
           </div>
-          {errors.lastName && (
-            <p className="text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {errors.lastName}
-            </p>
-          )}
-        </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="your@email.com"
-            value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
-            disabled={isLoading}
-          />
-          {formData.email && !errors.email && <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />}
-        </div>
-        {errors.email && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {errors.email}
-          </p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            className={`pl-10 pr-10 ${errors.password ? "border-red-500" : ""}`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-            disabled={isLoading}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-        {errors.password && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {errors.password}
-          </p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            id="confirmPassword"
-            type={showPassword ? "text" : "password"}
-            placeholder="Confirm your password"
-            value={formData.confirmPassword}
-            onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-            className={`pl-10 pr-10 ${errors.confirmPassword ? "border-red-500" : ""}`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-            disabled={isLoading}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-        {errors.confirmPassword && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {errors.confirmPassword}
-          </p>
-        )}
-      </div>
-
-      {errors.general && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors.general}</AlertDescription>
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Registering...
-          </>
-        ) : (
-          <>
-            Register
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </>
-        )}
-      </Button>
-
-      <div className="text-center text-sm text-gray-600 mt-4">
-        Already have an account?{" "}
-        <Link href="/login" className="text-teal-600 hover:underline">
-          Sign In
-        </Link>
-      </div>
-    </form>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
 

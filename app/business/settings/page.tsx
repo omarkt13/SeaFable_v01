@@ -44,14 +44,16 @@ export default function BusinessSettingsPage() {
     setIsLoading(true)
     setError(null)
     try {
+      // getHostProfile now queries by 'id' which is consistent with businessProfile.id
       const profileData = await getHostProfile(userId)
-      const { data: settingsData, error: settingsError } = await getBusinessSettings(hostProfileId)
+      // getBusinessSettings can return null, which is handled by the page
+      const settingsData = await getBusinessSettings(hostProfileId)
 
-      setBusinessName(profileData?.business_name || profileData?.name || "")
-      setContactEmail(profileData?.email || "")
-      setPhoneNumber(profileData?.phone || "")
-      setLocation(profileData?.location || "")
-      setDescription(profileData?.description || "")
+      setBusinessName(profileData.business_name || profileData.name || "")
+      setContactEmail(profileData.email || "")
+      setPhoneNumber(profileData.phone || "")
+      setLocation(profileData.location || "")
+      setDescription(profileData.description || "")
     } catch (err: any) {
       console.error("Failed to load settings:", err)
       setError(err.message || "Failed to load business settings.")
@@ -74,13 +76,12 @@ export default function BusinessSettingsPage() {
     setError(null)
     try {
       await updateBusinessProfile(businessProfile.id, {
-        // Use businessProfile.id for host_profiles update
-        name: businessName, // Update host_profiles.name
-        business_name: businessName, // Update host_profiles.business_name
-        business_email: contactEmail, // Map to business_email
-        business_phone: phoneNumber, // Map to business_phone
-        business_address: location, // Map to business_address
-        business_description: description, // Map to business_description
+        name: businessName,
+        business_name: businessName,
+        business_email: contactEmail,
+        business_phone: phoneNumber,
+        business_address: location,
+        business_description: description,
       })
 
       toast({
