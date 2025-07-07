@@ -1,109 +1,108 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase/client"
 
-interface CustomerRegisterFormProps {
-  onSuccess?: () => void
-}
-
-export function CustomerRegisterForm({ onSuccess }: CustomerRegisterFormProps) {
+export function CustomerRegisterForm() {
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    setError("")
+  }
+
+  const validateForm = () => {
+    if (!formData.firstName.trim()) {
+      setError("First name is required")
+      return false
+    }
+    if (!formData.lastName.trim()) {
+      setError("Last name is required")
+      return false
+    }
+    if (!formData.email.trim()) {
+      setError("Email is required")
+      return false
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError("Please enter a valid email address")
+      return false
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      return false
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
-
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters")
-      setLoading(false)
-      return
-    }
+    setError("")
 
     try {
-      const supabase = createClient()
-
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            phone: formData.phone,
-            role: "customer",
           },
         },
       })
 
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
+      if (signUpError) {
+        setError(signUpError.message)
         return
       }
 
-      if (authData.user) {
-        // Create user profile in database
-        const { error: profileError } = await supabase.from("users").insert([
+      if (data.user) {
+        const { error: profileError } = await supabase.from("user_profiles").insert([
           {
-            id: authData.user.id,
-            email: formData.email,
+            id: data.user.id,
+            email: data.user.email,
             first_name: formData.firstName,
             last_name: formData.lastName,
-            phone: formData.phone,
-            role: "customer",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            user_type: "customer",
           },
         ])
 
         if (profileError) {
           console.error("Error creating user profile:", profileError)
-          // Don't show this error to user as auth was successful
+          setError("Account created but profile setup failed. Please contact support.")
+          return
         }
 
-        if (onSuccess) {
-          onSuccess()
-        } else {
-          router.push("/dashboard")
-        }
+        router.push("/dashboard")
       }
     } catch (error: any) {
-      setError(error.message || "An error occurred during registration")
+      setError(error.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
     }
@@ -113,7 +112,6 @@ export function CustomerRegisterForm({ onSuccess }: CustomerRegisterFormProps) {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Create Customer Account</CardTitle>
-        <CardDescription>Join SeaFable to book amazing marine experiences</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -124,79 +122,63 @@ export function CustomerRegisterForm({ onSuccess }: CustomerRegisterFormProps) {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
-                name="firstName"
                 type="text"
-                required
                 value={formData.firstName}
-                onChange={handleChange}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                required
                 disabled={loading}
               />
             </div>
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
-                name="lastName"
                 type="text"
-                required
                 value={formData.lastName}
-                onChange={handleChange}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                required
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              name="email"
               type="email"
-              required
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              required
               disabled={loading}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
-              name="password"
               type="password"
-              required
               value={formData.password}
-              onChange={handleChange}
+              onChange={(e) => handleInputChange("password", e.target.value)}
+              required
               disabled={loading}
+              minLength={6}
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input
               id="confirmPassword"
-              name="confirmPassword"
               type="password"
-              required
               value={formData.confirmPassword}
-              onChange={handleChange}
+              onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+              required
               disabled={loading}
             />
           </div>

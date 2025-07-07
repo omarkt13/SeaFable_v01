@@ -1,17 +1,30 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
-import { getUserProfile } from "@/lib/auth-utils"
-import type { UserProfile } from "@/types/auth"
+import { supabase } from "@/lib/supabase/client"
+
+interface BusinessProfile {
+  id: string
+  business_name: string
+  business_type: string
+  description?: string
+  location: string
+  contact_email: string
+  contact_phone?: string
+  website?: string
+  is_verified: boolean
+  created_at: string
+  updated_at: string
+}
 
 interface AuthContextType {
   user: User | null
-  userProfile: UserProfile | null
+  userType: "customer" | "business" | null
+  businessProfile: BusinessProfile | null
   loading: boolean
+  isLoading: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
@@ -22,46 +35,82 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userType, setUserType] = useState<"customer" | "business" | null>(null)
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
 
-      if (session?.user) {
-        const profile = await getUserProfile(session.user.id)
-        setUserProfile(profile)
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error("Error getting session:", error)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     getInitialSession()
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
 
       if (session?.user) {
-        const profile = await getUserProfile(session.user.id)
-        setUserProfile(profile)
+        await fetchUserProfile(session.user.id)
       } else {
-        setUserProfile(null)
+        setUserType(null)
+        setBusinessProfile(null)
       }
 
       setLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [])
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: businessData, error: businessError } = await supabase
+        .from("business_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single()
+
+      if (businessData && !businessError) {
+        setUserType("business")
+        setBusinessProfile(businessData)
+        return
+      }
+
+      const { data: customerData, error: customerError } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", userId)
+        .single()
+
+      if (customerData && !customerError) {
+        setUserType("customer")
+        setBusinessProfile(null)
+        return
+      }
+
+      setUserType("customer")
+      setBusinessProfile(null)
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
+      setUserType("customer")
+      setBusinessProfile(null)
+    }
+  }
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -106,15 +155,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      const profile = await getUserProfile(user.id)
-      setUserProfile(profile)
+      await fetchUserProfile(user.id)
     }
   }
 
   const value = {
     user,
-    userProfile,
+    userType,
+    businessProfile,
     loading,
+    isLoading: loading,
     signIn,
     signUp,
     signOut,

@@ -92,7 +92,7 @@ function NewExperienceForm() {
   const [error, setError] = useState("")
   const router = useRouter()
   const { toast } = useToast()
-  const { userProfile } = useAuth()
+  const { user } = useAuth()
 
   const [formData, setFormData] = useState({
     title: "",
@@ -128,7 +128,7 @@ function NewExperienceForm() {
   const handleArrayToggle = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: prev[field as keyof typeof prev].includes(value)
+      [field]: (prev[field as keyof typeof prev] as string[]).includes(value)
         ? (prev[field as keyof typeof prev] as string[]).filter((item) => item !== value)
         : [...(prev[field as keyof typeof prev] as string[]), value],
     }))
@@ -166,9 +166,9 @@ function NewExperienceForm() {
       case 4:
         return !!(formData.durationHours > 0 && formData.pricePerPerson > 0)
       case 5:
-        return true // Optional step
+        return true
       case 6:
-        return true // Review step
+        return true
       default:
         return false
     }
@@ -189,8 +189,8 @@ function NewExperienceForm() {
   }
 
   const handleSubmit = async () => {
-    if (!userProfile?.id) {
-      setError("User profile not found. Please log in again.")
+    if (!user?.id) {
+      setError("User not found. Please log in again.")
       return
     }
 
@@ -199,7 +199,7 @@ function NewExperienceForm() {
 
     try {
       const experienceData = {
-        host_id: userProfile.id,
+        host_id: user.id,
         title: formData.title,
         description: formData.description,
         short_description: formData.shortDescription,

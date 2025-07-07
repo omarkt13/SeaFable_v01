@@ -1,6 +1,4 @@
-import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Import client-side Supabase client with alias
-import { createClient } from "@/lib/supabase/server" // Import server-side Supabase client for specific functions
-import { getUserProfile } from "./auth-utils"
+import { supabase } from "@/lib/supabase/client"
 import type { BusinessProfile } from "../types/auth"
 import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
 import type { HostAvailability } from "@/types/business" // Import HostAvailability type
@@ -215,7 +213,6 @@ export interface BusinessDashboardData {
 
 export async function signInUser(email: string, password: string) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -225,64 +222,8 @@ export async function signInUser(email: string, password: string) {
       return { success: false, error: error.message }
     }
 
-    if (data.user) {
-      // Get user data from database
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single()
-
-      if (userError) {
-        return { success: false, error: "User data not found" }
-      }
-
-      // Get host profile if user is a host
-      let hostProfile = null
-      let businessProfile = null
-
-      if (userData.role === "host") {
-        const { data: hostData, error: hostError } = await supabase
-          .from("host_profiles")
-          .select("*")
-          .eq("user_id", userData.id)
-          .single()
-
-        if (!hostError && hostData) {
-          hostProfile = {
-            id: hostData.id,
-            name: hostData.name,
-            bio: hostData.bio || "",
-            years_experience: hostData.years_experience || 0,
-            certifications: hostData.certifications || [],
-            specialties: hostData.specialties || [],
-            rating: hostData.rating || 0,
-            total_reviews: hostData.total_reviews || 0,
-            host_type: hostData.host_type || "individual_operator",
-          }
-
-          businessProfile = {
-            companyName: hostData.business_name || hostData.name,
-            businessType: hostData.business_type || "Tour Operator",
-            yearsInBusiness: hostData.years_experience || 0,
-            totalExperiences: 0,
-            averageRating: hostData.rating || 0,
-          }
-        }
-      }
-
-      return {
-        success: true,
-        user: {
-          ...userData,
-          hostProfile,
-          businessProfile,
-        },
-      }
-    }
-
-    return { success: false, error: "Authentication failed" }
-  } catch (error) {
+    return { success: true, data }
+  } catch (error: any) {
     console.error("Sign in error:", error)
     return { success: false, error: "Network error occurred" }
   }
@@ -290,179 +231,118 @@ export async function signInUser(email: string, password: string) {
 
 export async function signOutUser() {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error("Sign out error:", error)
       return { success: false, error: error.message }
     }
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Sign out error:", error)
     return { success: false, error: "Network error occurred" }
   }
 }
 
 // Experience functions
-export async function getExperiences(filters: any = {}) {
+export interface ExperienceData {
+  host_id: string
+  title: string
+  description: string
+  short_description: string
+  location: string
+  specific_location?: string
+  country?: string
+  activity_type: string
+  category: string[]
+  duration_hours: number
+  max_guests: number
+  min_guests: number
+  price_per_person: number
+  difficulty_level: string
+  included_amenities: string[]
+  what_to_bring: string[]
+  min_age?: number
+  max_age?: number
+  age_restriction_details?: string
+  activity_specific_details?: any
+  tags: string[]
+  seasonal_availability: string[]
+  itinerary: Array<{ time: string; activity: string; description?: string }>
+  primary_image_url?: string
+  weather_contingency?: string
+  is_active?: boolean
+}
+
+export async function createExperience(experienceData: ExperienceData) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
-    let query = supabase
+    const { data, error } = await supabase
       .from("experiences")
-      .select(`
-        *,
-        host_profiles!experiences_host_id_fkey (
-          id,
-          name,
-          avatar_url,
-          rating,
-          total_reviews,
-          host_type
-        ),
-        experience_images (
-          image_url,
-          alt_text,
-          display_order
-        )
-      `)
-      .eq("is_active", true)
-
-    // Apply filters
-    if (filters.search) {
-      const sanitizedSearch = sanitizeInput(filters.search) // ✅ FIXED: Sanitized input
-      query = query.ilike("title", `%${sanitizedSearch}%`)
-    }
-    if (filters.location) {
-      const sanitizedLocation = sanitizeInput(filters.location) // ✅ FIXED: Sanitized input
-      query = query.ilike("location", `%${sanitizedLocation}%`)
-    }
-    if (filters.activityTypes && filters.activityTypes.length > 0) {
-      query = query.in("activity_type", filters.activityTypes)
-    }
-    if (filters.priceRange) {
-      query = query.gte("price_per_person", filters.priceRange[0])
-      query = query.lte("price_per_person", filters.priceRange[1])
-    }
-    if (filters.difficultyLevels && filters.difficultyLevels.length > 0) {
-      query = query.in("difficulty_level", filters.difficultyLevels)
-    }
-    if (filters.minGuests) {
-      query = query.gte("max_guests", filters.minGuests)
-    }
-    if (filters.rating) {
-      query = query.gte("rating", filters.rating)
-    }
-
-    // Apply sorting
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case "price_low":
-          query = query.order("price_per_person", { ascending: true })
-          break
-        case "price_high":
-          query = query.order("price_per_person", { ascending: false })
-          break
-        case "rating":
-          query = query.order("rating", { ascending: false })
-          break
-        case "popular":
-          query = query.order("total_bookings", { ascending: false })
-          break
-        case "newest":
-          query = query.order("created_at", { ascending: false })
-          break
-        default:
-          query = query.order("created_at", { ascending: false })
-      }
-    } else {
-      query = query.order("created_at", { ascending: false })
-    }
-
-    const { data, error } = await query
+      .insert([
+        {
+          ...experienceData,
+          is_active: true,
+          rating: 0,
+          total_reviews: 0,
+          total_bookings: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+      .single()
 
     if (error) {
-      console.error("Error fetching experiences:", error)
-      return { success: false, error: error.message, data: [] }
+      console.error("Database error:", error)
+      return { success: false, error: error.message }
     }
 
-    return { success: true, data: data || [] }
-  } catch (error) {
-    console.error("Error fetching experiences:", error)
-    return { success: false, error: "Network error occurred", data: [] }
+    return { success: true, data }
+  } catch (error: any) {
+    console.error("Unexpected error:", error)
+    return { success: false, error: error.message || "An unexpected error occurred" }
+  }
+}
+
+export async function getExperiences(hostId?: string) {
+  try {
+    let query = supabase.from("experiences").select("*").eq("is_active", true)
+
+    if (hostId) {
+      query = query.eq("host_id", hostId)
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Database error:", error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error: any) {
+    console.error("Unexpected error:", error)
+    return { success: false, error: error.message || "An unexpected error occurred" }
   }
 }
 
 export async function getExperienceById(id: string) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
-    const { data, error } = await supabase
-      .from("experiences")
-      .select(`
-        *,
-        host_profiles!experiences_host_id_fkey (
-          id,
-          name,
-          bio,
-          avatar_url,
-          rating,
-          total_reviews,
-          host_type,
-          years_experience,
-          certifications,
-          specialties
-        ),
-        experience_images (
-          image_url,
-          alt_text,
-          display_order
-        ),
-        reviews (
-          id,
-          rating,
-          title,
-          comment,
-          created_at,
-          users (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        )
-      `)
-      .eq("id", id)
-      .eq("is_active", true)
-      .single()
+    const { data, error } = await supabase.from("experiences").select("*").eq("id", id).single()
 
     if (error) {
-      console.error("Error fetching experience:", error)
-      return { success: false, error: error.message, data: null }
+      console.error("Database error:", error)
+      return { success: false, error: error.message }
     }
 
-    // Fetch host availability separately as it's linked to host_profile_id
-    const { data: availabilityData, error: availabilityError } = await supabase
-      .from("host_availability")
-      .select("*")
-      .eq("host_profile_id", data.host_id)
-      .gte("date", new Date().toISOString().split("T")[0]) // Only future dates
-      .order("date", { ascending: true })
-      .order("start_time", { ascending: true })
-
-    if (availabilityError) {
-      console.error("Error fetching host availability:", availabilityError)
-      // Don't fail the whole experience fetch if availability fails
-    }
-
-    return { success: true, data: { ...data, host_availability: availabilityData || [] } }
-  } catch (error) {
-    console.error("Error fetching experience:", error)
-    return { success: false, error: "Network error occurred", data: null }
+    return { success: true, data }
+  } catch (error: any) {
+    console.error("Unexpected error:", error)
+    return { success: false, error: error.message || "An unexpected error occurred" }
   }
 }
 
-// Get reviews for a specific experience
 export async function getExperienceReviews(experienceId: string) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("reviews")
       .select(`
@@ -488,10 +368,8 @@ export async function getExperienceReviews(experienceId: string) {
   }
 }
 
-// Get user bookings
 export async function getUserBookings(userId: string) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("bookings")
       .select(`
@@ -525,9 +403,7 @@ export async function getUserBookings(userId: string) {
   }
 }
 
-// Get host bookings
 export async function getHostBookings(hostId: string): Promise<Booking[]> {
-  const supabase = createBrowserSupabaseClient() // ✅ FIXED: Use client-side client for this function
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -541,7 +417,7 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
         special_requests,
         experiences ( id, title, primary_image_url, duration_display, activity_type ),
         users ( id, first_name, last_name, email, avatar_url )
-      `) // ✅ FIXED: Removed phone from users select
+      `)
       .eq("host_id", hostId)
       .order("booking_date", { ascending: true })
 
@@ -558,10 +434,7 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
   }
 }
 
-// Get host earnings
 export async function getHostEarnings(hostId: string) {
-  const supabase = createBrowserSupabaseClient() // Use client-side client for this function
-
   const { data, error } = await supabase
     .from("bookings")
     .select(
@@ -590,8 +463,6 @@ export async function getHostDashboardData(hostId: string): Promise<{
   data: BusinessDashboardData | null
 }> {
   try {
-    const supabase = createClient() // Use server-side client for this function
-
     // 1. Get Host Profile
     const { data: hostProfile, error: hostError } = await supabase
       .from("host_profiles")
@@ -630,7 +501,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
           last_name,
           avatar_url
         )
-      `) // ✅ FIXED: Removed inline comment from select string
+      `)
       .eq("host_id", hostId)
       .order("booked_at", { ascending: false }) // Already correct, no change needed here
 
@@ -688,12 +559,12 @@ export async function getHostDashboardData(hostId: string): Promise<{
 
     // Monthly booking growth
     const thisMonthBookings = bookingsData.filter((b) => {
-      const bookingDate = new Date(b.booked_at)
+      const bookingDate = new Date(b.booking_date)
       return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear
     }).length
 
     const lastMonthBookings = bookingsData.filter((b) => {
-      const bookingDate = new Date(b.booked_at)
+      const bookingDate = new Date(b.booking_date)
       return bookingDate.getMonth() === lastMonth.getMonth() && bookingDate.getFullYear() === lastMonth.getFullYear()
     }).length
 
@@ -848,8 +719,6 @@ export async function getHostDashboardData(hostId: string): Promise<{
 // Get user dashboard data
 export async function getUserDashboardData(userId: string) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
-
     // Get user profile using the centralized function from auth-utils
     const user = await getUserProfile(userId)
 
@@ -903,7 +772,6 @@ export async function createBooking(bookingData: {
   dietary_requirements?: string[]
 }) {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase
       .from("bookings")
       .insert([
@@ -923,7 +791,7 @@ export async function createBooking(bookingData: {
     }
 
     return { success: true, data }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating booking:", error)
     return { success: false, error: "Network error occurred", data: null }
   }
@@ -932,7 +800,6 @@ export async function createBooking(bookingData: {
 // Database connection test functions
 export async function testDatabaseConnection() {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const { data, error } = await supabase.from("users").select("count").limit(1)
 
     if (error) {
@@ -940,13 +807,12 @@ export async function testDatabaseConnection() {
     }
 
     return { success: true, message: "Database connection successful" }
-  } catch (error) {
+  } catch (error: any) {
     return { success: false, error: "Network error occurred" }
   }
 }
 
 export async function testTableAccess() {
-  const supabase = createBrowserSupabaseClient() // Use client-side client
   const tables = [
     "users",
     "host_profiles",
@@ -979,7 +845,6 @@ export async function testTableAccess() {
 
 export async function getSampleData() {
   try {
-    const supabase = createBrowserSupabaseClient() // Use client-side client
     const [usersResult, experiencesResult, bookingsResult] = await Promise.all([
       supabase.from("users").select("*").limit(3),
       supabase.from("experiences").select("*, host_profiles(name)").limit(3),
@@ -1002,7 +867,6 @@ export async function getSampleData() {
 }
 
 export async function updateBusinessProfile(userId: string, updates: Partial<BusinessProfile>) {
-  const supabase = createBrowserSupabaseClient() // Use client-side client
   const hostProfileUpdates: Partial<Omit<BusinessProfile, "onboarding_completed" | "marketplace_enabled">> = {}
   const hostBusinessSettingsUpdates: { onboarding_completed?: boolean; marketplace_enabled?: boolean } = {}
 
@@ -1056,58 +920,14 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
   return { success: true, hostProfile: hostProfileResult, settings: settingsResult }
 }
 
-// Create experience function
-export async function createExperience(experienceData: {
-  host_id: string
-  title: string
-  description: string
-  short_description: string
-  location: string
-  specific_location?: string
-  country: string
-  activity_type: string
-  category: string[]
-  duration_hours: number
-  max_guests: number
-  min_guests: number
-  price_per_person: number
-  difficulty_level: string
-  included_amenities: string[]
-  what_to_bring: string[]
-  min_age?: number
-  max_age?: number
-  age_restriction_details?: string
-  activity_specific_details?: any
-  tags: string[]
-  seasonal_availability: string[]
-  itinerary?: any
-}) {
-  try {
-    const supabase = createBrowserSupabaseClient()
-    const { data, error } = await supabase
-      .from("experiences")
-      .insert([
-        {
-          ...experienceData,
-          is_active: true,
-          rating: 0,
-          total_reviews: 0,
-          total_bookings: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single()
+// Helper function to get user profile
+async function getUserProfile(userId: string) {
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
-    if (error) {
-      console.error("Error creating experience:", error)
-      return { success: false, error: error.message, data: null }
-    }
-
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error creating experience:", error)
-    return { success: false, error: "Network error occurred", data: null }
+  if (error) {
+    console.error("Error fetching user profile:", error)
+    return null
   }
+
+  return data
 }
