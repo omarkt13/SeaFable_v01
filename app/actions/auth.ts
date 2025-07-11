@@ -23,7 +23,7 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  const origin = headers().get("origin")
+  const origin = (await headers()).get("origin")
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const firstName = formData.get("firstName") as string
@@ -71,7 +71,7 @@ export async function signUp(formData: FormData) {
 }
 
 export async function businessSignUp(formData: FormData) {
-  const origin = headers().get("origin")
+  const origin = (await headers()).get("origin")
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const businessName = formData.get("businessName") as string
@@ -149,7 +149,7 @@ export async function requestPasswordReset(formData: FormData) {
   const supabase = createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${headers().get("origin")}/update-password`, // Assuming you have an update-password page
+    redirectTo: `${(await headers()).get("origin")}/update-password`, // Assuming you have an update-password page
   })
 
   if (error) {

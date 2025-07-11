@@ -1,5 +1,5 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import type { UserProfile, BusinessProfile } from "./types/auth"
+import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 // Use globalThis to ensure a single instance across the entire client-side application.
 // This is robust against hot module reloading in development.
@@ -37,7 +37,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
   if (error || !data) return null
-  return data
+  return data as unknown as UserProfile
 }
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
@@ -55,10 +55,13 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
 
   if (error || !data) return null
 
+  // Type assertion to handle the complex joined data structure
+  const businessData = data as any
+
   return {
-    ...data,
-    onboarding_completed: data.host_business_settings?.onboarding_completed || false,
-    marketplace_enabled: data.host_business_settings?.marketplace_enabled || false,
+    ...businessData,
+    onboarding_completed: businessData.host_business_settings?.onboarding_completed || false,
+    marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
   }
 }
 

@@ -173,3 +173,44 @@ export type FishingDetails = {
   licenseIncluded: boolean
   catchAndRelease: boolean
 }
+
+// HostAvailability type for managing host schedules
+export type HostAvailability = {
+  id: string
+  host_id: string
+  business_id: string
+  available_date: string // YYYY-MM-DD
+  start_time: string // HH:MM
+  end_time: string // HH:MM
+  max_capacity: number
+  current_bookings: number
+  is_available: boolean
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+// BusinessSettings type for business configuration
+export type BusinessSettings = {
+  id: string
+  business_id: string
+  onboarding_completed: boolean
+  marketplace_enabled: boolean
+  auto_booking_enabled: boolean
+  instant_booking_enabled: boolean
+  cancellation_policy: string
+  refund_policy: string
+  contact_preferences: {
+    email: boolean
+    phone: boolean
+    sms: boolean
+  }
+  notification_settings: {
+    new_bookings: boolean
+    cancellations: boolean
+    reviews: boolean
+    payments: boolean
+  }
+  created_at: string
+  updated_at: string
+}
