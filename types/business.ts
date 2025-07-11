@@ -18,15 +18,37 @@ export type BusinessProfile = {
   updated_at: string
 }
 
+// Enhanced Experience type with activity expansion from v3
 export type Experience = {
   id: string
   host_id: string
+  business_id: string
   title: string
   description: string
   location: string
   price: number
-  duration: number // in minutes or hours, define unit
-  itinerary?: ItineraryItem[] // New field
+  duration: number // in minutes
+  itinerary?: ItineraryItem[]
+  
+  // New activity-specific fields from v3
+  activityType: 'sailing' | 'surfing' | 'kayaking' | 'diving' | 'jet-skiing' | 
+                'fishing' | 'whale-watching' | 'paddleboarding' | 'windsurfing' | 'snorkeling'
+  activitySpecificDetails: Record<string, any> // JSONB equivalent for activity-specific data
+  difficultyLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  maxParticipants: number
+  minAge?: number
+  equipmentProvided: string[]
+  whatToBring: string[]
+  cancellationPolicy: string
+  weatherDependency: boolean
+  instantBooking: boolean
+  
+  // Enhanced metadata
+  tags: string[]
+  highlights: string[]
+  includedServices: string[]
+  excludedServices: string[]
+  
   created_at: string
   updated_at: string
 }
@@ -35,6 +57,8 @@ export type ItineraryItem = {
   id?: string // Optional for new items before saving
   title: string
   description: string
+  duration?: number // in minutes
+  order: number
 }
 
 export type AvailabilitySlot = {
@@ -62,6 +86,7 @@ export type Booking = {
   updated_at: string
 }
 
+// Enhanced TeamMember to support multiple host roles
 export type TeamMember = {
   id: string
   business_id: string
@@ -70,4 +95,81 @@ export type TeamMember = {
   created_at: string
   updated_at: string
   user?: User // Joined user data
+}
+
+// New HostProfile type (renamed from CaptainProfile)
+export type HostProfile = {
+  id: string
+  business_id: string
+  name: string
+  role: 'captain' | 'instructor' | 'guide' | 'operator'
+  specializations: string[]
+  certifications: string[]
+  yearsExperience: number
+  languages: string[]
+  bio: string
+  avatar_url?: string
+  contact_email?: string
+  phone_number?: string
+  emergency_contact?: string
+  created_at: string
+  updated_at: string
+}
+
+// New Equipment type
+export type Equipment = {
+  id: string
+  business_id: string
+  name: string
+  category: 'safety' | 'activity' | 'comfort' | 'navigation'
+  description: string
+  quantity: number
+  condition: 'excellent' | 'good' | 'fair' | 'needs_replacement'
+  last_maintenance?: string
+  created_at: string
+  updated_at: string
+}
+
+// New Certification type
+export type Certification = {
+  id: string
+  name: string
+  issuing_authority: string
+  description: string
+  validity_period?: number // in months
+  category: 'safety' | 'instruction' | 'navigation' | 'specialized'
+  created_at: string
+  updated_at: string
+}
+
+// Activity-specific data types
+export type SailingDetails = {
+  boatType: 'sailboat' | 'catamaran' | 'yacht' | 'dinghy'
+  boatLength: number // in feet
+  maxWindSpeed: number // in knots
+  sailingArea: string
+  licenseRequired: boolean
+}
+
+export type DivingDetails = {
+  diveType: 'scuba' | 'snorkeling' | 'freediving'
+  maxDepth: number // in meters
+  certificationRequired: boolean
+  equipmentIncluded: boolean
+  diveSites: string[]
+}
+
+export type SurfingDetails = {
+  surfType: 'beginner' | 'intermediate' | 'advanced'
+  boardType: 'longboard' | 'shortboard' | 'foam' | 'provided'
+  waveHeight: string
+  lessonIncluded: boolean
+}
+
+export type FishingDetails = {
+  fishingType: 'deep_sea' | 'inshore' | 'fly_fishing' | 'spearfishing'
+  targetSpecies: string[]
+  equipmentProvided: boolean
+  licenseIncluded: boolean
+  catchAndRelease: boolean
 }
