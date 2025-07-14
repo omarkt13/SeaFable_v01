@@ -1,45 +1,41 @@
-"use client" // Error boundaries must be Client Components
 
-import { Component, type ErrorInfo, type ReactNode } from "react"
+"use client"
 
-interface ErrorBoundaryProps {
-  // Fallback can now be a function that receives the error and a reset function
-  fallback?: (props: { error: Error | null; reset: () => void }) => ReactNode
-  children: ReactNode
-}
+import React from "react"
+import { ErrorFallback } from "@/components/ui/ErrorFallback"
 
 interface ErrorBoundaryState {
   hasError: boolean
-  error: Error | null
+  error?: Error
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+interface ErrorBoundaryProps {
+  children: React.ReactNode
+  fallback?: React.ComponentType<{ error?: Error; resetError?: () => void }>
+}
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false }
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error caught by boundary:", error, errorInfo)
+  }
+
+  resetError = () => {
+    this.setState({ hasError: false, error: undefined })
   }
 
   render() {
     if (this.state.hasError) {
-      const reset = () => {
-        this.setState({ hasError: false, error: null })
-      }
-
-      return (
-        <ErrorFallback 
-          error={this.state.error} 
-          reset={reset} 
-          message={this.props.message || "An application error occurred."} 
-        />
-      )
+      const FallbackComponent = this.props.fallback || ErrorFallback
+      return <FallbackComponent error={this.state.error} resetError={this.resetError} />
     }
 
     return this.props.children
