@@ -1,0 +1,262 @@
+1) Run the following command to sync Subframe components:
+
+```bash
+npx @subframe/cli@latest sync --all
+```
+
+2) Create a new page using the following TSX code. If the page already exists, use it as reference to update the existing code but preserve existing business logic or functionality.
+
+```tsx
+"use client";
+
+import React from "react";
+import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
+import { IconWithBackground } from "@/ui/components/IconWithBackground";
+import { FeatherLayout } from "@subframe/core";
+import { Button } from "@/ui/components/Button";
+import { FeatherHome } from "@subframe/core";
+import { FeatherCalendar } from "@subframe/core";
+import { FeatherUsers } from "@subframe/core";
+import { FeatherDollarSign } from "@subframe/core";
+import { FeatherSettings } from "@subframe/core";
+import { TextField } from "@/ui/components/TextField";
+import { IconButton } from "@/ui/components/IconButton";
+import { FeatherBell } from "@subframe/core";
+import { DropdownMenu } from "@/ui/components/DropdownMenu";
+import { FeatherUser } from "@subframe/core";
+import { FeatherLogOut } from "@subframe/core";
+import * as SubframeCore from "@subframe/core";
+import { FeatherChevronDown } from "@subframe/core";
+import { FeatherPlus } from "@subframe/core";
+import { Badge } from "@/ui/components/Badge";
+
+function BusinessDashboardDesign() {
+  return (
+    <DefaultPageLayout>
+      <div className="flex h-full w-full items-start">
+        <div className="flex w-64 flex-none flex-col items-start gap-8 self-stretch border-r border-solid border-neutral-border bg-brand-50 px-6 py-8">
+          <div className="flex items-center gap-2">
+            <IconWithBackground
+              size="large"
+              icon={<FeatherLayout />}
+              square={true}
+            />
+            <span className="text-heading-2 font-heading-2 text-default-font">
+              Dashboard
+            </span>
+          </div>
+          <div className="flex w-full flex-col items-start gap-2">
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherHome />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Home
+            </Button>
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherCalendar />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Calendar
+            </Button>
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherUsers />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Clients
+            </Button>
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherDollarSign />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Finance
+            </Button>
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherSettings />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Settings
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-col items-start grow">
+          <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4">
+            <TextField label="" helpText="">
+              <TextField.Input
+                placeholder="Search..."
+                value=""
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
+              />
+            </TextField>
+            <div className="flex items-center gap-4">
+              <IconButton
+                icon={<FeatherBell />}
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+              />
+              <SubframeCore.DropdownMenu.Root>
+                <SubframeCore.DropdownMenu.Trigger asChild={true}>
+                  <Button
+                    variant="neutral-tertiary"
+                    iconRight={<FeatherChevronDown />}
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                  >
+                    John Smith
+                  </Button>
+                </SubframeCore.DropdownMenu.Trigger>
+                <SubframeCore.DropdownMenu.Portal>
+                  <SubframeCore.DropdownMenu.Content
+                    side="bottom"
+                    align="end"
+                    sideOffset={4}
+                    asChild={true}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenu.DropdownItem icon={<FeatherUser />}>
+                        Profile
+                      </DropdownMenu.DropdownItem>
+                      <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
+                        Settings
+                      </DropdownMenu.DropdownItem>
+                      <DropdownMenu.DropdownDivider />
+                      <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
+                        Logout
+                      </DropdownMenu.DropdownItem>
+                    </DropdownMenu>
+                  </SubframeCore.DropdownMenu.Content>
+                </SubframeCore.DropdownMenu.Portal>
+              </SubframeCore.DropdownMenu.Root>
+            </div>
+          </div>
+          <div className="flex w-full flex-col items-start gap-8 px-8 py-8 overflow-auto">
+            <div className="flex w-full flex-wrap items-start gap-4">
+              <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
+                <div className="flex w-full items-center justify-between">
+                  <IconWithBackground icon={<FeatherUsers />} />
+                  <span className="text-caption font-caption text-subtext-color">
+                    This month
+                  </span>
+                </div>
+                <span className="text-heading-1 font-heading-1 text-default-font">
+                  246
+                </span>
+                <span className="text-body font-body text-subtext-color">
+                  Total Clients
+                </span>
+              </div>
+              <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
+                <div className="flex w-full items-center justify-between">
+                  <IconWithBackground
+                    variant="success"
+                    icon={<FeatherCalendar />}
+                  />
+                  <span className="text-caption font-caption text-subtext-color">
+                    This week
+                  </span>
+                </div>
+                <span className="text-heading-1 font-heading-1 text-default-font">
+                  52
+                </span>
+                <span className="text-body font-body text-subtext-color">
+                  Appointments
+                </span>
+              </div>
+              <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
+                <div className="flex w-full items-center justify-between">
+                  <IconWithBackground
+                    variant="error"
+                    icon={<FeatherDollarSign />}
+                  />
+                  <span className="text-caption font-caption text-subtext-color">
+                    Today
+                  </span>
+                </div>
+                <span className="text-heading-1 font-heading-1 text-default-font">
+                  $1,254
+                </span>
+                <span className="text-body font-body text-subtext-color">
+                  Revenue
+                </span>
+              </div>
+            </div>
+            <div className="flex w-full flex-col items-start gap-4">
+              <div className="flex w-full items-center justify-between">
+                <span className="text-heading-2 font-heading-2 text-default-font">
+                  Today&#39;s Schedule
+                </span>
+                <Button
+                  icon={<FeatherPlus />}
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                >
+                  New Appointment
+                </Button>
+              </div>
+              <div className="flex w-full flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
+                <div className="flex w-full items-center gap-4 border-b border-solid border-neutral-border pb-4">
+                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
+                    <span className="text-heading-2 font-heading-2 text-brand-600">
+                      09
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-start grow">
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Sarah Johnson
+                    </span>
+                    <span className="text-body font-body text-subtext-color">
+                      Hair Coloring - 9:00 AM
+                    </span>
+                  </div>
+                  <Badge variant="success">Confirmed</Badge>
+                </div>
+                <div className="flex w-full items-center gap-4 border-b border-solid border-neutral-border pb-4">
+                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
+                    <span className="text-heading-2 font-heading-2 text-brand-600">
+                      11
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-start grow">
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Mike Peters
+                    </span>
+                    <span className="text-body font-body text-subtext-color">
+                      Haircut - 11:30 AM
+                    </span>
+                  </div>
+                  <Badge variant="warning">Pending</Badge>
+                </div>
+                <div className="flex w-full items-center gap-4">
+                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
+                    <span className="text-heading-2 font-heading-2 text-brand-600">
+                      14
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-start grow">
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Wilson
+                    </span>
+                    <span className="text-body font-body text-subtext-color">
+                      Manicure - 2:00 PM
+                    </span>
+                  </div>
+                  <Badge variant="success">Confirmed</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </DefaultPageLayout>
+  );
+}
+
+export default BusinessDashboardDesign;
+
+```
