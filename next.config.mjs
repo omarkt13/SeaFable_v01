@@ -16,7 +16,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false, // Disable to avoid critters dependency issues
     gzipSize: true,
     workerThreads: false, // Recommended for Vercel deployments to avoid memory issues
     cpus: 1, // Recommended for Vercel deployments to avoid memory issues
