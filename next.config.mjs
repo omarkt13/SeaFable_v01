@@ -20,6 +20,7 @@ const nextConfig = {
     gzipSize: true,
     workerThreads: false, // Recommended for Vercel deployments to avoid memory issues
     cpus: 1, // Recommended for Vercel deployments to avoid memory issues
+    allowedDevOrigins: ['*.replit.dev'],
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production', // Remove console logs in production builds
