@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider key="auth-provider">
-            <ErrorBoundary fallback={<ErrorFallback />}>
+            <ErrorBoundary fallback={({ error, reset }) => <ErrorFallback error={error} reset={reset} />}>
               {children}
             </ErrorBoundary>
           </AuthProvider>

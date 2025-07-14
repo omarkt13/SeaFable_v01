@@ -146,7 +146,7 @@ export interface Booking {
     last_name: string
     email: string
     avatar_url?: string
-    phone?: string // Added phone to user type for upcoming bookings
+    // phone?: string // Added phone to user type for upcoming bookings
   }
   host_profiles?: {
     id: string
@@ -416,7 +416,12 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
         departure_time,
         special_requests,
         experiences ( id, title, primary_image_url, duration_display, activity_type ),
-        users ( id, first_name, last_name, email, avatar_url )
+        users (
+        first_name,
+        last_name,
+        email,
+        avatar_url
+      )
       `)
       .eq("host_id", hostId)
       .order("booking_date", { ascending: true })
