@@ -4,11 +4,11 @@ import { validateExperienceData, sanitizeExperienceData } from '@/lib/security'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { type: string } }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
     const supabase = createClient()
-    const { type } = params
+    const { type } = await params
 
     // Validate activity type
     const validTypes = [
@@ -60,11 +60,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { type: string } }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
     const supabase = createClient()
-    const { type } = params
+    const { type } = await params
     const body = await request.json()
 
     // Validate activity type
