@@ -188,4 +188,4 @@ INSERT INTO host_certifications (host_id, certification_id, issued_date, expiry_
 ('host-010', 'cert-009', '2019-08-12', '2029-08-12', 'ACA-78901'),
 ('host-011', 'cert-008', '2020-04-30', '2022-04-30', 'PWIA-89012'),
 ('host-011', 'cert-005', '2020-05-15', '2022-05-15', 'RC-90123'),
-('host-012', 'cert-010', '2012-01-20', '2024-01-20', 'NOAA-01234'); 
+('host-012', 'cert-010', '2012-01-20', '2024-01-20', 'NOAA-01234');

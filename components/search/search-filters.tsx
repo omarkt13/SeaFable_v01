@@ -298,4 +298,4 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
       )}
     </div>
   )
-} 
+}

@@ -283,10 +283,10 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
                       View Details
                     </Button>
                     <div className="flex space-x-1">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button variant="outline" size="sm" className="flex-1 bg-transparent">
                         <Share2 className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button variant="outline" size="sm" className="flex-1 bg-transparent">
                         <MessageCircle className="h-4 w-4" />
                       </Button>
                     </div>
@@ -310,7 +310,7 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
   // Grid view (default)
   return (
     <Link href={`/experience/${experience.id}`} className="block">
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:-translate-y-1">
         <div className="relative">
           <img
             src={transformedExperience.primaryImage || "/placeholder.svg"}
@@ -585,28 +585,38 @@ export default function EnhancedExperiencesSearchPage() {
       {" "}
       {/* ✅ FIXED: Wrapped with ErrorBoundary */}
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+        {/* Enhanced Header */}
+        <header className="bg-white/80 backdrop-blur-md shadow-sm border-b sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
                 <Link href="/" className="flex items-center space-x-2">
-                  <Anchor className="h-8 w-8 text-blue-600" />
-                  <span className="text-xl font-bold text-gray-900">SeaFable</span>
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
+                    <Anchor className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    SeaFable
+                  </span>
                 </Link>
                 <div className="hidden md:block h-6 w-px bg-gray-300" />
                 <h1 className="hidden md:block text-lg font-semibold text-gray-900">Discover Water Adventures</h1>
               </div>
 
               <div className="flex items-center space-x-4">
-                <Button variant="ghost">List Your Experience</Button>
+                <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                  List Your Experience
+                </Button>
                 {user ? (
                   <Link href="/dashboard">
-                    <Button variant="outline">Dashboard</Button>
+                    <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent">
+                      Dashboard
+                    </Button>
                   </Link>
                 ) : (
                   <Link href="/login">
-                    <Button variant="outline">Sign In</Button>
+                    <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent">
+                      Sign In
+                    </Button>
                   </Link>
                 )}
               </div>
@@ -615,7 +625,7 @@ export default function EnhancedExperiencesSearchPage() {
         </header>
 
         {/* Enhanced Search Bar */}
-        <div className="bg-white border-b shadow-sm">
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex flex-col lg:flex-row gap-4">
               {/* Main search inputs */}
@@ -626,7 +636,7 @@ export default function EnhancedExperiencesSearchPage() {
                     placeholder="What adventure?"
                     value={filters.search}
                     onChange={(e) => handleFilterChange("search", e.target.value)}
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
@@ -636,7 +646,7 @@ export default function EnhancedExperiencesSearchPage() {
                     placeholder="Where?"
                     value={filters.location}
                     onChange={(e) => handleFilterChange("location", e.target.value)}
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
@@ -646,7 +656,7 @@ export default function EnhancedExperiencesSearchPage() {
                     type="date"
                     value={filters.date}
                     onChange={(e) => handleFilterChange("date", e.target.value)}
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
@@ -656,7 +666,7 @@ export default function EnhancedExperiencesSearchPage() {
                     value={filters.guests.toString()}
                     onValueChange={(value) => handleFilterChange("guests", Number.parseInt(value))}
                   >
-                    <SelectTrigger className="pl-10 h-11">
+                    <SelectTrigger className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -672,7 +682,11 @@ export default function EnhancedExperiencesSearchPage() {
 
               {/* Action buttons */}
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="lg:px-6 relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="lg:px-6 relative border-blue-200 text-blue-600 hover:bg-blue-50"
+                >
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
                   Filters
                   {activeFilterCount > 0 && (
@@ -680,7 +694,11 @@ export default function EnhancedExperiencesSearchPage() {
                   )}
                 </Button>
 
-                <Button onClick={handleSearch} disabled={isLoading} className="lg:px-8">
+                <Button
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  className="lg:px-8 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                >
                   {isLoading ? (
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -699,7 +717,11 @@ export default function EnhancedExperiencesSearchPage() {
                   variant={filters[filter.key as keyof typeof filters] ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleFilterChange(filter.key, !filters[filter.key as keyof typeof filters])}
-                  className="text-xs"
+                  className={`text-xs ${
+                    filters[filter.key as keyof typeof filters]
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                      : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                  }`}
                 >
                   <filter.icon className="h-3 w-3 mr-1" />
                   {filter.label}

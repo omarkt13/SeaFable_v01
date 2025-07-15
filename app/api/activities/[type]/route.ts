@@ -186,4 +186,4 @@ function validateActivitySpecificData(type: string, data: any): {
     isValid: errors.length === 0,
     errors,
   }
-} 
+}

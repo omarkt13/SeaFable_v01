@@ -20,14 +20,14 @@ Secondary major issues include an improperly configured error boundary that hide
 
 - **Problem:** The `next.config.mjs` file contains the following lines:
 
-```javascript
+\`\`\`javascript
 eslint: {
   ignoreDuringBuilds: true,
 },
 typescript: {
   ignoreBuildErrors: true,
 },
-```
+\`\`\`
 
 
 - **Impact:** This is the most critical issue in your project. These settings tell Vercel to ignore all TypeScript type errors and ESLint rule violations during the build. The build process may complete without logging any errors, but the resulting JavaScript bundle is likely to be malformed, contain type-related bugs, or have other critical issues that cause the application to crash instantly upon startup. **This is the most likely cause of your "failing deployment."**
@@ -50,11 +50,11 @@ typescript: {
 
 - **Problem:** In `app/layout.tsx`, the `ErrorBoundary` is configured like this:
 
-```typescriptreact
+\`\`\`typescriptreact
 <ErrorBoundary fallback={<ErrorFallback />}>
   {children}
 </ErrorBoundary>
-```
+\`\`\`
 
 The `components/ui/ErrorFallback.tsx` component is designed to accept `error` and `reset` props to display specific error details and allow the user to retry the action. The current implementation renders the fallback component but **fails to pass these essential props to it.**
 
@@ -64,7 +64,7 @@ The `components/ui/ErrorFallback.tsx` component is designed to accept `error` an
 
 **Suggested Fix for `app/layout.tsx`:**
 
-```typescriptreact
+\`\`\`typescriptreact
 <ErrorBoundary
   fallback={({ error, reset }) => (
     <ErrorFallback error={error} reset={reset} />
@@ -72,7 +72,7 @@ The `components/ui/ErrorFallback.tsx` component is designed to accept `error` an
 >
   {children}
 </ErrorBoundary>
-```
+\`\`\`
 
 *(Note: This assumes your custom `ErrorBoundary` component passes props to its fallback. If not, the `ErrorBoundary` component itself needs to be fixed.)*
 
@@ -105,7 +105,7 @@ The `components/ui/ErrorFallback.tsx` component is designed to accept `error` an
 
 **Suggested Edit for `lib/auth-utils.ts`:**
 
-```typescript
+\`\`\`typescript
 // Remove the globalThis declaration and the self-invoking function.
 // Instead, import the client directly.
 import { supabase } from "@/lib/supabase/client";
@@ -116,7 +116,7 @@ export async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser();
   // ...
 }
-```
+\`\`\`
 
 
 

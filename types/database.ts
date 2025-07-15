@@ -73,4 +73,4 @@ export type ExperienceData = {
     duration?: number
     order: number
   }[]
-} 
+}

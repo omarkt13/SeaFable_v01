@@ -43,7 +43,7 @@ SeaFable is a comprehensive aquatic adventure platform that combines robust busi
 ## 🏗️ Architecture
 
 ### Database Schema
-```
+\`\`\`
 experiences (expanded with activity fields)
 ├── activity_type (sailing, surfing, diving, etc.)
 ├── activity_specific_details (JSONB)
@@ -68,10 +68,10 @@ certifications (new table)
 ├── issuing_authority, validity_period
 ├── category (safety, instruction, navigation, specialized)
 └── description
-```
+\`\`\`
 
 ### API Structure
-```
+\`\`\`
 /api/
 ├── business/             # Business management
 ├── activities/[type]/    # Activity-specific operations
@@ -79,7 +79,7 @@ certifications (new table)
 ├── certifications/       # Certification tracking
 ├── weather/              # Weather integration (planned)
 └── bookings/             # Booking management
-```
+\`\`\`
 
 ## 🚀 Getting Started
 
@@ -91,32 +91,32 @@ certifications (new table)
 ### Installation
 
 1. **Clone the repository**
-   ```bash
+   \`\`\`bash
    git clone <repository-url>
    cd SeaFable_v01
-   ```
+   \`\`\`
 
 2. **Install dependencies**
-   ```bash
+   \`\`\`bash
    pnpm install
-   ```
+   \`\`\`
 
 3. **Environment Setup**
-   ```bash
+   \`\`\`bash
    cp .env.example .env.local
-   ```
+   \`\`\`
    Fill in your Supabase credentials and other environment variables.
 
 4. **Database Setup**
-   ```bash
+   \`\`\`bash
    # Run migration scripts in order
    pnpm run db:migrate
-   ```
+   \`\`\`
 
 5. **Start Development Server**
-   ```bash
+   \`\`\`bash
    pnpm dev
-   ```
+   \`\`\`
 
 ## 📊 Database Migrations
 
@@ -184,31 +184,31 @@ certifications (new table)
 ## 📱 Component Architecture
 
 ### Search & Discovery
-```
+\`\`\`
 /components/search/
 ├── search-filters.tsx      # Advanced filtering system
 ├── activity-type-filter.tsx # Activity type selection
 ├── difficulty-filter.tsx    # Difficulty level filtering
 └── equipment-filter.tsx    # Equipment-based filtering
-```
+\`\`\`
 
 ### Experience Management
-```
+\`\`\`
 /components/experience/
 ├── experience-card.tsx     # Enhanced experience display
 ├── activity-badge.tsx      # Activity type badges
 ├── difficulty-indicator.tsx # Difficulty level display
 └── equipment-list.tsx      # Equipment provided list
-```
+\`\`\`
 
 ### Business Portal
-```
+\`\`\`
 /components/business/
 ├── experience-form.tsx     # Enhanced experience creation
 ├── equipment-manager.tsx   # Equipment inventory management
 ├── host-profiles.tsx       # Multi-role host management
 └── certification-tracker.tsx # Certification management
-```
+\`\`\`
 
 ## 🧪 Testing Strategy
 
@@ -233,27 +233,27 @@ certifications (new table)
 ## 📚 API Documentation
 
 ### Activity-Specific Endpoints
-```typescript
+\`\`\`typescript
 GET /api/activities/[type]
 POST /api/activities/[type]
 // Supports: sailing, surfing, kayaking, diving, jet-skiing,
 //          fishing, whale-watching, paddleboarding, windsurfing, snorkeling
-```
+\`\`\`
 
 ### Equipment Management
-```typescript
+\`\`\`typescript
 GET /api/equipment?business_id=xxx&category=safety
 POST /api/equipment
 PUT /api/equipment
 DELETE /api/equipment?id=xxx
-```
+\`\`\`
 
 ### Certification Management
-```typescript
+\`\`\`typescript
 GET /api/certifications?category=safety&host_id=xxx
 POST /api/certifications
 PATCH /api/certifications // Add certification to host
-```
+\`\`\`
 
 ## 🎯 Success Criteria
 

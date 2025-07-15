@@ -223,4 +223,4 @@ export function sanitizeExperienceData(data: any): any {
       description: sanitizeHtml(item.description || ''),
     })),
   }
-} 
+}

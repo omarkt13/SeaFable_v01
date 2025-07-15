@@ -158,4 +158,4 @@ USING (experience_id IN (
     SELECT e.id FROM experiences e 
     JOIN business_profiles bp ON e.business_id = bp.id 
     WHERE bp.user_id = auth.uid()
-)); 
+));

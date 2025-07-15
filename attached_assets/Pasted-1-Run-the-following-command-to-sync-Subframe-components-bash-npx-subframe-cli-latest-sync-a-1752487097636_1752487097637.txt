@@ -1,12 +1,12 @@
 1) Run the following command to sync Subframe components:
 
-```bash
+\`\`\`bash
 npx @subframe/cli@latest sync --all
-```
+\`\`\`
 
 2) Create a new page using the following TSX code. If the page already exists, use it as reference to update the existing code but preserve existing business logic or functionality.
 
-```tsx
+\`\`\`tsx
 "use client";
 
 import React from "react";
@@ -259,4 +259,4 @@ function BusinessDashboardDesign() {
 
 export default BusinessDashboardDesign;
 
-```
+\`\`\`
