@@ -53,7 +53,14 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
     .eq("id", userId)
     .single()
 
-  if (error || !data) return null
+  if (error) {
+    console.error("Error fetching business profile:", error);
+    // If profile doesn't exist, return null instead of throwing
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    throw error;
+  }
 
   // Type assertion to handle the complex joined data structure
   const businessData = data as any

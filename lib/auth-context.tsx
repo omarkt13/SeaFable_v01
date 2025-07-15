@@ -34,53 +34,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createBrowserSupabaseClient() // Use the client-side Supabase instance
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
-    console.log("fetchUserAndProfiles called. Current user:", currentUser?.id)
-    setIsLoading(true)
-    setUser(currentUser)
-    setUserProfile(null)
-    setBusinessProfile(null)
-    setUserType(null)
+    console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
 
-    if (currentUser) {
-      let determinedUserType: "customer" | "business" | null = null
-      let fetchedUserProfile: UserProfile | null = null
-      let fetchedBusinessProfile: BusinessProfile | null = null
-
-      // Attempt to determine user type from metadata first (if set during signup)
-      const userMetadataType = currentUser.user_metadata?.user_type as "customer" | "business" | undefined
-
-      if (userMetadataType === "business") {
-        fetchedBusinessProfile = await getBusinessProfile(currentUser.id)
-        if (fetchedBusinessProfile) {
-          determinedUserType = "business"
-        }
-      } else if (userMetadataType === "customer") {
-        fetchedUserProfile = await getUserProfile(currentUser.id)
-        if (fetchedUserProfile) {
-          determinedUserType = "customer"
-        }
-      }
-
-      // Fallback: if user_type not in metadata or profile not found, check both tables
-      if (!determinedUserType) {
-        fetchedBusinessProfile = await getBusinessProfile(currentUser.id)
-        if (fetchedBusinessProfile) {
-          determinedUserType = "business"
-        } else {
-          fetchedUserProfile = await getUserProfile(currentUser.id)
-          if (fetchedUserProfile) {
-            determinedUserType = "customer"
-          }
-        }
-      }
-
-      setUserProfile(fetchedUserProfile)
-      setBusinessProfile(fetchedBusinessProfile)
-      setUserType(determinedUserType)
+    if (!currentUser) {
+      setUser(null);
+      setUserType(null);
+      setUserProfile(null);
+      setBusinessProfile(null);
+      console.log("fetchUserAndProfiles finished. User:", null, "User Type:", null);
+      return;
     }
-    setIsLoading(false)
-    console.log("fetchUserAndProfiles finished. User:", user?.id, "User Type:", userType)
-  }
+
+    try {
+      // Set user immediately
+      setUser(currentUser);
+
+      // Determine user type from metadata
+      const userTypeFromMetadata = currentUser.user_metadata?.user_type;
+      console.log("User type from metadata:", userTypeFromMetadata);
+
+      if (userTypeFromMetadata === "business") {
+        setUserType("business");
+
+        // Fetch business profile
+        try {
+          const businessData = await getBusinessProfile(currentUser.id);
+          console.log("Business profile fetched:", businessData);
+          setBusinessProfile(businessData);
+          setUserProfile(null);
+        } catch (error) {
+          console.error("Error fetching business profile:", error);
+          setBusinessProfile(null);
+        }
+      } else {
+        setUserType("customer");
+
+        // Fetch customer profile
+        try {
+          const customerData = await getUserProfile(currentUser.id);
+          console.log("Customer profile fetched:", customerData);
+          setUserProfile(customerData);
+          setBusinessProfile(null);
+        } catch (error) {
+          console.error("Error fetching customer profile:", error);
+          setUserProfile(null);
+        }
+      }
+
+      console.log("fetchUserAndProfiles finished. User:", currentUser.id, "User Type:", userTypeFromMetadata);
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+      setUser(currentUser);
+      setUserType(null);
+      setUserProfile(null);
+      setBusinessProfile(null);
+    }
+  };
 
   useEffect(() => {
     // Initial session check
