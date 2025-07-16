@@ -2,7 +2,7 @@ import type React from "react"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
-import { ErrorFallback } from "@/components/ui/ErrorFallback"
+import ErrorFallback from "@/components/ui/ErrorFallback"
 import "./globals.css"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider key="auth-provider">
-            <ErrorBoundary fallback={ErrorFallback}>
+            <ErrorBoundary fallback={({ error, reset }) => <ErrorFallback error={error} reset={reset} />}>
               {children}
             </ErrorBoundary>
           </AuthProvider>
