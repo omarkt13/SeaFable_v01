@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Search, MapPin, Calendar, Sailboat, Users, Shield, Globe, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -48,10 +49,10 @@ export default function HomePage() {
   }
 
   // Auto-rotate activity text every 3 seconds
-  useState(() => {
+  useEffect(() => {
     const interval = setInterval(rotateActivity, 3000)
     return () => clearInterval(interval)
-  })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -147,6 +148,7 @@ export default function HomePage() {
                 onClick={() => {
                   const params = new URLSearchParams()
                   params.append('what', activity.type.toLowerCase())
+                  console.log(`Navigating to search with activity: ${activity.type.toLowerCase()}`)
                   router.push(`/search?${params.toString()}`)
                 }}
               >
@@ -258,7 +260,7 @@ export default function HomePage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">
-                    <Badge className="bg-blue-600 text-white">{experience.badge}</Badge>
+                    <Badge variant="secondary" className="bg-blue-600 text-white">{experience.badge}</Badge>
                   </div>
                 </div>
                 <CardContent className="p-4">

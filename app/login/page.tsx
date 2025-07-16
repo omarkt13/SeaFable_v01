@@ -20,14 +20,21 @@ export default function CustomerLoginPage() {
     setLoading(true)
     setError("")
 
-    const result = await login(email, password, "customer") // Call login from useAuth
+    try {
+      const result = await login(email, password, "customer") // Call login from useAuth
 
-    if (result.success) {
-      router.push("/dashboard")
-    } else {
-      setError(result.error || "Login failed.")
+      if (result.success) {
+        console.log("Customer login successful, redirecting to dashboard")
+        router.push("/dashboard")
+      } else {
+        setError(result.error || "Login failed.")
+      }
+    } catch (error: any) {
+      console.error("Login error:", error)
+      setError(error.message || "An unexpected error occurred")
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

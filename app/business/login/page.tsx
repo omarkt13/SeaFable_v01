@@ -25,7 +25,12 @@ export default function BusinessLoginPage() {
 
       if (result.success) {
         console.log("Business login successful")
-        router.push("/business/home")
+        // Check if onboarding is complete first
+        if (result.profile?.onboarding_completed) {
+          router.push("/business/dashboard")
+        } else {
+          router.push("/business/onboarding")
+        }
       } else {
         setError(result.error || "Login failed")
       }
