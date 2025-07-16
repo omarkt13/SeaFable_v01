@@ -908,7 +908,6 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
     }
     hostProfileResult = data
   }
-  }
 
   // Update host_business_settings table (use upsert to create if doesn't exist)
   if (Object.keys(hostBusinessSettingsUpdates).length > 0) {
