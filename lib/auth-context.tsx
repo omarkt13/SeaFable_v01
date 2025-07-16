@@ -35,14 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
-    setIsLoading(true);
 
     if (!currentUser) {
       setUser(null);
       setUserType(null);
       setUserProfile(null);
       setBusinessProfile(null);
-      setIsLoading(false);
       console.log("fetchUserAndProfiles finished. User:", null, "User Type:", null);
       return;
     }
@@ -90,32 +88,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserType(null);
       setUserProfile(null);
       setBusinessProfile(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     // Initial session check
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial getSession result:", session?.user?.id);
-        await fetchUserAndProfiles(session?.user || null);
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    getInitialSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial getSession result:", session?.user?.id)
+      fetchUserAndProfiles(session?.user || null)
+    })
 
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id);
-      await fetchUserAndProfiles(session?.user || null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id)
+      fetchUserAndProfiles(session?.user || null)
     })
 
     return () => {
@@ -141,23 +129,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         console.log("Login successful for user:", data.user.id)
-        
-        // Check user type from metadata first
-        const userTypeFromMetadata = data.user.user_metadata?.user_type;
-        console.log("User type from metadata:", userTypeFromMetadata);
+        await fetchUserAndProfiles(data.user)
+        console.log("After login, userType determined:", userType) // Note: userType might not be updated immediately here due to async state updates
 
-        // Validate user type matches the login portal
-        if (type === "business" && userTypeFromMetadata !== "business") {
-          await authUtilsSignOut()
-          return { success: false, error: "This account is not registered as a business. Please use the customer login or register your business first." }
-        }
-        if (type === "customer" && userTypeFromMetadata === "business") {
-          await authUtilsSignOut()
+        // Additional check to ensure user logs into the correct portal
+        if (type === "customer" && userType === "business") {
+          await authUtilsSignOut() // Use the signOut from auth-utils
           return { success: false, error: "Business accounts should use the business login page." }
         }
+        if (type === "business" && userType === "customer") {
+          await authUtilsSignOut() // Use the signOut from auth-utils
+          return { success: false, error: "Customer accounts should use the customer login page." }
+        }
 
-        // If validation passes, fetch profiles
-        await fetchUserAndProfiles(data.user)
         return { success: true, user: data.user }
       }
       return { success: false, error: "Login failed: No user data." }
