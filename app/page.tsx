@@ -98,7 +98,7 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div className="relative">
@@ -109,7 +109,7 @@ export default function HomePage() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div className="relative">
@@ -120,7 +120,7 @@ export default function HomePage() {
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <Button
