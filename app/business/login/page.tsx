@@ -2,12 +2,13 @@
 import { useState } from "react"
 import type React from "react"
 
-import { supabase } from "@/lib/auth-utils"
+import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Building, Mail, Lock, ArrowRight } from "lucide-react"
 
 export default function BusinessLoginPage() {
+  const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -20,49 +21,23 @@ export default function BusinessLoginPage() {
     setError("")
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const result = await login(email, password, "business")
 
-      if (signInError) throw signInError
-
-      if (data.user) {
-        console.log("Login Page: User signed in:", data.user)
-
-        // Primary check: Verify if user exists in host_profiles table
-        const { data: hostProfile, error: hostError } = await supabase
-          .from("host_profiles")
-          .select("id, business_name")
-          .eq("id", data.user.id)
-          .single()
-
-        // --- ADDED LOG FOR DEBUGGING ---
-        console.log("Login Page: Host profile query result:", { hostProfile, hostError })
-        // --- END ADDED LOG ---
-
-        if (hostError || !hostProfile) {
-          // If not found in host_profiles, it's not a business account for this login page
-          await supabase.auth.signOut() // Sign out the user if they are not a business
-          setError(
-            "This account is not registered as a business. Please use the customer login or register your business first.",
-          )
-          return
-        }
-
-        console.log("Login Page: Business user confirmed, redirecting to home.")
-        // Use router.push for client-side navigation.
-        // AuthContext's onAuthStateChange will pick up the new session.
-        router.push("/business/home") // Confirmed: Redirect to /business/home
-        // IMPORTANT: Do NOT use router.refresh() here. It causes AuthContext to remount.
+      if (result.success) {
+        console.log("Business login successful")
+        router.push("/business/home")
+      } else {
+        setError(result.error || "Login failed")
       }
     } catch (error: any) {
-      console.error("Login Page: Login error:", error.message)
-      setError(error.message || "An error occurred during login. Please check your credentials.")
+      console.error("Login error:", error)
+      setError(error.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
     }
   }
+
+        
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
