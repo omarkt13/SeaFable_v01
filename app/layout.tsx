@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { ErrorFallback } from "@/components/ui/ErrorFallback"
 import "./globals.css"
+import "@/lib/suppress-layout-effect-warning"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
