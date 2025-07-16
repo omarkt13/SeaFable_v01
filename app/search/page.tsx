@@ -124,20 +124,6 @@ function SearchResultsContent() {
   const [sortBy, setSortBy] = useState('relevance')
   const [minRating, setMinRating] = useState(0)
 
-  // Initialize filters from URL parameters
-  useEffect(() => {
-    const whatParam = searchParams.get('what')
-    if (whatParam) {
-      // Map search query to activity type if it matches
-      const matchingActivity = activityTypes.find(type => 
-        type.toLowerCase() === whatParam.toLowerCase()
-      )
-      if (matchingActivity) {
-        setSelectedActivityTypes([matchingActivity])
-      }
-    }
-  }, [searchParams])
-
   // Apply filters
   useEffect(() => {
     let filtered = experiences
@@ -329,19 +315,10 @@ function SearchResultsContent() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {searchQuery ? `"${searchQuery}"` : selectedActivityTypes.length > 0 ? selectedActivityTypes.join(', ') : 'Water Adventures'} - {filteredExperiences.length} results found
+              {searchQuery ? `"${searchQuery}"` : 'Water Adventures'} - {filteredExperiences.length} results found
             </h1>
             {location && (
               <p className="text-gray-600 mt-1">in {location}</p>
-            )}
-            {selectedActivityTypes.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedActivityTypes.map(type => (
-                  <Badge key={type} variant="secondary" className="bg-blue-100 text-blue-700">
-                    {type}
-                  </Badge>
-                ))}
-              </div>
             )}
           </div>
 

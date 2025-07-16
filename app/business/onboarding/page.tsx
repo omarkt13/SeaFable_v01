@@ -46,16 +46,13 @@ export default function BusinessOnboardingPage() {
     }
 
     try {
-      console.log("Submitting onboarding data for user:", user.id)
-      const result = await updateBusinessProfile(user.id, {
+      await updateBusinessProfile(user.id, {
         contact_name: contactName,
         phone: phone,
         location: location,
         business_type: businessType,
         onboarding_completed: true, // This is the key update
       })
-
-      console.log("Database update result:", result)
 
       // Force a session refresh to update AuthContext state
       const {
@@ -71,7 +68,7 @@ export default function BusinessOnboardingPage() {
       router.push("/business/dashboard")
     } catch (err: any) {
       console.error("Onboarding submission error:", err)
-      setError(`Failed to complete onboarding: ${err.message}`)
+      setError(err.message)
     } finally {
       setLoading(false)
     }

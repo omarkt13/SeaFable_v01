@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Search, MapPin, Calendar, Sailboat, Users, Shield, Globe, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -49,10 +48,10 @@ export default function HomePage() {
   }
 
   // Auto-rotate activity text every 3 seconds
-  useEffect(() => {
+  useState(() => {
     const interval = setInterval(rotateActivity, 3000)
     return () => clearInterval(interval)
-  }, [])
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -65,7 +64,7 @@ export default function HomePage() {
               <span className="ml-2 text-xl font-bold text-gray-900">SeaFable</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/business/register" className="text-gray-700 hover:text-blue-600">Become a Host</Link>
+              <Link href="#" className="text-gray-700 hover:text-blue-600">Become a Host</Link>
               <Link href="/login" className="text-gray-700 hover:text-blue-600">Sign In</Link>
               <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Sign Up</Link>
             </div>
@@ -97,8 +96,7 @@ export default function HomePage() {
                   placeholder="What water adventure?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="relative">
@@ -108,8 +106,7 @@ export default function HomePage() {
                   placeholder="Where?"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="relative">
@@ -119,8 +116,7 @@ export default function HomePage() {
                   placeholder="When?"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500"
+                  className="pl-10 h-12 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <Button
@@ -142,16 +138,7 @@ export default function HomePage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {activityCategories.map((activity, index) => (
-              <Card 
-                key={index} 
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={() => {
-                  const params = new URLSearchParams()
-                  params.append('what', activity.type.toLowerCase())
-                  console.log(`Navigating to search with activity: ${activity.type.toLowerCase()}`)
-                  router.push(`/search?${params.toString()}`)
-                }}
-              >
+              <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer group">
                 <CardContent className="p-6 text-center">
                   <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">
                     {activity.icon}
@@ -159,130 +146,6 @@ export default function HomePage() {
                   <h3 className="font-semibold text-gray-900 mb-2">{activity.type}</h3>
                   <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
                   <p className="text-xs text-blue-600 font-medium">{activity.count} experiences</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Destination Showcase Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Explore by Destination
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Santorini, Greece", image: "/placeholder.jpg", count: 45, description: "Stunning sunsets and crystal waters" },
-              { name: "Mallorca, Spain", image: "/placeholder.jpg", count: 38, description: "Perfect Mediterranean adventures" },
-              { name: "Costa Brava, Spain", image: "/placeholder.jpg", count: 29, description: "Hidden coves and rugged coastline" },
-              { name: "Algarve, Portugal", image: "/placeholder.jpg", count: 52, description: "Golden beaches and dramatic cliffs" }
-            ].map((destination, index) => (
-              <Card 
-                key={index} 
-                className="hover:shadow-lg transition-shadow cursor-pointer group overflow-hidden"
-                onClick={() => {
-                  const params = new URLSearchParams()
-                  params.append('where', destination.name)
-                  router.push(`/search?${params.toString()}`)
-                }}
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={destination.image} 
-                    alt={destination.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all"></div>
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="font-semibold text-lg mb-1">{destination.name}</h3>
-                    <p className="text-sm opacity-90">{destination.description}</p>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <p className="text-sm text-blue-600 font-medium">{destination.count} experiences</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Adventures Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Featured Adventures
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                id: 1,
-                title: "Sunset Sailing in Santorini",
-                location: "Santorini, Greece",
-                price: 85,
-                rating: 4.9,
-                image: "/placeholder.jpg",
-                badge: "Best Seller",
-                description: "Experience magical sunsets from the sea"
-              },
-              {
-                id: 2,
-                title: "Professional Diving Course",
-                location: "Mallorca, Spain", 
-                price: 120,
-                rating: 4.8,
-                image: "/placeholder.jpg",
-                badge: "Certified",
-                description: "Learn to dive with expert instructors"
-              },
-              {
-                id: 3,
-                title: "Kayaking Hidden Coves",
-                location: "Costa Brava, Spain",
-                price: 55,
-                rating: 4.7,
-                image: "/placeholder.jpg",
-                badge: "Adventure",
-                description: "Discover secret coastal spots"
-              }
-            ].map((experience) => (
-              <Card 
-                key={experience.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer group overflow-hidden"
-                onClick={() => router.push(`/experience/${experience.id}`)}
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={experience.image} 
-                    alt={experience.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <Badge variant="secondary" className="bg-blue-600 text-white">{experience.badge}</Badge>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">{experience.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2 flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {experience.location}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-3">{experience.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="w-4 h-4 text-yellow-400 mr-1">⭐</div>
-                        ))}
-                      </div>
-                      <span className="text-sm font-medium ml-1">{experience.rating}</span>
-                    </div>
-                    <div className="text-lg font-semibold text-gray-900">
-                      €{experience.price}
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             ))}

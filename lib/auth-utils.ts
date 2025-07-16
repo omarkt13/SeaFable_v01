@@ -65,23 +65,10 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
   // Type assertion to handle the complex joined data structure
   const businessData = data as any
 
-  // Get settings directly if the join didn't work
-  let settings = businessData.host_business_settings;
-  if (!settings) {
-    console.log("No settings found via join, fetching directly");
-    const { data: settingsData } = await supabase
-      .from("host_business_settings")
-      .select("onboarding_completed, marketplace_enabled")
-      .eq("host_profile_id", userId)
-      .single();
-    
-    settings = settingsData;
-  }
-
   return {
     ...businessData,
-    onboarding_completed: settings?.onboarding_completed || false,
-    marketplace_enabled: settings?.marketplace_enabled || false,
+    onboarding_completed: businessData.host_business_settings?.onboarding_completed || false,
+    marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
   }
 }
 

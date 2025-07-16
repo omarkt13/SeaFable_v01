@@ -894,10 +894,7 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
   if (Object.keys(hostProfileUpdates).length > 0) {
     const { data, error } = await supabase
       .from("host_profiles")
-      .update({
-        ...hostProfileUpdates,
-        updated_at: new Date().toISOString()
-      })
+      .update(hostProfileUpdates)
       .eq("id", userId)
       .select()
       .single()
@@ -909,17 +906,12 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
     hostProfileResult = data
   }
 
-  // Update host_business_settings table (use upsert to create if doesn't exist)
+  // Update host_business_settings table
   if (Object.keys(hostBusinessSettingsUpdates).length > 0) {
     const { data, error } = await supabase
       .from("host_business_settings")
-      .upsert({
-        host_profile_id: userId,
-        ...hostBusinessSettingsUpdates,
-        updated_at: new Date().toISOString()
-      }, { 
-        onConflict: 'host_profile_id'
-      })
+      .update(hostBusinessSettingsUpdates)
+      .eq("host_profile_id", userId)
       .select()
       .single()
 
