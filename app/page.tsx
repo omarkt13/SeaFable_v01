@@ -61,11 +61,11 @@ export default function LandingPage() {
 
   const activities = [
     { name: "Sailing", icon: "⛵", count: "2,400+ experiences" },
-    { name: "Surfing", icon: "🏄", count: "1,800+ experiences" },
     { name: "Diving", icon: "🤿", count: "1,200+ experiences" },
-    { name: "Kayaking", icon: "🚣", count: "3,100+ experiences" },
-    { name: "Fishing", icon: "🎣", count: "900+ experiences" },
-    { name: "Yacht Charter", icon: "🛥️", count: "600+ experiences" },
+    { name: "Kitesurfing", icon: "🪁", count: "850+ experiences" },
+    { name: "Surfing", icon: "🏄‍♂️", count: "1,800+ experiences" },
+    { name: "Kayaking", icon: "🛶", count: "3,100+ experiences" },
+    { name: "Paddleboarding", icon: "🏄‍♀️", count: "1,500+ experiences" },
   ]
 
   const featuredExperiences = [
@@ -146,13 +146,13 @@ export default function LandingPage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
             <div className="text-center">
               <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                Dive into
+                Dive into your next
                 <span className="block bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-                  Adventure
+                  Sea Adventure
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto">
-                Connect with experienced captains, instructors, and guides for unforgettable water adventures worldwide
+                Book amazing sailing, diving, kitesurfing, surfing, kayaking, and paddleboarding experiences worldwide
               </p>
 
               {/* Search Bar */}
@@ -212,7 +212,7 @@ export default function LandingPage() {
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       </div>
                     ) : (
-                      "Search"
+                      "Search Adventures"
                     )}
                   </Button>
                 </div>
@@ -270,7 +270,7 @@ export default function LandingPage() {
         <section id="featured-experiences" className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Experiences</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Adventures</h2>
               <p className="text-xl text-gray-600">Handpicked adventures from our top-rated hosts</p>
             </div>
 
@@ -337,34 +337,27 @@ export default function LandingPage() {
               <p className="text-xl text-gray-600">Your safety and satisfaction are our top priorities</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">Verified Hosts</h3>
-                <p className="text-gray-600 text-sm">All hosts are background checked and certified</p>
+                <h3 className="font-bold text-gray-900 mb-2">Verified Businesses</h3>
+                <p className="text-gray-600 text-sm">All hosts are verified businesses with proper certifications</p>
               </div>
               <div className="text-center">
                 <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-8 w-8 text-blue-600" />
+                  <Globe className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">Instant Booking</h3>
-                <p className="text-gray-600 text-sm">Secure, fast bookings with instant confirmation</p>
+                <h3 className="font-bold text-gray-900 mb-2">Insurance Included</h3>
+                <p className="text-gray-600 text-sm">All experiences come with comprehensive insurance coverage</p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Globe className="h-8 w-8 text-purple-600" />
+                  <Award className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">Global Coverage</h3>
-                <p className="text-gray-600 text-sm">Experiences available in 50+ destinations worldwide</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-orange-600" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">Quality Guarantee</h3>
-                <p className="text-gray-600 text-sm">100% satisfaction guarantee or your money back</p>
+                <h3 className="font-bold text-gray-900 mb-2">Perfect Match</h3>
+                <p className="text-gray-600 text-sm">Join thousands who have discovered their perfect water experience</p>
               </div>
             </div>
           </div>
@@ -453,7 +446,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h2 className="text-4xl font-bold text-white mb-6">Ready to Make Waves?</h2>
             <p className="text-xl text-blue-100 mb-8">
-              Join thousands of adventurers who have discovered their perfect water experience
+              Join thousands of adventurers who have discovered their perfect water adventure
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
