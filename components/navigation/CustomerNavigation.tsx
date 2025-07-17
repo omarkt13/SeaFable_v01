@@ -24,7 +24,7 @@ export function CustomerNavigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">SF</span>
               </div>
@@ -35,25 +35,25 @@ export function CustomerNavigation() {
           {/* Customer Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href="/experiences"
+              href="/search"
               className="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition-colors"
             >
               <Search className="w-4 h-4" />
-              <span>Explore</span>
+              <span>Find Adventures</span>
             </Link>
             <Link
               href="/dashboard/bookings"
               className="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition-colors"
             >
               <Calendar className="w-4 h-4" />
-              <span>My Trips</span>
+              <span>My Adventures</span>
             </Link>
             <Link
               href="/dashboard/favorites"
               className="flex items-center space-x-2 text-gray-700 hover:text-teal-600 transition-colors"
             >
               <Heart className="w-4 h-4" />
-              <span>Favorites</span>
+              <span>Wishlist</span>
             </Link>
           </div>
 
