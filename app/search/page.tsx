@@ -512,12 +512,32 @@ export default function EnhancedExperiencesSearchPage() {
     sortBy,
   ])
 
-  // Load experiences on initialization
+  // Load experiences on initialization and when search filters change
   useEffect(() => {
     if (hasInitialized) {
       loadExperiences()
     }
   }, [hasInitialized, loadExperiences])
+
+  // Initial load of all experiences when component first mounts
+  useEffect(() => {
+    if (!hasInitialized) {
+      const loadInitialExperiences = async () => {
+        setIsLoading(true)
+        try {
+          const result = await getExperiences()
+          if (result.success) {
+            setExperiences(Array.isArray(result.data) ? result.data : [])
+          }
+        } catch (error) {
+          console.error("Error loading initial experiences:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+      loadInitialExperiences()
+    }
+  }, [hasInitialized])
 
   // Apply client-side filters that aren't handled by the database
   const filteredExperiences = useMemo(() => {

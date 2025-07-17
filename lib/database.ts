@@ -303,15 +303,93 @@ export async function createExperience(experienceData: ExperienceData) {
   }
 }
 
-export async function getExperiences(hostId?: string) {
+export async function getExperiences(filters?: any) {
   try {
-    let query = supabase.from("experiences").select("*").eq("is_active", true)
+    let query = supabase
+      .from("experiences")
+      .select(`
+        *,
+        host_profiles!experiences_host_id_fkey (
+          id,
+          name,
+          avatar_url,
+          rating,
+          total_reviews
+        )
+      `)
+      .eq("is_active", true)
 
-    if (hostId) {
-      query = query.eq("host_id", hostId)
+    // Handle legacy hostId parameter (when filters is a string)
+    if (typeof filters === "string") {
+      query = query.eq("host_id", filters)
+    } else if (filters && typeof filters === "object") {
+      // Handle search filters object
+      if (filters.search) {
+        query = query.or(`title.ilike.%${filters.search}%, description.ilike.%${filters.search}%`)
+      }
+      
+      if (filters.location) {
+        query = query.or(`location.ilike.%${filters.location}%, country.ilike.%${filters.location}%`)
+      }
+      
+      if (filters.activityTypes && filters.activityTypes.length > 0) {
+        query = query.in("activity_type", filters.activityTypes)
+      }
+      
+      if (filters.priceRange && filters.priceRange.length === 2) {
+        query = query.gte("price_per_person", filters.priceRange[0])
+        if (filters.priceRange[1] < 500) {
+          query = query.lte("price_per_person", filters.priceRange[1])
+        }
+      }
+      
+      if (filters.difficultyLevels && filters.difficultyLevels.length > 0) {
+        query = query.in("difficulty_level", filters.difficultyLevels)
+      }
+      
+      if (filters.minGuests) {
+        query = query.gte("max_guests", filters.minGuests)
+      }
+      
+      if (filters.rating) {
+        query = query.gte("rating", filters.rating)
+      }
+      
+      if (filters.hostId) {
+        query = query.eq("host_id", filters.hostId)
+      }
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false })
+    // Apply sorting
+    if (filters && filters.sortBy) {
+      switch (filters.sortBy) {
+        case "price_low":
+          query = query.order("price_per_person", { ascending: true })
+          break
+        case "price_high":
+          query = query.order("price_per_person", { ascending: false })
+          break
+        case "rating":
+          query = query.order("rating", { ascending: false })
+          break
+        case "reviews":
+          query = query.order("total_reviews", { ascending: false })
+          break
+        case "popular":
+          query = query.order("total_bookings", { ascending: false })
+          break
+        case "newest":
+          query = query.order("created_at", { ascending: false })
+          break
+        default:
+          query = query.order("rating", { ascending: false }).order("total_bookings", { ascending: false })
+          break
+      }
+    } else {
+      query = query.order("created_at", { ascending: false })
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error("Database error:", error)
