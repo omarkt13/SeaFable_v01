@@ -29,7 +29,7 @@ export function BusinessSidebar({ isOpen, onClose }) {
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
     { name: "Sales", icon: DollarSign, href: "/business/sales" },
-    { name: "Catalogue", icon: BookOpen, href: "/business/experiences" }, // Re-using existing experiences page
+    { name: "Adventures", icon: BookOpen, href: "/business/adventures" }, // Re-using existing experiences page
     { name: "Team", icon: Users2, href: "/business/team" },
     { name: "Online bookings", icon: Globe, href: "/business/online-bookings" },
     { name: "Reports", icon: BarChart, href: "/business/reports" },

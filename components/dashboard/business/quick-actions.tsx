@@ -18,9 +18,9 @@ export function QuickActions({ businessProfile }: QuickActionsProps) {
       </CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Button variant="outline" asChild>
-          <Link href="/business/experiences/new">
+          <Link href="/business/adventures/new">
             <Plus className="h-4 w-4 mr-2" />
-            Add Experience
+            Add Adventure
           </Link>
         </Button>
         <Button variant="outline" asChild>
