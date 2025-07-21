@@ -81,7 +81,7 @@ export function BusinessSidebar({ isOpen, onClose }) {
           </div>
           <div className="mt-6 pt-6 border-t border-gray-200 space-y-1">
             <Link
-              href="/business/experiences/new"
+              href="/business/adventures/new"
               className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               onClick={onClose}
             >
