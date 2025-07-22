@@ -1,0 +1,113 @@
+[17:28:45.936] Running build in Washington, D.C., USA (East) – iad1
+[17:28:45.936] Build machine configuration: 2 cores, 8 GB
+[17:28:45.950] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: f97d29c)
+[17:28:46.075] Previous build caches not available
+[17:28:46.289] Cloning completed: 339.000ms
+[17:28:46.996] Running "vercel build"
+[17:28:48.714] Vercel CLI 44.5.0
+[17:28:49.782] Installing dependencies...
+[17:28:54.067] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[17:28:54.742] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[17:29:05.560] 
+[17:29:05.561] added 489 packages in 15s
+[17:29:05.562] 
+[17:29:05.562] 57 packages are looking for funding
+[17:29:05.562]   run `npm fund` for details
+[17:29:05.731] Detected Next.js version: 15.2.4
+[17:29:05.735] Running "npm run build"
+[17:29:05.858] 
+[17:29:05.858] > my-v0-project@0.1.0 build
+[17:29:05.858] > next build
+[17:29:05.859] 
+[17:29:06.621] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[17:29:06.622] This information is used to shape Next.js' roadmap and prioritize features.
+[17:29:06.622] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[17:29:06.622] https://nextjs.org/telemetry
+[17:29:06.622] 
+[17:29:06.716]    ▲ Next.js 15.2.4
+[17:29:06.716]    - Experiments (use with caution):
+[17:29:06.717]      · allowedDevOrigins
+[17:29:06.717] 
+[17:29:06.788]    Creating an optimized production build ...
+[17:29:21.843] Failed to compile.
+[17:29:21.843] 
+[17:29:21.843] ./app/experience/[id]/page.tsx
+[17:29:21.843] Module parse failed: Identifier 'availableTimeSlots' has already been declared (115:10)
+[17:29:21.843] File was processed with these loaders:
+[17:29:21.843]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+[17:29:21.844]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[17:29:21.844] You may need an additional loader to handle the result of these loaders.
+[17:29:21.844] |     };
+[17:29:21.844] |     // Filter available slots based on selected date
+[17:29:21.844] >     const availableTimeSlots = useMemo(()=>{
+[17:29:21.844] |         if (!experience?.host_availability || !bookingData.date) return [];
+[17:29:21.844] |         return experience.host_availability.filter((slot)=>slot.date === bookingData.date && slot.available_capacity >= bookingData.guests && new Date(`${slot.date}T${slot.start_time}`) > new Date()).sort((a, b)=>a.start_time.localeCompare(b.start_time));
+[17:29:21.845] 
+[17:29:21.845] Import trace for requested module:
+[17:29:21.845] ./app/experience/[id]/page.tsx
+[17:29:21.845] 
+[17:29:21.845] ./app/api/business/experiences/route.ts
+[17:29:21.845] Module parse failed: Identifier 'NextResponse' has already been declared (77:9)
+[17:29:21.845] File was processed with these loaders:
+[17:29:21.846]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[17:29:21.846]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[17:29:21.846] You may need an additional loader to handle the result of these loaders.
+[17:29:21.846] |     }
+[17:29:21.846] | }
+[17:29:21.846] > import { NextResponse } from 'next/server';
+[17:29:21.846] | import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+[17:29:21.846] | import { cookies } from 'next/headers';
+[17:29:21.846] 
+[17:29:21.847] Import trace for requested module:
+[17:29:21.847] ./app/api/business/experiences/route.ts
+[17:29:21.847] 
+[17:29:21.847] ./app/api/certifications/route.ts
+[17:29:21.847] Module parse failed: Identifier 'NextResponse' has already been declared (204:9)
+[17:29:21.847] File was processed with these loaders:
+[17:29:21.847]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[17:29:21.852]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[17:29:21.853] You may need an additional loader to handle the result of these loaders.
+[17:29:21.853] |     }
+[17:29:21.853] | }
+[17:29:21.853] > import { NextResponse } from 'next/server';
+[17:29:21.853] | import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+[17:29:21.853] | import { cookies } from 'next/headers';
+[17:29:21.854] 
+[17:29:21.854] Import trace for requested module:
+[17:29:21.854] ./app/api/certifications/route.ts
+[17:29:21.855] 
+[17:29:21.855] ./app/api/database/test/route.ts
+[17:29:21.856] Module parse failed: Identifier 'NextResponse' has already been declared (98:9)
+[17:29:21.856] File was processed with these loaders:
+[17:29:21.856]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[17:29:21.856]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[17:29:21.856] You may need an additional loader to handle the result of these loaders.
+[17:29:21.857] |     }
+[17:29:21.857] | }
+[17:29:21.857] > import { NextResponse } from 'next/server';
+[17:29:21.857] | import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+[17:29:21.857] | import { cookies } from 'next/headers';
+[17:29:21.858] 
+[17:29:21.858] Import trace for requested module:
+[17:29:21.858] ./app/api/database/test/route.ts
+[17:29:21.858] 
+[17:29:21.858] ./app/api/equipment/route.ts
+[17:29:21.859] Module parse failed: Identifier 'NextResponse' has already been declared (220:9)
+[17:29:21.859] File was processed with these loaders:
+[17:29:21.859]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[17:29:21.860]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[17:29:21.860] You may need an additional loader to handle the result of these loaders.
+[17:29:21.860] |     }
+[17:29:21.860] | }
+[17:29:21.860] > import { NextResponse } from 'next/server';
+[17:29:21.861] | import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+[17:29:21.861] | import { cookies } from 'next/headers';
+[17:29:21.861] 
+[17:29:21.861] Import trace for requested module:
+[17:29:21.862] ./app/api/equipment/route.ts
+[17:29:21.862] 
+[17:29:21.868] 
+[17:29:21.878] > Build failed because of webpack errors
+[17:29:21.897] Error: Command "npm run build" exited with 1
+[17:29:22.151] 
+[17:29:25.083] Exiting build container
