@@ -403,6 +403,11 @@ export async function getExperiences(filters?: any) {
   }
 }
 
+// Host-specific experiences function
+export async function getHostExperiences(hostId: string) {
+  return getExperiences({ hostId })
+}
+
 export async function getExperienceById(id: string) {
   try {
     const { data, error } = await supabase.from("experiences").select("*").eq("id", id).single()

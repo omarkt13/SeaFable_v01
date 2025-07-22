@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,563 +19,1225 @@ import { createExperience } from "@/lib/database"
 import { useAuth } from "@/hooks/useAuth"
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
 
-// Enhanced activity types with icons and descriptions
-const ACTIVITY_TYPES = [
-  { value: 'sailing', label: 'Sailing', icon: '⛵', description: 'Yacht charters, sailing lessons, and racing experiences' },
-  { value: 'surfing', label: 'Surfing', icon: '🏄', description: 'Surf lessons, guided surf tours, and advanced coaching' },
-  { value: 'kayaking', label: 'Kayaking', icon: '🛶', description: 'Sea kayaking, river kayaking, and wildlife tours' },
-  { value: 'diving', label: 'Diving', icon: '🤿', description: 'Scuba diving, snorkeling, and underwater exploration' },
-  { value: 'jet-skiing', label: 'Jet Skiing', icon: '🚤', description: 'Jet ski rentals and guided tours' },
-  { value: 'fishing', label: 'Fishing', icon: '🎣', description: 'Deep sea fishing, inshore fishing, and fishing charters' },
-  { value: 'whale-watching', label: 'Whale Watching', icon: '🐋', description: 'Marine wildlife observation and educational tours' },
-  { value: 'paddleboarding', label: 'Paddleboarding', icon: '🏄‍♂️', description: 'Stand-up paddleboarding and SUP tours' },
-  { value: 'windsurfing', label: 'Windsurfing', icon: '🏄‍♀️', description: 'Windsurfing lessons and equipment rental' },
-  { value: 'snorkeling', label: 'Snorkeling', icon: '🤿', description: 'Guided snorkeling tours and equipment rental' },
+import {
+  SettingsMenu,
+  TextField,
+  DropdownMenu,
+  IconWithBackground,
+  IconButton,
+} from '@storefront-ui/react'
+import {
+  FeatherHome,
+  FeatherUsers,
+  FeatherAnchor,
+  FeatherMessageCircle,
+  FeatherCalendar,
+  FeatherHandshake,
+  FeatherUser,
+  FeatherSettings,
+  FeatherDollarSign,
+  FeatherShapes,
+  FeatherBell,
+  FeatherChevronDown,
+  FeatherLogOut,
+  FeatherUserPlus,
+  FeatherUserMinus,
+  FeatherCheck,
+  FeatherMapPin,
+  FeatherClock,
+  FeatherX,
+  FeatherChevronLeft,
+  FeatherSave,
+  FeatherChevronRight,
+  FeatherPlus,
+  FeatherInstagram,
+  FeatherFacebook,
+  FeatherYoutube,
+  FeatherUpload,
+} from '@storefront-ui/react/icons'
+import * as SubframeCore from '@storefront-ui/react/core'
+
+interface ExperienceFormData {
+  // Basic Info
+  title: string
+  description: string
+  location: string
+  category: string
+
+  // Details
+  price: number
+  groupSize: number
+  duration: number
+  durationType: 'hours' | 'days'
+  difficultyLevel: string
+  tags: string[]
+
+  // Inclusions
+  included: string[]
+  notIncluded: string[]
+  thingsToBring: string[]
+
+  // Dates & Availability
+  availableDates: string[]
+
+  // Media
+  images: string[]
+  videos: string[]
+
+  // Social Media
+  socialMedia: {
+    instagram: string
+    facebook: string
+    youtube: string
+    tiktok: string
+  }
+
+  // FAQ
+  faq: Array<{ question: string; answer: string }>
+
+  // Policy
+  cancellationPolicy: string
+}
+
+interface FormErrors {
+  [key: string]: string
+}
+
+const STEPS = [
+  { id: 1, title: 'Basic Info', description: 'Title, description, and category' },
+  { id: 2, title: 'Details', description: 'Pricing, duration, and specifications' },
+  { id: 3, title: 'Content', description: 'Inclusions, FAQ, and policies' },
+  { id: 4, title: 'Media', description: 'Photos and videos' },
+  { id: 5, title: 'Social', description: 'Social media integration' },
+  { id: 6, title: 'Review', description: 'Preview and publish' }
 ]
 
-const DIFFICULTY_LEVELS = [
-  { value: "beginner", label: "Beginner", description: "No experience required, suitable for all ages" },
-  { value: "intermediate", label: "Intermediate", description: "Some experience helpful, moderate fitness required" },
-  { value: "advanced", label: "Advanced", description: "Significant experience required, good fitness needed" },
-  { value: "expert", label: "Expert", description: "Professional level skills, excellent fitness required" },
+const CATEGORIES = [
+  'Sailing Tour', 'Diving Tour', 'Wildlife Tour', 'Beach Vacation', 
+  'Road Trip', 'Hiking Tour', 'Cultural Experience', 'Food & Wine',
+  'Adventure Sports', 'Photography Tour'
 ]
 
-const EQUIPMENT_CATEGORIES = [
-  { value: 'safety', label: 'Safety Equipment', items: ['Life Jackets', 'First Aid Kit', 'Emergency Flares', 'VHF Radio'] },
-  { value: 'activity', label: 'Activity Equipment', items: ['Boards', 'Paddles', 'Fishing Gear', 'Diving Equipment'] },
-  { value: 'comfort', label: 'Comfort Items', items: ['Towels', 'Sunscreen', 'Shade', 'Refreshments'] },
-  { value: 'navigation', label: 'Navigation', items: ['GPS', 'Compass', 'Maps', 'Communication Devices'] },
-]
-
-const WHAT_TO_BRING_OPTIONS = [
-  "Swimwear", "Towel", "Sunscreen", "Hat", "Sunglasses", "Water Bottle", 
-  "Camera", "Comfortable Shoes", "Light Jacket", "Personal Medication",
-  "Snacks", "Change of Clothes", "Waterproof Bag", "Motion Sickness Medication"
-]
+const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels']
 
 export default function NewExperiencePage() {
   return (
     <BusinessProtectedRoute>
-      <NewExperienceForm />
+      <CreateNewExperience />
     </BusinessProtectedRoute>
   )
 }
 
-function NewExperienceForm() {
+function CreateNewExperience() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({})
   const router = useRouter()
-  const { toast } = useToast()
   const { user } = useAuth()
 
-  const [formData, setFormData] = useState({
-    title: "",
-    location: "",
-    description: "",
-    activityType: "",
-    difficultyLevel: "",
-    price: 50,
-    duration: 120, // in minutes
-    maxParticipants: 8,
-    minAge: undefined as number | undefined,
-    equipmentProvided: [] as string[],
-    whatToBring: [] as string[],
-    weatherDependency: true,
-    instantBooking: false,
-    tags: [] as string[],
-    highlights: [] as string[],
-    includedServices: [] as string[],
-    excludedServices: [] as string[],
-    cancellationPolicy: "",
-    activitySpecificDetails: {} as Record<string, any>,
-    itinerary: [{ title: "", description: "", duration: 0, order: 1 }],
+  const [formData, setFormData] = useState<ExperienceFormData>({
+    title: '',
+    description: '',
+    location: '',
+    category: '',
+    price: 0,
+    groupSize: 1,
+    duration: 1,
+    durationType: 'hours',
+    difficultyLevel: '',
+    tags: [],
+    included: [],
+    notIncluded: [],
+    thingsToBring: [],
+    availableDates: [],
+    images: [],
+    videos: [],
+    socialMedia: {
+      instagram: '',
+      facebook: '',
+      youtube: '',
+      tiktok: ''
+    },
+    faq: [],
+    cancellationPolicy: ''
   })
 
-  const totalSteps = 5
-  const progress = (currentStep / totalSteps) * 100
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleArrayToggle = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as string[]).includes(value)
-        ? (prev[field as keyof typeof prev] as string[]).filter((item) => item !== value)
-        : [...(prev[field as keyof typeof prev] as string[]), value],
-    }))
-  }
-
-  const handleItineraryChange = (index: number, field: string, value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      itinerary: prev.itinerary.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      ),
-    }))
-  }
-
-  const addItineraryItem = () => {
-    setFormData((prev) => ({
-      ...prev,
-      itinerary: [...prev.itinerary, { 
-        title: "", 
-        description: "", 
-        duration: 0, 
-        order: prev.itinerary.length + 1 
-      }],
-    }))
-  }
-
-  const removeItineraryItem = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      itinerary: prev.itinerary.filter((_, i) => i !== index),
-    }))
-  }
+const updateFormData = useCallback((updates: Partial<ExperienceFormData>) => {
+    setFormData(prev => ({ ...prev, ...updates }))
+    // Clear relevant errors when user starts typing
+    const updatedFields = Object.keys(updates)
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      updatedFields.forEach(field => delete newErrors[field])
+      return newErrors
+    })
+  }, [])
 
   const validateStep = (step: number): boolean => {
+    const newErrors: FormErrors = {}
+
     switch (step) {
       case 1:
-        return !!(formData.title && formData.location && formData.activityType)
+        if (!formData.title.trim()) newErrors.title = 'Title is required'
+        if (!formData.description.trim()) newErrors.description = 'Description is required'
+        if (!formData.location.trim()) newErrors.location = 'Location is required'
+        if (!formData.category) newErrors.category = 'Category is required'
+        break
+
       case 2:
-        return !!(formData.description && formData.difficultyLevel)
+        if (formData.price <= 0) newErrors.price = 'Price must be greater than 0'
+        if (formData.groupSize <= 0) newErrors.groupSize = 'Group size must be greater than 0'
+        if (formData.duration <= 0) newErrors.duration = 'Duration must be greater than 0'
+        if (!formData.difficultyLevel) newErrors.difficultyLevel = 'Difficulty level is required'
+        break
+
       case 3:
-        return !!(formData.price > 0 && formData.duration > 0 && formData.maxParticipants > 0)
-      case 4:
-        return true
-      case 5:
-        return true
-      default:
-        return false
+        if (formData.included.length === 0) newErrors.included = 'At least one inclusion is required'
+        break
     }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const nextStep = () => {
+  const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
-      setError("")
-    } else {
-      setError("Please fill in all required fields before continuing.")
+      setCurrentStep(prev => Math.min(prev + 1, STEPS.length))
     }
   }
 
-  const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
-    setError("")
+  const handlePrevious = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = async () => {
-    if (!user?.id) {
-      setError("User not found. Please log in again.")
+  const handleSaveDraft = async () => {
+    setIsLoading(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Draft saved:', formData)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+const handlePublish = async () => {
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+      alert('Please complete all required fields before publishing')
       return
     }
 
-    setLoading(true)
-    setError("")
+    if (!user?.id) {
+      alert("User not found. Please log in again.")
+      return
+    }
 
+    setIsLoading(true)
     try {
       const experienceData = {
         host_id: user.id,
-        business_id: user.id, // Assuming user ID is business ID for now
         title: formData.title,
         description: formData.description,
+        short_description: formData.description.substring(0, 150),
         location: formData.location,
-        price: formData.price,
-        duration: formData.duration,
-        activity_type: formData.activityType,
-        activity_specific_details: formData.activitySpecificDetails,
-        difficulty_level: formData.difficultyLevel,
-        max_participants: formData.maxParticipants,
-        min_age: formData.minAge,
-        equipment_provided: formData.equipmentProvided,
-        what_to_bring: formData.whatToBring,
-        weather_dependency: formData.weatherDependency,
-        instant_booking: formData.instantBooking,
+        activity_type: formData.category.toLowerCase().replace(/\s+/g, '-'),
+        category: [formData.category],
+        duration_hours: formData.durationType === 'days' ? formData.duration * 24 : formData.duration,
+        max_guests: formData.groupSize,
+        min_guests: 1,
+        price_per_person: formData.price,
+        difficulty_level: formData.difficultyLevel.toLowerCase(),
+        included_amenities: formData.included,
+        what_to_bring: formData.thingsToBring,
         tags: formData.tags,
-        highlights: formData.highlights,
-        included_services: formData.includedServices,
-        excluded_services: formData.excludedServices,
-        cancellation_policy: formData.cancellationPolicy,
-        itinerary: formData.itinerary.filter((item) => item.title.trim() !== ""),
+        seasonal_availability: ['year-round'],
+        is_active: true,
+        itinerary: formData.faq.map((faqItem, index) => ({
+          time: `${index + 1}:00`,
+          activity: faqItem.question,
+          description: faqItem.answer
+        }))
       }
 
       const result = await createExperience(experienceData)
 
       if (result.success) {
-        toast({
-          title: "Experience Created!",
-          description: "Your experience has been successfully created and is now live.",
-        })
-        router.push("/business/experiences")
+        alert('Experience published successfully!')
+        router.push('/business/experiences')
       } else {
-        setError(result.error || "Failed to create experience")
+        alert(result.error || 'Failed to create experience')
       }
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred")
+      alert(error.message || 'An unexpected error occurred')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="title">Experience Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="e.g., Sunset Sailing Cruise"
-              />
-            </div>
+  const addItem = (field: keyof Pick<ExperienceFormData, 'tags' | 'included' | 'notIncluded' | 'thingsToBring' | 'availableDates'>, item: string) => {
+    if (item.trim()) {
+      updateFormData({
+        [field]: [...formData[field], item.trim()]
+      })
+    }
+  }
 
-            <div>
-              <Label htmlFor="location">Location *</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
-                placeholder="e.g., Marina Bay, San Diego"
-              />
-            </div>
+  const removeItem = (field: keyof Pick<ExperienceFormData, 'tags' | 'included' | 'notIncluded' | 'thingsToBring' | 'availableDates'>, index: number) => {
+    updateFormData({
+      [field]: formData[field].filter((_, i) => i !== index)
+    })
+  }
 
-            <div>
-              <Label>Activity Type *</Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-                {ACTIVITY_TYPES.map((activity) => (
-                  <div
-                    key={activity.value}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      formData.activityType === activity.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => handleInputChange("activityType", activity.value)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">{activity.icon}</span>
-                      <div>
-                        <div className="font-medium">{activity.label}</div>
-                        <div className="text-xs text-gray-600">{activity.description}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+  const addFAQ = () => {
+    updateFormData({
+      faq: [...formData.faq, { question: '', answer: '' }]
+    })
+  }
+
+  const updateFAQ = (index: number, field: 'question' | 'answer', value: string) => {
+    const newFaq = [...formData.faq]
+    newFaq[index][field] = value
+    updateFormData({ faq: newFaq })
+  }
+
+  const removeFAQ = (index: number) => {
+    updateFormData({
+      faq: formData.faq.filter((_, i) => i !== index)
+    })
+  }
+
+const renderProgressBar = () => (
+    <div className="w-full mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-heading-2 font-heading-2 text-default-font">
+          Create New Experience
+        </h2>
+        <div className="text-body text-subtext-color">
+          Step {currentStep} of {STEPS.length}
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-4 mb-6">
+        {STEPS.map((step, index) => (
+          <div key={step.id} className="flex items-center">
+            <div className={`
+              flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors
+              ${currentStep > step.id 
+                ? 'bg-brand-600 border-brand-600 text-white' 
+                : currentStep === step.id 
+                  ? 'border-brand-600 text-brand-600 bg-white' 
+                  : 'border-neutral-300 text-neutral-400 bg-white'
+              }
+            `}>
+              {currentStep > step.id ? (
+                <FeatherCheck size={16} />
+              ) : (
+                <span className="text-caption font-bold">{step.id}</span>
+              )}
             </div>
+            {index < STEPS.length - 1 && (
+              <div className={`
+                w-12 h-0.5 mx-2 transition-colors
+                ${currentStep > step.id ? 'bg-brand-600' : 'bg-neutral-300'}
+              `} />
+            )}
           </div>
-        )
+        ))}
+      </div>
 
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Describe your experience in detail..."
-                rows={4}
-              />
-            </div>
+      <div className="text-center">
+        <h3 className="text-heading-3 font-heading-3 text-default-font mb-1">
+          {STEPS[currentStep - 1].title}
+        </h3>
+        <p className="text-body text-subtext-color">
+          {STEPS[currentStep - 1].description}
+        </p>
+      </div>
+    </div>
+  )
 
-            <div>
-              <Label>Difficulty Level *</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {DIFFICULTY_LEVELS.map((level) => (
-                  <div
-                    key={level.value}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      formData.difficultyLevel === level.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => handleInputChange("difficultyLevel", level.value)}
-                  >
-                    <div className="font-medium">{level.label}</div>
-                    <div className="text-xs text-gray-600">{level.description}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+  const renderBasicInfoStep = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="lg:col-span-2">
+          <TextField 
+            label="Experience Title *" 
+            helpText="Give your experience a catchy, descriptive name"
+            error={errors.title}
+          >
+            <TextField.Input
+              placeholder="e.g., Mediterranean Yacht Cruise"
+              value={formData.title}
+              onChange={(e) => updateFormData({ title: e.target.value })}
+            />
+          </TextField>
+        </div>
 
-            <div>
-              <Label>Highlights</Label>
-              <div className="space-y-2">
-                <Input
-                  placeholder="Add a highlight (e.g., Breathtaking sunset views)"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      handleArrayToggle("highlights", e.currentTarget.value.trim())
-                      e.currentTarget.value = ""
-                    }
-                  }}
-                />
-                <div className="flex flex-wrap gap-2">
-                  {formData.highlights.map((highlight, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => handleArrayToggle("highlights", highlight)}>
-                      {highlight} ×
-                    </Badge>
+        <div>
+          <TextField 
+            label="Location *" 
+            helpText="Where does this experience take place?"
+            error={errors.location}
+          >
+            <TextField.Input
+              placeholder="e.g., Antigua, Caribbean"
+              value={formData.location}
+              onChange={(e) => updateFormData({ location: e.target.value })}
+            />
+          </TextField>
+        </div>
+
+        <div>
+          <label className="block text-body-bold font-body-bold text-default-font mb-2">
+            Category *
+          </label>
+          <SubframeCore.DropdownMenu.Root>
+            <SubframeCore.DropdownMenu.Trigger asChild={true}>
+              <Button
+                variant="neutral-secondary"
+                iconRight={<FeatherChevronDown />}
+                className="w-full justify-between"
+                onClick={() => {}}
+              >
+                {formData.category || 'Select a category'}
+              </Button>
+            </SubframeCore.DropdownMenu.Trigger>
+            <SubframeCore.DropdownMenu.Portal>
+              <SubframeCore.DropdownMenu.Content
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                asChild={true}
+              >
+                <DropdownMenu>
+                  {CATEGORIES.map((category) => (
+                    <DropdownMenu.DropdownItem
+                      key={category}
+                      onClick={() => updateFormData({ category })}
+                    >
+                      {category}
+                    </DropdownMenu.DropdownItem>
                   ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+                </DropdownMenu>
+              </SubframeCore.DropdownMenu.Content>
+            </SubframeCore.DropdownMenu.Portal>
+          </SubframeCore.DropdownMenu.Root>
+          {errors.category && (
+            <p className="text-caption text-error-600 mt-1">{errors.category}</p>
+          )}
+        </div>
+      </div>
 
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Price per person *</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">$</span>
-                  <Input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", parseInt(e.target.value) || 0)}
-                    min="0"
-                  />
-                </div>
-              </div>
+      <div>
+        <TextField 
+          label="Description *" 
+          helpText="Describe what makes this experience special"
+          error={errors.description}
+        >
+          <textarea
+            className="w-full h-32 px-3 py-2 border border-neutral-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand-600"
+            placeholder="Tell potential guests about the amazing experience they'll have..."
+            value={formData.description}
+            onChange={(e) => updateFormData({ description: e.target.value })}
+          />
+        </TextField>
+      </div>
+    </div>
+  )
 
-              <div>
-                <Label>Duration (minutes) *</Label>
-                <Input
-                  type="number"
-                  value={formData.duration}
-                  onChange={(e) => handleInputChange("duration", parseInt(e.target.value) || 0)}
-                  min="1"
-                />
-              </div>
-            </div>
+  const renderDetailsStep = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <TextField 
+            label="Price per Person *" 
+            helpText="In USD"
+            error={errors.price}
+          >
+            <TextField.Input
+              type="number"
+              placeholder="0"
+              value={formData.price || ''}
+              onChange={(e) => updateFormData({ price: Number(e.target.value) })}
+            />
+          </TextField>
+        </div>
 
-            <div>
-              <Label>Max Participants: {formData.maxParticipants}</Label>
-              <Slider
-                value={[formData.maxParticipants]}
-                onValueChange={(value) => handleInputChange("maxParticipants", value[0])}
-                max={20}
-                min={1}
-                step={1}
-                className="w-full"
+        <div>
+          <TextField 
+            label="Maximum Group Size *" 
+            helpText="How many people can join?"
+            error={errors.groupSize}
+          >
+            <TextField.Input
+              type="number"
+              placeholder="1"
+              min="1"
+              value={formData.groupSize || ''}
+              onChange={(e) => updateFormData({ groupSize: Number(e.target.value) })}
+            />
+          </TextField>
+        </div>
+
+        <div>
+          <TextField 
+            label="Duration *" 
+            helpText="How long does it last?"
+            error={errors.duration}
+          >
+            <div className="flex gap-2">
+              <TextField.Input
+                type="number"
+                placeholder="1"
+                min="1"
+                value={formData.duration || ''}
+                onChange={(e) => updateFormData({ duration: Number(e.target.value) })}
+                className="flex-1"
               />
-            </div>
-
-            <div>
-              <Label>Minimum Age: {formData.minAge || 'None'}</Label>
-              <Slider
-                value={[formData.minAge || 0]}
-                onValueChange={(value) => handleInputChange("minAge", value[0] || undefined)}
-                max={18}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label>Equipment Provided</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {EQUIPMENT_CATEGORIES.map((category) => (
-                  <div key={category.value} className="space-y-2">
-                    <div className="font-medium text-sm">{category.label}</div>
-                    <div className="space-y-1">
-                      {category.items.map((item) => (
-                        <div key={item} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={item}
-                            checked={formData.equipmentProvided.includes(item)}
-                            onCheckedChange={() => handleArrayToggle("equipmentProvided", item)}
-                          />
-                          <Label htmlFor={item} className="text-sm">{item}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div>
-              <Label>What to Bring</Label>
-              <div className="space-y-2">
-                <Input
-                  placeholder="Add an item (e.g., Sunscreen)"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      handleArrayToggle("whatToBring", e.currentTarget.value.trim())
-                      e.currentTarget.value = ""
-                    }
-                  }}
-                />
-                <div className="flex flex-wrap gap-2">
-                  {formData.whatToBring.map((item, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => handleArrayToggle("whatToBring", item)}>
-                      {item} ×
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Additional Options</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="weather-dependency"
-                    checked={formData.weatherDependency}
-                    onCheckedChange={(checked) => handleInputChange("weatherDependency", checked)}
-                  />
-                  <Label htmlFor="weather-dependency">Weather dependent</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="instant-booking"
-                    checked={formData.instantBooking}
-                    onCheckedChange={(checked) => handleInputChange("instantBooking", checked)}
-                  />
-                  <Label htmlFor="instant-booking">Instant booking available</Label>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="cancellation-policy">Cancellation Policy</Label>
-              <Textarea
-                id="cancellation-policy"
-                value={formData.cancellationPolicy}
-                onChange={(e) => handleInputChange("cancellationPolicy", e.target.value)}
-                placeholder="Describe your cancellation policy..."
-                rows={3}
-              />
-            </div>
-          </div>
-        )
-
-      case 5:
-        return (
-          <div className="space-y-6">
-            <div>
-              <Label>Itinerary</Label>
-              <div className="space-y-4">
-                {formData.itinerary.map((item, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <Label>Title</Label>
-                        <Input
-                          value={item.title}
-                          onChange={(e) => handleItineraryChange(index, "title", e.target.value)}
-                          placeholder="Activity title"
-                        />
-                      </div>
-                      <div>
-                        <Label>Duration (minutes)</Label>
-                        <Input
-                          type="number"
-                          value={item.duration}
-                          onChange={(e) => handleItineraryChange(index, "duration", parseInt(e.target.value) || 0)}
-                          min="0"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeItineraryItem(index)}
-                          disabled={formData.itinerary.length === 1}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={item.description}
-                        onChange={(e) => handleItineraryChange(index, "description", e.target.value)}
-                        placeholder="Describe this part of the experience..."
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" onClick={addItineraryItem}>
-                  Add Itinerary Item
+              <div className="flex">
+                <Button
+                  variant={formData.durationType === 'hours' ? 'brand-secondary' : 'neutral-secondary'}
+                  onClick={() => updateFormData({ durationType: 'hours' })}
+                  className="rounded-r-none"
+                >
+                  Hours
+                </Button>
+                <Button
+                  variant={formData.durationType === 'days' ? 'brand-secondary' : 'neutral-secondary'}
+                  onClick={() => updateFormData({ durationType: 'days' })}
+                  className="rounded-l-none"
+                >
+                  Days
                 </Button>
               </div>
             </div>
-          </div>
-        )
+          </TextField>
+        </div>
 
-      default:
-        return null
+        <div>
+          <label className="block text-body-bold font-body-bold text-default-font mb-2">
+            Difficulty Level *
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {DIFFICULTY_LEVELS.map((level) => (
+              <Button
+                key={level}
+                variant={formData.difficultyLevel === level ? 'brand-secondary' : 'neutral-secondary'}
+                onClick={() => updateFormData({ difficultyLevel: level })}
+                size="small"
+              >
+                {level}
+              </Button>
+            ))}
+          </div>
+          {errors.difficultyLevel && (
+            <p className="text-caption text-error-600 mt-1">{errors.difficultyLevel}</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          Tags
+        </label>
+        <p className="text-caption text-subtext-color mb-3">
+          Add tags to help guests find your experience
+        </p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {formData.tags.map((tag, index) => (
+            <Badge key={index} variant="brand-secondary" className="flex items-center gap-2">
+              {tag}
+              <button
+                onClick={() => removeItem('tags', index)}
+                className="text-brand-600 hover:text-brand-700"
+              >
+                <FeatherX size={12} />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <TextField className="flex-1" label="" helpText="">
+            <TextField.Input
+              placeholder="Add a tag..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addItem('tags', e.currentTarget.value)
+                  e.currentTarget.value = ''
+                }
+              }}
+            />
+          </TextField>
+          <Button
+            variant="neutral-secondary"
+            icon={<FeatherPlus />}
+            onClick={(e) => {
+              const input = e.currentTarget.parentElement?.querySelector('input')
+              if (input?.value) {
+                addItem('tags', input.value)
+                input.value = ''
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderContentStep = () => (
+    <div className="space-y-6">
+      {/* What's Included */}
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          What's Included *
+        </label>
+        <p className="text-caption text-subtext-color mb-3">
+          List what guests will receive as part of the experience
+        </p>
+        {errors.included && (
+          <p className="text-caption text-error-600 mb-2">{errors.included}</p>
+        )}
+        <div className="space-y-2 mb-3">
+          {formData.included.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 p-2 bg-success-50 rounded-md">
+              <FeatherCheck className="text-success-600" size={16} />
+              <span className="flex-1 text-body">{item}</span>
+              <IconButton
+                size="small"
+                icon={<FeatherX />}
+                onClick={() => removeItem('included', index)}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <TextField className="flex-1" label="" helpText="">
+            <TextField.Input
+              placeholder="e.g., Professional guide, Equipment rental"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addItem('included', e.currentTarget.value)
+                  e.currentTarget.value = ''
+                }
+              }}
+            />
+          </TextField>
+          <Button
+            variant="neutral-secondary"
+            icon={<FeatherPlus />}
+            onClick={(e) => {
+              const input = e.currentTarget.parentElement?.querySelector('input')
+              if (input?.value) {
+                addItem('included', input.value)
+                input.value = ''
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* What's Not Included */}
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          What's Not Included
+        </label>
+        <div className="space-y-2 mb-3">
+          {formData.notIncluded.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 p-2 bg-error-50 rounded-md">
+              <FeatherX className="text-error-600" size={16} />
+              <span className="flex-1 text-body">{item}</span>
+              <IconButton
+                size="small"
+                icon={<FeatherX />}
+                onClick={() => removeItem('notIncluded', index)}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <TextField className="flex-1" label="" helpText="">
+            <TextField.Input
+              placeholder="e.g., Transportation, Personal insurance"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addItem('notIncluded', e.currentTarget.value)
+                  e.currentTarget.value = ''
+                }
+              }}
+            />
+          </TextField>
+          <Button
+            variant="neutral-secondary"
+            icon={<FeatherPlus />}
+            onClick={(e) => {
+              const input = e.currentTarget.parentElement?.querySelector('input')
+              if (input?.value) {
+                addItem('notIncluded', input.value)
+                input.value = ''
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* Things to Bring */}
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          Things to Bring
+        </label>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {formData.thingsToBring.map((item, index) => (
+            <Badge key={index} variant="neutral" className="flex items-center gap-2">
+              {item}
+              <button
+                onClick={() => removeItem('thingsToBring', index)}
+                className="text-neutral-600 hover:text-neutral-700"
+              >
+                <FeatherX size={12} />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <TextField className="flex-1" label="" helpText="">
+            <TextField.Input
+              placeholder="e.g., Sunscreen, Water bottle"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addItem('thingsToBring', e.currentTarget.value)
+                  e.currentTarget.value = ''
+                }
+              }}
+            />
+          </TextField>
+          <Button
+            variant="neutral-secondary"
+            icon={<FeatherPlus />}
+            onClick={(e) => {
+              const input = e.currentTarget.parentElement?.querySelector('input')
+              if (input?.value) {
+                addItem('thingsToBring', input.value)
+                input.value = ''
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* Cancellation Policy */}
+      <div>
+        <TextField 
+          label="Cancellation Policy" 
+          helpText="Describe your cancellation and refund policy"
+        >
+          <textarea
+            className="w-full h-24 px-3 py-2 border border-neutral-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand-600"
+            placeholder="e.g., Moderate: cancel 14 days before arrival with 50% refund"
+            value={formData.cancellationPolicy}
+            onChange={(e) => updateFormData({ cancellationPolicy: e.target.value })}
+          />
+        </TextField>
+      </div>
+    </div>
+  )
+
+  const renderMediaStep = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          Photos & Videos
+        </label>
+        <p className="text-caption text-subtext-color mb-4">
+          Add high-quality images and videos to showcase your experience
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {formData.images.map((image, index) => (
+            <div key={index} className="relative group">
+              <img
+                src={image}
+                alt={`Experience ${index + 1}`}
+                className="w-full h-48 object-cover rounded-lg"
+              />
+              <button
+                onClick={() => {
+                  updateFormData({
+                    images: formData.images.filter((_, i) => i !== index)
+                  })
+                }}
+                className="absolute top-2 right-2 p-1 bg-error-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <FeatherX size={16} />
+              </button>
+            </div>
+          ))}
+
+          <div className="border-2 border-dashed border-neutral-300 rounded-lg h-48 flex flex-col items-center justify-center hover:border-brand-600 hover:bg-brand-50 transition-colors cursor-pointer">
+            <FeatherUpload className="text-neutral-400 mb-2" size={24} />
+            <span className="text-body text-neutral-600">Upload Media</span>
+            <span className="text-caption text-neutral-400">Images or Videos</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Available Dates */}
+      <div>
+        <label className="block text-body-bold font-body-bold text-default-font mb-2">
+          Available Dates
+        </label>
+        <p className="text-caption text-subtext-color mb-3">
+          Add specific dates when this experience is available
+        </p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {formData.availableDates.map((date, index) => (
+            <Badge key={index} variant="brand-secondary" className="flex items-center gap-2">
+              <FeatherCalendar size={12} />
+              {date}
+              <button
+                onClick={() => removeItem('availableDates', index)}
+                className="text-brand-600 hover:text-brand-700"
+              >
+                <FeatherX size={12} />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <TextField className="flex-1" label="" helpText="">
+            <TextField.Input
+              type="date"
+              onChange={(e) => {
+                if (e.target.value) {
+                  addItem('availableDates', new Date(e.target.value).toLocaleDateString())
+                  e.target.value = ''
+                }
+              }}
+            />
+          </TextField>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderSocialStep = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-heading-3 font-heading-3 text-default-font mb-2">
+          Social Media Integration
+        </h3>
+        <p className="text-body text-subtext-color mb-6">
+          Connect your social media accounts to showcase more content (optional)
+        </p>
+
+        <div className="space-y-4">
+          {/* Instagram */}
+          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
+            <IconButton
+              variant="brand-secondary"
+              icon={<FeatherInstagram />}
+              onClick={() => {}}
+            />
+            <div className="flex-1">
+              <TextField label="" helpText="">
+                <TextField.Input
+                  placeholder="Instagram profile URL"
+                  value={formData.socialMedia.instagram}
+                  onChange={(e) => updateFormData({
+                    socialMedia: { ...formData.socialMedia, instagram: e.target.value }
+                  })}
+                />
+              </TextField>
+            </div>
+            <Button
+              variant={formData.socialMedia.instagram ? "destructive-secondary" : "brand-secondary"}
+              size="small"
+            >
+              {formData.socialMedia.instagram ? "Unlink" : "Connect"}
+            </Button>
+          </div>
+
+          {/* Facebook */}
+          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
+            <IconButton
+              icon={<FeatherFacebook />}
+              onClick={() => {}}
+            />
+            <div className="flex-1">
+              <TextField label="" helpText="">
+                <TextField.Input
+                  placeholder="Facebook page URL"
+                  value={formData.socialMedia.facebook}
+                  onChange={(e) => updateFormData({
+                    socialMedia: { ...formData.socialMedia, facebook: e.target.value }
+                  })}
+                />
+              </TextField>
+            </div>
+            <Button
+              variant={formData.socialMedia.facebook ? "destructive-secondary" : "brand-secondary"}
+              size="small"
+            >
+              {formData.socialMedia.facebook ? "Unlink" : "Connect"}
+            </Button>
+          </div>
+
+          {/* YouTube */}
+          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
+            <IconButton
+              icon={<FeatherYoutube />}
+              onClick={() => {}}
+            />
+            <div className="flex-1">
+              <TextField label="" helpText="">
+                <TextField.Input
+                  placeholder="YouTube channel URL"
+                  value={formData.socialMedia.youtube}
+                  onChange={(e) => updateFormData({
+                    socialMedia: { ...formData.socialMedia, youtube: e.target.value }
+                  })}
+                />
+              </TextField>
+            </div>
+            <Button
+              variant={formData.socialMedia.youtube ? "destructive-secondary" : "brand-secondary"}
+              size="small"
+            >
+              {formData.socialMedia.youtube ? "Unlink" : "Connect"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderReviewStep = () => (
+    <div className="space-y-6">
+      <div className="bg-neutral-50 rounded-lg p-6">
+        <h3 className="text-heading-3 font-heading-3 text-default-font mb-4">
+          Experience Preview
+        </h3>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-heading-2 font-heading-2 text-default-font mb-2">
+              {formData.title || 'Untitled Experience'}
+            </h4>
+            <div className="flex items-center gap-4 mb-3">
+              <div className="flex items-center gap-1">
+                <FeatherMapPin size={16} className="text-neutral-500" />
+                <span className="text-body text-neutral-600">{formData.location || 'No location'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FeatherClock size={16} className="text-neutral-500" />
+                <span className="text-body text-neutral-600">
+                  {formData.duration} {formData.durationType}
+                </span>
+              </div>
+            </div>
+            <p className="text-body text-subtext-color mb-4">
+              {formData.description || 'No description provided'}
+            </p>
+
+            <div className="flex items-center gap-2 mb-4">
+              {formData.category && (
+                <Badge variant="brand-secondary">{formData.category}</Badge>
+              )}
+              {formData.difficultyLevel && (
+                <Badge variant="neutral">{formData.difficultyLevel}</Badge>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="text-heading-3 font-heading-3 text-success-600">
+                  ${formData.price}
+                </div>
+                <div className="text-body text-neutral-600">
+                  Max {formData.groupSize} guests
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="space-y-3">
+              <div>
+                <span className="text-body-bold font-body-bold text-default-font">What's Included:</span>
+                <ul className="text-body text-subtext-color ml-4 mt-1">
+                  {formData.included.slice(0, 3).map((item, index) => (
+                    <li key={index} className="list-disc">{item}</li>
+                  ))}
+                  {formData.included.length > 3 && (
+                    <li className="list-disc">...and {formData.included.length - 3} more</li>
+                  )}
+                </ul>
+              </div>
+
+              {formData.tags.length > 0 && (
+                <div>
+                  <span className="text-body-bold font-body-bold text-default-font">Tags:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {formData.tags.slice(0, 4).map((tag, index) => (
+                      <Badge key={index} variant="neutral" size="small">{tag}</Badge>
+                    ))}
+                    {formData.tags.length > 4 && (
+                      <Badge variant="neutral" size="small">+{formData.tags.length - 4}</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {formData.availableDates.length > 0 && (
+                <div>
+                  <span className="text-body-bold font-body-bold text-default-font">Available Dates:</span>
+                  <div className="text-body text-subtext-color mt-1">
+                    {formData.availableDates.slice(0, 2).join(', ')}
+                    {formData.availableDates.length > 2 && ` ...and ${formData.availableDates.length - 2} more`}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Validation Summary */}
+      <div className="bg-white border border-neutral-200 rounded-lg p-6">
+        <h4 className="text-heading-3 font-heading-3 text-default-font mb-4">
+          Completeness Check
+        </h4>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <FeatherCheck className={`${formData.title && formData.description && formData.location && formData.category ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
+            <span className={`text-body ${formData.title && formData.description && formData.location && formData.category ? 'text-success-700' : 'text-neutral-600'}`}>
+              Basic Information Complete
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <FeatherCheck className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
+            <span className={`text-body ${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-success-700' : 'text-neutral-600'}`}>
+              Pricing & Details Complete
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <FeatherCheck className={`${formData.included.length > 0 ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
+            <span className={`text-body ${formData.included.length > 0 ? 'text-success-700' : 'text-neutral-600'}`}>
+              Content & Inclusions Added
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <FeatherCheck className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
+            <span className={`text-body ${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-success-700' : 'text-neutral-600'}`}>
+              Media or Dates Added (Optional)
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1: return renderBasicInfoStep()
+      case 2: return renderDetailsStep()
+      case 3: return renderContentStep()
+      case 4: return renderMediaStep()
+      case 5: return renderSocialStep()
+      case 6: return renderReviewStep()
+      default: return null
     }
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create New Experience</h1>
-          <p className="text-gray-600">Set up your aquatic adventure experience</p>
+    <div className="container max-w-none flex w-full h-screen items-start border border-solid border-neutral-border">
+      {/* Sidebar */}
+      <div className="flex flex-col items-start gap-8 w-80 flex-shrink-0 border-r border-solid border-neutral-border bg-default-background px-6 py-8">
+        <div className="flex items-center gap-3">
+          <IconWithBackground
+            variant="warning"
+            size="large"
+            icon={<FeatherAnchor />}
+            square={true}
+          />
+          <span className="text-heading-2 font-heading-2 text-default-font">
+            Ocean Travel
+          </span>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Step {currentStep} of {totalSteps}</span>
-            <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+        <div className="flex w-full flex-col items-start gap-1">
+          <SettingsMenu.Item icon={<FeatherHome />} label="Dashboard" />
+        </div>
+
+        <div className="flex w-full flex-col items-start gap-1">
+          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
+            Client Management
+          </span>
+          <SettingsMenu.Item icon={<FeatherUsers />} label="Bookings" />
+          <SettingsMenu.Item
+            selected={true}
+            icon={<FeatherAnchor />}
+            label="Experiences"
+          />
+          <SettingsMenu.Item icon={<FeatherMessageCircle />} label="Messages" />
+          <SettingsMenu.Item icon={<FeatherCalendar />} label="Calendar" />
+          <SettingsMenu.Item icon={<FeatherHandshake />} label="Clients" />
+        </div>
+
+        <div className="flex w-full flex-col items-start gap-2">
+          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
+            Finance
+          </span>
+          <div className="flex w-full flex-col items-start gap-1">
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherDollarSign />}
+              onClick={() => {}}
+            >
+              Sales &amp; Payments
+            </Button>
+            <SettingsMenu.Item icon={<FeatherShapes />} label="Integrations" />
           </div>
-          <Progress value={progress} className="w-full" />
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            {error && (
-              <Alert className="mb-6">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+        <div className="flex w-full flex-col items-start gap-1">
+          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
+            Workspace
+          </span>
+          <SettingsMenu.Item icon={<FeatherUser />} label="Account" />
+          <SettingsMenu.Item icon={<FeatherSettings />} label="Settings" />
+        </div>
+      </div>
 
-            {renderStep()}
+      {/* Main Content */}
+      <div className="flex flex-col items-start flex-1 overflow-hidden">
+        {/* Header */}
+        <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4 bg-white">
+          <TextField label="" helpText="" className="w-80">
+            <TextField.Input
+              placeholder="Search..."
+              value=""
+              onChange={() => {}}
+            />
+          </TextField>
 
-            <div className="flex justify-between mt-8">
+          <div className="flex items-center gap-4">
+            <IconButton
+              icon={<FeatherBell />}
+              onClick={() => {}}
+              aria-label="Notifications"
+            />
+            <SubframeCore.DropdownMenu.Root>
+              <SubframeCore.DropdownMenu.Trigger asChild={true}>
+                <Button
+                  variant="neutral-tertiary"
+                  iconRight={<FeatherChevronDown />}
+                  onClick={() => {}}
+                >
+                  Ocean Travel
+                </Button>
+              </SubframeCore.DropdownMenu.Trigger>
+              <SubframeCore.DropdownMenu.Portal>
+                <SubframeCore.DropdownMenu.Content
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                  asChild={true}
+                >
+                  <DropdownMenu>
+                    <DropdownMenu.DropdownItem icon={<FeatherUser />}>
+                      Profile
+                    </DropdownMenu.DropdownItem>
+                    <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
+                      Settings
+                    </DropdownMenu.DropdownItem>
+                    <DropdownMenu.DropdownDivider />
+                    <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
+                      Logout
+                    </DropdownMenu.DropdownItem>
+                  </DropdownMenu>
+                </SubframeCore.DropdownMenu.Content>
+              </SubframeCore.DropdownMenu.Portal>
+            </SubframeCore.DropdownMenu.Root>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto w-full">
+          <div className="max-w-4xl mx-auto px-8 py-8">
+            {renderProgressBar()}
+
+            <div className="bg-white rounded-lg border border-neutral-200 p-8">
+              {renderStepContent()}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-8">
               <Button
-                variant="outline"
-                onClick={prevStep}
+                variant="neutral-secondary"
+                icon={<FeatherChevronLeft />}
+                onClick={handlePrevious}
                 disabled={currentStep === 1}
               >
                 Previous
               </Button>
 
-              {currentStep < totalSteps ? (
-                <Button onClick={nextStep}>
-                  Next
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="neutral-secondary"
+                  icon={<FeatherSave />}
+                  onClick={handleSaveDraft}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Saving...' : 'Save Draft'}
                 </Button>
-              ) : (
-                <Button onClick={handleSubmit} disabled={loading}>
-                  {loading ? "Creating..." : "Create Experience"}
-                </Button>
-              )}
+
+                {currentStep === STEPS.length ? (
+                  <Button
+                    icon={<FeatherCheck />}
+                    onClick={handlePublish}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Publishing...' : 'Publish Experience'}
+                  </Button>
+                ) : (
+                  <Button
+                    iconRight={<FeatherChevronRight />}
+                    onClick={handleNext}
+                  >
+                    Next
+                  </Button>
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+return null
+    }
+  }
 }
+
+export { CreateNewExperience as NewExperienceForm }
