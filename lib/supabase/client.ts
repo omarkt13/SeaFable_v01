@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 
@@ -19,11 +18,3 @@ export const supabase = (() => {
   }
   return supabaseInstance
 })()
-
-// Export createClient function for auth-context
-export const createClient as createBrowserSupabaseClient = () => {
-  return supabase
-}
-
-// Export the default client
-export default supabase

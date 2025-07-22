@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Use the client-side Supabase instance with alias
 import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils" // Import profile fetching and signOut from auth-utils
@@ -96,10 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Use isomorphic effect to prevent SSR issues
-  const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
-
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     setMounted(true)
 
     // Initial session check
@@ -243,11 +240,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: null,
           userProfile: null,
           businessProfile: null,
+          customerProfile: null,
           userType: null,
           isLoading: true,
           login,
           signUp,
           signOut,
+          refreshProfile: () => Promise.resolve(),
         }}
       >
         {children}
