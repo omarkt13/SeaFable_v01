@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from '@/lib/supabase/client'
 
 export function CustomerRegisterForm() {
   const [formData, setFormData] = useState({
@@ -66,7 +66,8 @@ export function CustomerRegisterForm() {
     setError("")
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const supabase = createClient()
+    const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
