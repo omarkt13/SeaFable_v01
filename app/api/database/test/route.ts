@@ -111,35 +111,3 @@ export async function GET(request: NextRequest) {
     }, { status: 500 })
   }
 }
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
-export async function GET() {
-  try {
-    const supabase = createRouteHandlerClient({ cookies });
-
-    // Test basic database connection
-    const { data, error } = await supabase
-      .from('users')
-      .select('count(*)')
-      .single();
-
-    if (error) {
-      return NextResponse.json({ 
-        status: 'error',
-        message: error.message 
-      }, { status: 500 });
-    }
-
-    return NextResponse.json({ 
-      status: 'success',
-      message: 'Database connection successful',
-      userCount: data?.count || 0
-    });
-  } catch (error) {
-    return NextResponse.json({ 
-      status: 'error',
-      message: 'Database connection failed' 
-    }, { status: 500 });
-  }
-}
