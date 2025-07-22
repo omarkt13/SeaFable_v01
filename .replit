@@ -6,14 +6,17 @@ channel = "stable-24_05"
 packages = ["gildas"]
 
 [deployment]
-deploymentTarget = "static"
-publicDir = "public"
+deploymentTarget = "cloudrun"
 run = ["sh", "-c", "npm run start"]
 build = ["sh", "-c", "npm run build"]
 
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [workflows]
 runButton = "Run Development Server"
