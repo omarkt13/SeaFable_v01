@@ -216,6 +216,51 @@ export default function LandingPage() {
                     )}
                   </Button>
                 </div>
+
+                {/* Popular Search Suggestions */}
+                <div className="mt-4 md:mt-6">
+                  <p className="text-sm text-gray-600 mb-3 font-medium">Popular searches:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { activity: "Sailing", location: "San Francisco" },
+                      { activity: "Surfing", location: "Malibu" },
+                      { activity: "Kayaking", location: "Lake Tahoe" },
+                      { activity: "Diving", location: "Key West" },
+                      { activity: "Paddleboarding", location: "Miami" }
+                    ].map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSearchData({ 
+                            service: suggestion.activity, 
+                            location: suggestion.location, 
+                            date: searchData.date 
+                          })
+                        }}
+                        className="px-3 py-2 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-700 rounded-lg text-sm font-medium transition-all duration-200 border border-gray-200 hover:border-blue-200"
+                      >
+                        {suggestion.activity} in {suggestion.location}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Popular Activities */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-20">
+                {activities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl p-4 md:p-6 text-center group cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    onClick={() => setSearchData({ ...searchData, service: activity.name })}
+                  >
+                    <div className="text-3xl md:text-4xl mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-200">
+                      {activity.icon}
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">{activity.name}</h3>
+                    <p className="text-xs md:text-sm text-gray-600 font-medium">{activity.count}</p>
+                  </div>
+                ))}
               </div>
 
               {/* Stats */}
