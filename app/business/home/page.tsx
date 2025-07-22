@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -57,7 +56,7 @@ interface WeeklyBookings {
 export default function BusinessHomePage() {
   const { user, businessProfile } = useAuth()
   const router = useRouter()
-  
+
   const [stats, setStats] = useState<Stats>({
     revenue: 0,
     active_bookings: 0,
@@ -267,7 +266,7 @@ export default function BusinessHomePage() {
 
   const renderWeeklyBookings = () => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
+
     return (
       <div className="flex gap-4 overflow-x-auto pb-4">
         {days.map(day => (

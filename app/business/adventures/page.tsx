@@ -6,31 +6,32 @@ import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute
 import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { useAuth } from "@/lib/auth-context"
 import { createClient } from "@/lib/supabase/client"
-import {
-  Search,
-  Calendar,
+import Link from 'next/link'
+import { 
+  Plus, 
+  MapPin, 
+  Calendar, 
+  Euro, 
+  Eye, 
+  Settings, 
+  MoreVertical,
   Filter,
-  Plus,
-  MoreHorizontal,
-  Edit2,
-  Copy,
-  Archive,
-  Star,
-  Users,
+  Search,
   Clock,
-  MapPin,
-  DollarSign,
-  Eye,
-  Settings,
-  ChevronDown,
-  Heart,
-  Share2,
-  Trash2,
-  BarChart3,
-  Camera,
-  Globe,
+  Users,
   Activity
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useResponsive, getResponsiveClasses } from '@/hooks/use-responsive'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 // Types
 interface Adventure {
@@ -65,6 +66,8 @@ export default function AdventuresPage() {
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
+  const { isMobile, isTablet, screenSize } = useResponsive()
+  const classes = getResponsiveClasses(screenSize)
 
   useEffect(() => {
     if (user && businessProfile) {
@@ -208,23 +211,23 @@ export default function AdventuresPage() {
       <BusinessLayout>
         <div className="space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className={`flex ${isMobile ? 'flex-col lg:flex-row' : 'flex-row'} lg:items-center justify-between gap-4`}>
             <div>
               <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Adventures</h1>
               <p className="text-sm lg:text-base text-gray-600 mt-1">Manage your adventure offerings</p>
             </div>
-            <button 
+            <Button 
               onClick={() => router.push('/business/adventures/new')}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
               Create New Adventure
-            </button>
+            </Button>
           </div>
 
           {/* Filters and Search */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-4 items-center justify-between`}>
               {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -238,7 +241,7 @@ export default function AdventuresPage() {
               </div>
 
               {/* Filters */}
-              <div className="flex gap-4 items-center">
+              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-4 items-center`}>
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-500" />
                   <select
@@ -281,7 +284,7 @@ export default function AdventuresPage() {
           </div>
 
           {/* Adventures Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6`}>
             {filteredAdventures.map((adventure) => (
               <div key={adventure.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Image */}
@@ -415,7 +418,7 @@ export default function AdventuresPage() {
           {/* Stats Summary */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Adventure Summary</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-6">
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-6'} gap-6`}>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{adventures.length}</div>
                 <div className="text-sm text-gray-500">Total Adventures</div>
