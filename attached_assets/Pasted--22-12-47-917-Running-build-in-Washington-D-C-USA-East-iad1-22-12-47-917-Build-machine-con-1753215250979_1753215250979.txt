@@ -1,0 +1,54 @@
+[22:12:47.917] Running build in Washington, D.C., USA (East) – iad1
+[22:12:47.917] Build machine configuration: 2 cores, 8 GB
+[22:12:47.934] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 8900008)
+[22:12:48.071] Previous build caches not available
+[22:12:48.403] Cloning completed: 469.000ms
+[22:12:50.205] Running "vercel build"
+[22:12:50.678] Vercel CLI 44.5.0
+[22:12:50.995] Installing dependencies...
+[22:12:54.674] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[22:12:55.365] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[22:13:04.652] 
+[22:13:04.653] added 490 packages in 13s
+[22:13:04.653] 
+[22:13:04.653] 57 packages are looking for funding
+[22:13:04.653]   run `npm fund` for details
+[22:13:04.701] Detected Next.js version: 15.2.4
+[22:13:04.704] Running "npm run build"
+[22:13:04.815] 
+[22:13:04.816] > my-v0-project@0.1.0 build
+[22:13:04.816] > next build
+[22:13:04.816] 
+[22:13:05.385] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[22:13:05.386] This information is used to shape Next.js' roadmap and prioritize features.
+[22:13:05.386] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[22:13:05.386] https://nextjs.org/telemetry
+[22:13:05.386] 
+[22:13:05.442]    ▲ Next.js 15.2.4
+[22:13:05.442]    - Experiments (use with caution):
+[22:13:05.442]      · allowedDevOrigins
+[22:13:05.442] 
+[22:13:05.514]    Creating an optimized production build ...
+[22:13:20.829] Failed to compile.
+[22:13:20.829] 
+[22:13:20.830] ./components/layouts/BusinessLayout.tsx
+[22:13:20.830] Error:   [31mx[0m Unexpected eof
+[22:13:20.830]      ,-[[36;1;4m/vercel/path0/components/layouts/BusinessLayout.tsx[0m:212:1]
+[22:13:20.830]  [2m209[0m | }
+[22:13:20.830]  [2m210[0m | 
+[22:13:20.830]  [2m211[0m | export default BusinessLayout
+[22:13:20.830]  [2m212[0m | ```Applying the change to remove the SidebarTrigger component, there isn't any SidebarTrigger.
+[22:13:20.830]      `----
+[22:13:20.831] 
+[22:13:20.831] Caused by:
+[22:13:20.831]     Syntax Error
+[22:13:20.831] 
+[22:13:20.831] Import trace for requested module:
+[22:13:20.831] ./components/layouts/BusinessLayout.tsx
+[22:13:20.831] ./app/business/adventures/page.tsx
+[22:13:20.831] 
+[22:13:20.845] 
+[22:13:20.849] > Build failed because of webpack errors
+[22:13:20.877] Error: Command "npm run build" exited with 1
+[22:13:21.130] 
+[22:13:24.310] Exiting build container
