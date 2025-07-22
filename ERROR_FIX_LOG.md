@@ -103,6 +103,42 @@ import { NextRequest, NextResponse } from "next/server"
 
 ---
 
+## 3. Module Not Found Error - Missing Scripts
+**Location:** `scripts/pre-build-check.js`
+**Error Type:** Missing file/module
+**Issue:** Required script file doesn't exist
+```bash
+Error: Cannot find module '/home/runner/workspace/scripts/pre-build-check.js'
+```
+**Status:** 🔄 NEEDS CREATION
+
+---
+
+## 4. Syntax Error - Invalid Token in Script
+**Location:** `scripts/compilation-diagnostics.js:2`
+**Error Type:** JavaScript syntax error
+**Issue:** Shebang line causing syntax error in Node.js execution
+```javascript
+#!/usr/bin/env node
+^
+SyntaxError: Invalid or unexpected token
+```
+**Status:** 🔄 NEEDS FIX
+
+---
+
+## 5. Chunk Loading Errors - Next.js Build
+**Location:** Web runtime
+**Error Type:** Build/deployment error
+**Issue:** Next.js chunks failing to load with timeout errors
+```
+ChunkLoadError: Loading chunk app-pages-internals failed.
+(timeout: https://.../_next/static/chunks/app-pages-internals.js)
+```
+**Status:** 🔄 BUILD OPTIMIZATION NEEDED
+
+---
+
 ## Errors Still to be Investigated
 
 ### High Priority
