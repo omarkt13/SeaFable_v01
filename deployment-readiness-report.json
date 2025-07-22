@@ -1,242 +1,241 @@
 {
   "summary": {
     "total": 45,
-    "passed": 44,
-    "failed": 1,
+    "passed": 45,
+    "failed": 0,
     "warnings": 0,
-    "passRate": "97.8"
+    "passRate": "100.0"
   },
   "details": {
     "passed": [
       {
+        "message": "Environment template exists",
+        "details": null,
+        "timestamp": "2025-07-22T15:51:55.090Z"
+      },
+      {
         "message": "Next.js configuration exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.837Z"
+        "timestamp": "2025-07-22T15:51:55.090Z"
       },
       {
         "message": "Images configured for static deployment",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.838Z"
+        "timestamp": "2025-07-22T15:51:55.091Z"
       },
       {
         "message": "Console removal configured for production",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.838Z"
+        "timestamp": "2025-07-22T15:51:55.091Z"
       },
       {
         "message": "Replit dev origins configured",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.838Z"
+        "timestamp": "2025-07-22T15:51:55.091Z"
       },
       {
         "message": "Package configuration exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.839Z"
+        "timestamp": "2025-07-22T15:51:55.092Z"
       },
       {
         "message": "Script \"build\" defined",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.840Z"
+        "timestamp": "2025-07-22T15:51:55.093Z"
       },
       {
         "message": "Script \"start\" defined",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.840Z"
+        "timestamp": "2025-07-22T15:51:55.093Z"
       },
       {
         "message": "Script \"dev\" defined",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.840Z"
+        "timestamp": "2025-07-22T15:51:55.093Z"
       },
       {
         "message": "Security dependency \"isomorphic-dompurify\" installed",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.840Z"
+        "timestamp": "2025-07-22T15:51:55.093Z"
       },
       {
         "message": "Security dependency \"bcryptjs\" installed",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.840Z"
+        "timestamp": "2025-07-22T15:51:55.093Z"
       },
       {
         "message": "Essential dependency \"next\" installed",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.841Z"
+        "timestamp": "2025-07-22T15:51:55.094Z"
       },
       {
         "message": "Essential dependency \"react\" installed",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.841Z"
+        "timestamp": "2025-07-22T15:51:55.094Z"
       },
       {
         "message": "Essential dependency \"@supabase/supabase-js\" installed",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.841Z"
+        "timestamp": "2025-07-22T15:51:55.094Z"
       },
       {
         "message": "Migration: 13-business-portal-tables.sql exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.841Z"
+        "timestamp": "2025-07-22T15:51:55.095Z"
       },
       {
         "message": "Migration: 18-expand-activity-types.sql exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.841Z"
+        "timestamp": "2025-07-22T15:51:55.095Z"
       },
       {
         "message": "Migration: 19-seed-expanded-activities.sql exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.842Z"
+        "timestamp": "2025-07-22T15:51:55.095Z"
       },
       {
         "message": "API: dashboard exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.842Z"
+        "timestamp": "2025-07-22T15:51:55.095Z"
       },
       {
         "message": "API: experiences exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.843Z"
+        "timestamp": "2025-07-22T15:51:55.096Z"
       },
       {
         "message": "API: availability exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.843Z"
+        "timestamp": "2025-07-22T15:51:55.096Z"
       },
       {
         "message": "API: [type] exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.844Z"
+        "timestamp": "2025-07-22T15:51:55.096Z"
       },
       {
         "message": "Auth: auth-context.tsx exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.844Z"
+        "timestamp": "2025-07-22T15:51:55.097Z"
       },
       {
         "message": "Auth: auth-utils.ts exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.844Z"
+        "timestamp": "2025-07-22T15:51:55.097Z"
       },
       {
         "message": "Auth: BusinessProtectedRoute.tsx exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.845Z"
+        "timestamp": "2025-07-22T15:51:55.097Z"
       },
       {
         "message": "Auth: CustomerProtectedRoute.tsx exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.845Z"
+        "timestamp": "2025-07-22T15:51:55.097Z"
       },
       {
         "message": "Business page: home exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.845Z"
+        "timestamp": "2025-07-22T15:51:55.097Z"
       },
       {
         "message": "Business page: experiences exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.846Z"
+        "timestamp": "2025-07-22T15:51:55.098Z"
       },
       {
         "message": "Business page: bookings exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.846Z"
+        "timestamp": "2025-07-22T15:51:55.098Z"
       },
       {
         "message": "Business page: settings exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.846Z"
+        "timestamp": "2025-07-22T15:51:55.098Z"
       },
       {
         "message": "Business layout component exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.846Z"
+        "timestamp": "2025-07-22T15:51:55.098Z"
       },
       {
         "message": "Security utilities exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.847Z"
+        "timestamp": "2025-07-22T15:51:55.099Z"
       },
       {
         "message": "Input sanitization implemented",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.847Z"
+        "timestamp": "2025-07-22T15:51:55.099Z"
       },
       {
         "message": "Rate limiting implemented",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.847Z"
+        "timestamp": "2025-07-22T15:51:55.099Z"
       },
       {
         "message": "TypeScript configuration exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.848Z"
+        "timestamp": "2025-07-22T15:51:55.099Z"
       },
       {
         "message": "Strict TypeScript mode enabled",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.848Z"
+        "timestamp": "2025-07-22T15:51:55.100Z"
       },
       {
         "message": "Path mapping configured",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.848Z"
+        "timestamp": "2025-07-22T15:51:55.100Z"
       },
       {
         "message": "UI component: button exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.849Z"
+        "timestamp": "2025-07-22T15:51:55.100Z"
       },
       {
         "message": "UI component: card exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.849Z"
+        "timestamp": "2025-07-22T15:51:55.101Z"
       },
       {
         "message": "UI component: form exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.849Z"
+        "timestamp": "2025-07-22T15:51:55.101Z"
       },
       {
         "message": "UI component: dialog exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.849Z"
+        "timestamp": "2025-07-22T15:51:55.101Z"
       },
       {
         "message": "Tailwind CSS configuration exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.850Z"
+        "timestamp": "2025-07-22T15:51:55.101Z"
       },
       {
         "message": "PostCSS configuration exists",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.850Z"
+        "timestamp": "2025-07-22T15:51:55.101Z"
       },
       {
         "message": "Gzip size reporting enabled",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.850Z"
+        "timestamp": "2025-07-22T15:51:55.102Z"
       },
       {
         "message": "Worker threads optimized for deployment",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.850Z"
+        "timestamp": "2025-07-22T15:51:55.102Z"
       },
       {
         "message": "CPU usage optimized for deployment",
         "details": null,
-        "timestamp": "2025-07-22T15:42:00.851Z"
+        "timestamp": "2025-07-22T15:51:55.102Z"
       }
     ],
-    "failed": [
-      {
-        "message": "Environment template missing",
-        "details": "File: .env.example",
-        "timestamp": "2025-07-22T15:42:00.836Z"
-      }
-    ],
+    "failed": [],
     "warnings": []
   },
-  "generatedAt": "2025-07-22T15:42:00.852Z"
+  "generatedAt": "2025-07-22T15:51:55.103Z"
 }
