@@ -125,3 +125,47 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Test failed", details: error }, { status: 500 })
   }
 }
+import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+
+export async function GET(request: NextRequest) {
+  console.log("Test API: Starting")
+
+  try {
+    const supabase = createClient()
+
+    const testResult = {
+      timestamp: new Date().toISOString(),
+      status: "success",
+      message: "API test successful",
+      supabaseConnected: true,
+    }
+
+    // Test basic Supabase connection
+    try {
+      const { data, error } = await supabase.from("users").select("id").limit(1)
+      testResult.supabaseConnected = !error
+      if (error) {
+        testResult.message = `Supabase error: ${error.message}`
+        testResult.status = "error"
+      }
+    } catch (error) {
+      testResult.supabaseConnected = false
+      testResult.message = `Connection failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      testResult.status = "error"
+    }
+
+    return NextResponse.json(testResult)
+  } catch (error) {
+    console.error("Test API error:", error)
+    return NextResponse.json(
+      { 
+        timestamp: new Date().toISOString(),
+        status: "error", 
+        message: error instanceof Error ? error.message : "Test API failed",
+        supabaseConnected: false
+      },
+      { status: 500 }
+    )
+  }
+}
