@@ -1,0 +1,304 @@
+## Core Tables
+
+### 1. `users`
+**Purpose**: Customer accounts and basic user information
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+first_name VARCHAR(100) NOT NULL
+last_name VARCHAR(100) NOT NULL
+email VARCHAR(255) UNIQUE NOT NULL
+password_hash VARCHAR(255)  -- For demo users only
+avatar_url TEXT
+role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'host', 'admin'))
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `email`, `role`
+**Triggers**: `update_updated_at_column`
+
+### 2. `host_profiles`
+**Purpose**: Business host information and profiles
+```sql
+id UUID PRIMARY KEY  -- Matches Supabase Auth user ID
+user_id UUID REFERENCES users(id)  -- Nullable for demo compatibility
+name VARCHAR(200) NOT NULL
+bio TEXT
+avatar_url TEXT
+years_experience INT CHECK (years_experience >= 0)
+certifications TEXT[] DEFAULT '{}'
+specialties TEXT[] DEFAULT '{}'
+rating NUMERIC(2,1) DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0)
+total_reviews INT DEFAULT 0
+host_type VARCHAR(50) CHECK (host_type IN ('captain', 'instructor', 'guide', 'company', 'individual_operator'))
+languages_spoken TEXT[] DEFAULT '{}'
+
+-- Business registration fields (matches business-auth-utils.ts)
+business_name VARCHAR(255)
+contact_name VARCHAR(255)
+email VARCHAR(255)
+phone VARCHAR(50)
+business_type VARCHAR(100)
+location VARCHAR(255)
+description TEXT
+
+business_registration_id VARCHAR(100)
+insurance_details TEXT
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `user_id`, `email`, `host_type`, `rating`
+**Triggers**: `update_updated_at_column`
+
+## Business Management Tables
+
+### 3. `host_business_settings`
+**Purpose**: Business configuration and onboarding
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_profile_id UUID UNIQUE REFERENCES host_profiles(id) ON DELETE CASCADE
+business_email VARCHAR(255)
+business_phone VARCHAR(50)
+website_url TEXT
+social_media_links JSONB DEFAULT '{}'
+operating_license TEXT
+insurance_policy_number TEXT
+tax_id TEXT
+bank_account_info JSONB DEFAULT '{}'
+notification_preferences JSONB DEFAULT '{
+  "emailBookings": true,
+  "smsReminders": true,
+  "weatherAlerts": true,
+  "marketingEmails": false
+}'
+subscription_tier VARCHAR(50) DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro', 'enterprise'))
+onboarding_completed BOOLEAN DEFAULT FALSE
+onboarding_step INT DEFAULT 1
+marketplace_enabled BOOLEAN DEFAULT TRUE
+auto_accept_bookings BOOLEAN DEFAULT FALSE
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `host_profile_id`
+**Triggers**: `update_updated_at_column`
+
+### 4. `host_availability`
+**Purpose**: Host calendar and availability management
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_profile_id UUID REFERENCES host_profiles(id) ON DELETE CASCADE
+date DATE NOT NULL
+start_time TIME
+end_time TIME
+available_capacity INT DEFAULT 1 CHECK (available_capacity >= 0)
+price_override NUMERIC(10,2)
+notes TEXT
+weather_dependent BOOLEAN DEFAULT TRUE
+is_recurring BOOLEAN DEFAULT FALSE
+recurring_pattern JSONB DEFAULT '{}'
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Constraints**: `UNIQUE(host_profile_id, date, start_time)`
+**Indexes**: `(host_profile_id, date DESC)`
+
+### 5. `host_team_members`
+**Purpose**: Team member management for hosts
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_profile_id UUID REFERENCES host_profiles(id) ON DELETE CASCADE
+user_id UUID REFERENCES users(id) ON DELETE CASCADE
+role VARCHAR(50) CHECK (role IN ('captain', 'instructor', 'crew', 'admin', 'assistant'))
+permissions JSONB DEFAULT '["view_bookings"]'
+hourly_rate NUMERIC(10,2)
+commission_rate NUMERIC(5,2) CHECK (commission_rate >= 0 AND commission_rate <= 100)
+certifications TEXT[] DEFAULT '{}'
+hire_date DATE DEFAULT CURRENT_DATE
+is_active BOOLEAN DEFAULT TRUE
+notes TEXT
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Constraints**: `UNIQUE(host_profile_id, user_id)`
+**Triggers**: `update_updated_at_column`
+
+## Experience & Booking Tables
+
+### 6. `experiences`
+**Purpose**: Water activity listings and details
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_id UUID NOT NULL REFERENCES host_profiles(id) ON DELETE CASCADE
+title VARCHAR(255) NOT NULL
+description TEXT
+short_description TEXT
+location VARCHAR(255)
+specific_location VARCHAR(255)
+country VARCHAR(100)
+activity_type VARCHAR(50) NOT NULL
+category TEXT[] NOT NULL DEFAULT '{}'
+duration_hours NUMERIC(4,1) CHECK (duration_hours > 0)
+duration_display VARCHAR(100)
+max_guests INT CHECK (max_guests > 0)
+min_guests INT DEFAULT 1 CHECK (min_guests > 0)
+price_per_person NUMERIC(10,2) CHECK (price_per_person >= 0)
+difficulty_level VARCHAR(50) CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced', 'all_levels'))
+rating NUMERIC(2,1) DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0)
+total_reviews INT DEFAULT 0
+total_bookings INT DEFAULT 0
+primary_image_url TEXT
+weather_contingency TEXT
+included_amenities TEXT[] DEFAULT '{}'
+what_to_bring TEXT[] DEFAULT '{}'
+min_age INT CHECK (min_age >= 0)
+max_age INT
+age_restriction_details TEXT
+activity_specific_details JSONB DEFAULT '{}'
+tags TEXT[] DEFAULT '{}'
+seasonal_availability TEXT[] DEFAULT '{}'
+is_active BOOLEAN DEFAULT TRUE
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `host_id`, `activity_type`, `(location, country)`, `rating`, `is_active`
+**Triggers**: `update_updated_at_column`
+
+### 7. `experience_images`
+**Purpose**: Additional images for experiences
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+experience_id UUID NOT NULL REFERENCES experiences(id) ON DELETE CASCADE
+image_url TEXT NOT NULL
+alt_text VARCHAR(255)
+display_order INT DEFAULT 0
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `experience_id`
+
+### 8. `bookings`
+**Purpose**: Customer reservations and booking management
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
+experience_id UUID NOT NULL REFERENCES experiences(id) ON DELETE CASCADE
+host_id UUID NOT NULL REFERENCES host_profiles(id) ON DELETE CASCADE
+booking_date DATE NOT NULL
+departure_time TIME
+number_of_guests INT NOT NULL CHECK (number_of_guests > 0)
+guest_details JSONB DEFAULT '{}'
+total_price NUMERIC(10,2) NOT NULL CHECK (total_price >= 0)
+booking_status VARCHAR(50) DEFAULT 'pending' CHECK (booking_status IN ('pending', 'confirmed', 'cancelled_user', 'cancelled_host', 'completed', 'rescheduled'))
+special_requests TEXT
+dietary_requirements TEXT[] DEFAULT '{}'
+payment_id VARCHAR(255)
+payment_method VARCHAR(100)
+payment_status VARCHAR(50) DEFAULT 'pending' CHECK (payment_status IN ('pending', 'succeeded', 'failed', 'refunded'))
+amount_paid NUMERIC(10,2)
+currency VARCHAR(10) DEFAULT 'EUR'
+booked_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `user_id`, `experience_id`, `host_id`, `(booking_date, booking_status)`
+**Triggers**: `update_updated_at_column`
+
+## Review & Financial Tables
+
+### 9. `reviews`
+**Purpose**: Customer reviews and ratings
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+booking_id UUID UNIQUE NOT NULL REFERENCES bookings(id) ON DELETE CASCADE
+user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
+experience_id UUID NOT NULL REFERENCES experiences(id) ON DELETE CASCADE
+host_id UUID NOT NULL REFERENCES host_profiles(id) ON DELETE CASCADE
+rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5)
+title VARCHAR(255)
+comment TEXT
+pros TEXT[] DEFAULT '{}'
+cons TEXT[] DEFAULT '{}'
+would_recommend BOOLEAN
+verified_booking BOOLEAN DEFAULT TRUE
+helpful_votes INT DEFAULT 0 CHECK (helpful_votes >= 0)
+response_from_host_comment TEXT
+response_from_host_at TIMESTAMPTZ
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `experience_id`, `host_id`
+**Triggers**: `update_updated_at_column`
+
+### 10. `host_earnings`
+**Purpose**: Financial tracking and payouts
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_profile_id UUID REFERENCES host_profiles(id) ON DELETE CASCADE
+booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE
+gross_amount NUMERIC(10,2) NOT NULL CHECK (gross_amount >= 0)
+platform_fee NUMERIC(10,2) NOT NULL CHECK (platform_fee >= 0)
+payment_processing_fee NUMERIC(10,2) NOT NULL CHECK (payment_processing_fee >= 0)
+net_amount NUMERIC(10,2) NOT NULL CHECK (net_amount >= 0)
+currency VARCHAR(10) DEFAULT 'EUR'
+payout_date DATE
+payout_status VARCHAR(50) DEFAULT 'pending' CHECK (payout_status IN ('pending', 'processing', 'completed', 'failed', 'cancelled'))
+stripe_transfer_id TEXT
+transaction_id TEXT
+fee_percentage NUMERIC(5,2) DEFAULT 15.0
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Indexes**: `host_profile_id`, `payout_status`
+
+## Analytics Table
+
+### 11. `host_analytics`
+**Purpose**: Business intelligence and metrics
+```sql
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+host_profile_id UUID REFERENCES host_profiles(id) ON DELETE CASCADE
+date DATE NOT NULL
+total_bookings INT DEFAULT 0
+total_revenue NUMERIC(10,2) DEFAULT 0
+total_guests INT DEFAULT 0
+average_rating NUMERIC(3,2)
+cancellation_rate NUMERIC(5,2) DEFAULT 0
+repeat_customer_rate NUMERIC(5,2) DEFAULT 0
+marketplace_bookings INT DEFAULT 0
+direct_bookings INT DEFAULT 0
+weather_cancellations INT DEFAULT 0
+created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+**Constraints**: `UNIQUE(host_profile_id, date)`
+**Indexes**: `(host_profile_id, date DESC)`
+
+## System Tables
+
+### 12. `schema_migrations`
+**Purpose**: Track database schema versions
+```sql
+version VARCHAR(255) PRIMARY KEY
+applied_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+```
+
+## Database Functions
+
+### `update_updated_at_column()`
+**Purpose**: Automatically update `updated_at` timestamps
+**Used on**: `users`, `host_profiles`, `host_business_settings`, `experiences`, `bookings`, `reviews`, `host_team_members`
+
+## Key Relationships
+
+```
+users (1) ←→ (many) bookings
+users (1) ←→ (many) reviews
+users (1) ←→ (many) host_team_members
+
+host_profiles (1) ←→ (many) experiences
+host_profiles (1) ←→ (1) host_business_settings
+host_profiles (1) ←→ (many) host_availability
+host_profiles (1) ←→ (many) host_earnings
+host_profiles (1) ←→ (many) host_team_members
+host_profiles (1) ←→ (many) host_analytics
+
+experiences (1) ←→ (many) bookings
+experiences (1) ←→ (many) reviews
+experiences (1) ←→ (many) experience_images
+
+bookings (1) ←→ (1) reviews
+bookings (1) ←→ (1) host_earnings
