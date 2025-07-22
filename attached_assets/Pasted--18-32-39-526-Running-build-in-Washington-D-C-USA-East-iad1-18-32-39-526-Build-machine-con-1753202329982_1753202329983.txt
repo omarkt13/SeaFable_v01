@@ -1,0 +1,70 @@
+[18:32:39.526] Running build in Washington, D.C., USA (East) – iad1
+[18:32:39.526] Build machine configuration: 2 cores, 8 GB
+[18:32:39.552] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: aaea816)
+[18:32:39.676] Previous build caches not available
+[18:32:39.912] Cloning completed: 358.000ms
+[18:32:41.591] Running "vercel build"
+[18:32:42.040] Vercel CLI 44.5.0
+[18:32:42.359] Installing dependencies...
+[18:32:46.023] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:32:46.739] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:32:57.019] 
+[18:32:57.020] added 489 packages in 14s
+[18:32:57.020] 
+[18:32:57.020] 57 packages are looking for funding
+[18:32:57.020]   run `npm fund` for details
+[18:32:57.307] Detected Next.js version: 15.2.4
+[18:32:57.313] Running "npm run build"
+[18:32:57.566] 
+[18:32:57.567] > my-v0-project@0.1.0 build
+[18:32:57.567] > next build
+[18:32:57.567] 
+[18:32:58.737] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:32:58.739] This information is used to shape Next.js' roadmap and prioritize features.
+[18:32:58.739] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:32:58.740] https://nextjs.org/telemetry
+[18:32:58.740] 
+[18:32:58.870]    ▲ Next.js 15.2.4
+[18:32:58.871]    - Experiments (use with caution):
+[18:32:58.871]      · allowedDevOrigins
+[18:32:58.871] 
+[18:32:59.007]    Creating an optimized production build ...
+[18:33:14.206] Failed to compile.
+[18:33:14.206] 
+[18:33:14.207] ./lib/database.ts
+[18:33:14.207] Module parse failed: Identifier 'getUserDashboardData' has already been declared (827:22)
+[18:33:14.207] File was processed with these loaders:
+[18:33:14.207]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+[18:33:14.207]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[18:33:14.207] You may need an additional loader to handle the result of these loaders.
+[18:33:14.207] |     return data;
+[18:33:14.207] | }
+[18:33:14.207] > export async function getUserDashboardData(userEmail) {
+[18:33:14.208] |     try {
+[18:33:14.208] |         ;
+[18:33:14.208] 
+[18:33:14.208] Import trace for requested module:
+[18:33:14.208] ./lib/database.ts
+[18:33:14.208] ./app/business/calendar/page.tsx
+[18:33:14.208] 
+[18:33:14.208] ./lib/database.ts
+[18:33:14.208] Module parse failed: Identifier 'getUserDashboardData' has already been declared (827:22)
+[18:33:14.209] File was processed with these loaders:
+[18:33:14.209]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[18:33:14.209]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[18:33:14.209] You may need an additional loader to handle the result of these loaders.
+[18:33:14.209] |     return data;
+[18:33:14.210] | }
+[18:33:14.210] > export async function getUserDashboardData(userEmail) {
+[18:33:14.210] |     try {
+[18:33:14.210] |         ;
+[18:33:14.210] 
+[18:33:14.210] Import trace for requested module:
+[18:33:14.210] ./lib/database.ts
+[18:33:14.211] ./app/api/business/dashboard/route.ts
+[18:33:14.211] 
+[18:33:14.224] 
+[18:33:14.224] > Build failed because of webpack errors
+[18:33:14.256] Error: Command "npm run build" exited with 1
+[18:33:14.524] 
+[18:33:17.485] Exiting build container
