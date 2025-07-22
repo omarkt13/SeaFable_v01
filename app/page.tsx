@@ -45,7 +45,7 @@ export default function LandingPage() {
         setShowDatePicker(false)
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showDatePicker])
@@ -64,15 +64,15 @@ export default function LandingPage() {
     const month = new Date(currentMonth)
     const year = month.getFullYear()
     const monthIndex = month.getMonth()
-    
+
     const firstDay = new Date(year, monthIndex, 1)
     const lastDay = new Date(year, monthIndex + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
-    
+
     const days = []
     const current = new Date(startDate)
-    
+
     for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
       days.push({
         date: current.toISOString().split('T')[0],
@@ -81,7 +81,7 @@ export default function LandingPage() {
       })
       current.setDate(current.getDate() + 1)
     }
-    
+
     return days
   }
 
@@ -263,7 +263,7 @@ export default function LandingPage() {
                         className="w-full pl-12 pr-4 py-4 h-auto border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 cursor-pointer"
                         placeholder="When?"
                       />
-                      
+
                       {showDatePicker && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
                           {/* Quick Date Options */}
@@ -290,7 +290,7 @@ export default function LandingPage() {
                               ))}
                             </div>
                           </div>
-                          
+
                           {/* Calendar Grid */}
                           <div>
                             <div className="flex items-center justify-between mb-3">
@@ -320,7 +320,7 @@ export default function LandingPage() {
                                 </button>
                               </div>
                             </div>
-                            
+
                             {/* Days of week header */}
                             <div className="grid grid-cols-7 gap-1 mb-2">
                               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -329,14 +329,14 @@ export default function LandingPage() {
                                 </div>
                               ))}
                             </div>
-                            
+
                             {/* Calendar days */}
                             <div className="grid grid-cols-7 gap-1">
                               {getCalendarDays().map((day, index) => {
                                 const isToday = day.date === new Date().toISOString().split('T')[0]
                                 const isSelected = day.date === searchData.date
                                 const isPast = new Date(day.date).getTime() < new Date().setHours(0, 0, 0, 0)
-                                
+
                                 return (
                                   <button
                                     key={index}
@@ -362,7 +362,7 @@ export default function LandingPage() {
                               })}
                             </div>
                           </div>
-                          
+
                           <div className="mt-4 pt-3 border-t border-gray-200">
                             <button
                               onClick={() => setShowDatePicker(false)}
