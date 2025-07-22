@@ -1,578 +1,477 @@
+"use client"
 
-"use client";
+import React, { useState, useEffect } from 'react';
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayout } from "@/components/layouts/BusinessLayout"
+import {
+  Search,
+  Calendar,
+  Filter,
+  Plus,
+  MoreHorizontal,
+  Edit2,
+  Copy,
+  Archive,
+  Star,
+  Users,
+  Clock,
+  MapPin,
+  DollarSign,
+  Eye,
+  Settings,
+  ChevronDown,
+  Heart,
+  Share2,
+  Trash2,
+  BarChart3,
+  Camera,
+  Globe,
+  Activity
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import React, { useState, useEffect } from "react";
-import { 
-  Anchor, 
-  Home, 
-  Users, 
-  MessageCircle, 
-  Calendar as CalendarIcon, 
-  Handshake, 
-  DollarSign, 
-  Shapes, 
-  Settings, 
-  Bell, 
-  User, 
-  LogOut, 
-  ChevronDown, 
-  Plus, 
-  Edit2, 
-  Trash, 
-  MoreHorizontal, 
-  Clock, 
-  ChevronLeft,
-  Search
-} from "lucide-react";
-import { FeatherChevronRight } from "@subframe/core";
-import { FeatherSearch } from "@subframe/core";
-import { FeatherFilter } from "@subframe/core";
-import { Loader2, AlertCircle } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
-import { getHostExperiences, type Experience } from "@/lib/database";
+// Types
+interface Adventure {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  activity_type: string;
+  duration_hours: number;
+  max_guests: number;
+  price_per_person: number;
+  rating: number;
+  total_reviews: number;
+  primary_image_url: string;
+  status: 'draft' | 'active' | 'paused' | 'archived';
+  created_at: string;
+  updated_at: string;
+  tags: string[];
+  difficulty_level: string;
+  total_bookings: number;
+}
 
-const mockExperiences: Experience[] = [
+// Mock data for demonstration
+const mockAdventures: Adventure[] = [
   {
     id: '1',
     title: 'Mediterranean Yacht Cruise',
     description: 'Explore the stunning Greek islands on a luxurious yacht, stopping at picturesque ports and enjoying crystal-clear waters.',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    category: 'Sailing Tour',
+    location: 'Santorini, Greece',
+    activity_type: 'Sailing Tour',
+    duration_hours: 7,
+    max_guests: 12,
+    price_per_person: 3500,
     rating: 5.0,
-    price: 3500,
-    spots: 12,
-    duration: '7 Days',
-    dates: ['June 15 2026', 'June 28 2026'],
-    status: 'active'
+    total_reviews: 24,
+    primary_image_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop',
+    status: 'active',
+    created_at: '2024-06-15',
+    updated_at: '2024-07-10',
+    tags: ['Luxury', 'Sailing', 'Greek Islands'],
+    difficulty_level: 'All Levels',
+    total_bookings: 15
   },
   {
     id: '2',
-    title: 'Diving with Turtles',
-    description: 'Embark on an underwater adventure swimming alongside majestic sea turtles in crystal clear waters.',
-    image: 'https://images.unsplash.com/photo-1533577180227-45c079af1927?q=80&w=1920&auto=format&fit=crop&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    category: 'Diving Tour',
-    rating: 4.8,
-    price: 280,
-    spots: 8,
-    duration: '4 Hours',
-    dates: ['July 14 2026'],
-    status: 'active'
+    title: 'Safari Wildlife Adventure',
+    description: 'Witness the incredible wildlife of the African savanna, tracking lions, elephants, and other magnificent creatures.',
+    location: 'Serengeti National Park',
+    activity_type: 'Wildlife Tour',
+    duration_hours: 240, // 10 days
+    max_guests: 10,
+    price_per_person: 4200,
+    rating: 0,
+    total_reviews: 0,
+    primary_image_url: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&h=300&fit=crop',
+    status: 'draft',
+    created_at: '2024-07-01',
+    updated_at: '2024-07-15',
+    tags: ['Wildlife', 'Safari', 'Adventure'],
+    difficulty_level: 'Intermediate',
+    total_bookings: 0
   },
   {
     id: '3',
-    title: 'Safari Wildlife Adventure',
-    description: 'Witness the incredible wildlife of the African savanna, tracking lions, elephants, and other magnificent creatures.',
-    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1920&auto=format&fit=crop&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    category: 'Wildlife Tour',
-    rating: 4.9,
-    price: 4200,
-    spots: 10,
-    duration: '10 Days',
-    dates: [],
-    status: 'draft'
+    title: 'Tropical Island Retreat',
+    description: 'Unwind in a luxurious tropical paradise, enjoying pristine beaches, water sports, and local culture.',
+    location: 'Maldives',
+    activity_type: 'Beach Vacation',
+    duration_hours: 168, // 7 days
+    max_guests: 15,
+    price_per_person: 3200,
+    rating: 0,
+    total_reviews: 0,
+    primary_image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+    status: 'draft',
+    created_at: '2024-07-05',
+    updated_at: '2024-07-12',
+    tags: ['Beach', 'Tropical', 'Luxury'],
+    difficulty_level: 'All Levels',
+    total_bookings: 0
   },
   {
     id: '4',
-    title: 'Tropical Island Retreat',
-    description: 'Unwind in a luxurious tropical paradise, enjoying pristine beaches, water sports, and local culture.',
-    image: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?q=80&w=1920&auto=format&fit=crop&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    category: 'Beach Vacation',
-    rating: 4.7,
-    price: 3200,
-    spots: 15,
-    duration: '7 Days',
-    dates: [],
-    status: 'draft'
-  },
-  {
-    id: '5',
-    title: 'Road Trip Across America',
-    description: 'Explore the diverse landscapes and iconic cities of the United States on an epic cross-country adventure.',
-    image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1920&auto=format&fit=crop&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    category: 'Road Trip',
-    rating: 4.6,
-    price: 3600,
-    spots: 6,
-    duration: '14 Days',
-    dates: [],
-    status: 'draft'
+    title: 'Diving with Turtles',
+    description: 'Embark on a challenging trek through the majestic Alpine peaks, experiencing breathtaking landscapes and mountain culture.',
+    location: 'Swiss Alps',
+    activity_type: 'Hiking Tour',
+    duration_hours: 4,
+    max_guests: 8,
+    price_per_person: 2800,
+    rating: 0,
+    total_reviews: 0,
+    primary_image_url: 'https://images.unsplash.com/photo-1464822759844-d150065e7d24?w=400&h=300&fit=crop',
+    status: 'active',
+    created_at: '2024-07-14',
+    updated_at: '2024-07-14',
+    tags: ['Hiking', 'Mountains', 'Adventure'],
+    difficulty_level: 'Advanced',
+    total_bookings: 3
   }
 ];
 
-export default function BusinessExperiencesPage() {
-  const { user, isLoading: authLoading } = useAuth();
+export default function ExperiencesPage() {
+  const router = useRouter();
+  const [adventures, setAdventures] = useState<Adventure[]>(mockAdventures);
+  const [filteredAdventures, setFilteredAdventures] = useState<Adventure[]>(mockAdventures);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('All');
-  const [experiences, setExperiences] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedActivityType, setSelectedActivityType] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('updated_at');
+  const [loading, setLoading] = useState(false);
 
+  // Filter and search functionality
   useEffect(() => {
-    if (!authLoading && user?.id) {
-      fetchExperiences(user.id);
-    } else if (!authLoading && !user) {
-      // Use mock data if no user
-      setExperiences(mockExperiences);
-      setIsLoading(false);
-    }
-  }, [user, authLoading]);
+    let filtered = adventures;
 
-  const fetchExperiences = async (hostId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data, error: fetchError } = await getHostExperiences(hostId);
-      if (fetchError) {
-        throw new Error(fetchError);
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(adventure =>
+        adventure.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        adventure.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        adventure.activity_type.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(adventure => adventure.status === selectedStatus);
+    }
+
+    // Activity type filter
+    if (selectedActivityType !== 'all') {
+      filtered = filtered.filter(adventure => adventure.activity_type === selectedActivityType);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'price':
+          return b.price_per_person - a.price_per_person;
+        case 'rating':
+          return b.rating - a.rating;
+        case 'bookings':
+          return b.total_bookings - a.total_bookings;
+        default: // updated_at
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
       }
-      // If no real experiences, use mock data
-      setExperiences(data && data.length > 0 ? data : mockExperiences);
-    } catch (err: any) {
-      console.error("Failed to fetch experiences:", err);
-      setError(err.message || "Failed to load experiences.");
-      // Fall back to mock data on error
-      setExperiences(mockExperiences);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    });
 
-  const categories = ['All', ...Array.from(new Set(experiences.map(exp => exp.activity_type || exp.category || 'Other')))];
-  
-  const filteredExperiences = experiences.filter(exp => {
-    const matchesSearch = (exp.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (exp.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const expCategory = exp.activity_type || exp.category || 'Other';
-    const matchesFilter = selectedFilter === 'All' || expCategory === selectedFilter;
-    return matchesSearch && matchesFilter;
-  });
+    setFilteredAdventures(filtered);
+  }, [adventures, searchQuery, selectedStatus, selectedActivityType, sortBy]);
 
-  const handleCreateExperience = () => {
-    // Navigate to create experience page
-    window.location.href = '/business/experiences/new';
-  };
-
-  const handleEditExperience = (id: string) => {
-    console.log('Editing experience:', id);
-    // Navigate to edit experience page
-    window.location.href = `/business/experiences/edit/${id}`;
-  };
-
-  const handleArchiveExperience = (id: string) => {
-    setExperiences(prev => 
-      prev.map(exp => 
-        exp.id === id ? { ...exp, status: 'archived' } : exp
-      )
-    );
-  };
-
-  const handleAddDates = (id: string) => {
-    console.log('Adding dates for experience:', id);
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'active': return 'success';
-      case 'draft': return 'neutral';
-      case 'archived': return 'error';
-      default: return 'neutral';
-    }
-  };
-
-  const formatPrice = (price: number) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0
-    }).format(price);
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
-  if (isLoading) {
+  const formatDuration = (hours: number) => {
+    if (hours < 24) {
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+    } else {
+      const days = Math.floor(hours / 24);
+      return `${days} ${days === 1 ? 'day' : 'days'}`;
+    }
+  };
+
+  const getStatusBadge = (status: Adventure['status']) => {
+    const statusConfig = {
+      active: { color: 'bg-green-100 text-green-800', text: 'Active' },
+      draft: { color: 'bg-gray-100 text-gray-800', text: 'Draft' },
+      paused: { color: 'bg-yellow-100 text-yellow-800', text: 'Paused' },
+      archived: { color: 'bg-red-100 text-red-800', text: 'Archived' }
+    };
+
     return (
-      <div className="container max-w-none flex items-center justify-center h-screen">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-          <span className="text-gray-500">Loading experiences...</span>
-        </div>
-      </div>
+      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusConfig[status].color}`}>
+        {statusConfig[status].text}
+      </span>
     );
-  }
+  };
+
+  const activityTypes = Array.from(new Set(adventures.map(a => a.activity_type)));
 
   return (
-    <div className="container max-w-none flex w-full h-screen items-start border border-solid border-neutral-border">
-      {/* Sidebar */}
-      <div className="flex flex-col items-start gap-8 w-80 flex-shrink-0 border-r border-solid border-neutral-border bg-default-background px-6 py-8">
-        <div className="flex items-center gap-3">
-          <IconWithBackground
-            variant="warning"
-            size="large"
-            icon={<FeatherAnchor />}
-            square={true}
-          />
-          <span className="text-heading-2 font-heading-2 text-default-font">
-            Business Dashboard
-          </span>
-        </div>
-        
-        <div className="flex w-full flex-col items-start gap-1">
-          <SettingsMenu.Item icon={<FeatherHome />} label="Home" />
-        </div>
-        
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Client Management
-          </span>
-          <SettingsMenu.Item icon={<FeatherUsers />} label="Bookings" />
-          <SettingsMenu.Item
-            selected={true}
-            icon={<FeatherAnchor />}
-            label="Experiences"
-          />
-          <SettingsMenu.Item icon={<FeatherMessageCircle />} label="Messages" />
-          <SettingsMenu.Item icon={<FeatherCalendar />} label="Calendar" />
-          <SettingsMenu.Item icon={<FeatherHandshake />} label="Clients" />
-        </div>
-        
-        <div className="flex w-full flex-col items-start gap-2">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Finance
-          </span>
-          <div className="flex w-full flex-col items-start gap-1">
-            <Button
-              className="h-8 w-full flex-none justify-start"
-              variant="neutral-tertiary"
-              icon={<FeatherDollarSign />}
-              onClick={() => {}}
+    <BusinessProtectedRoute>
+      <BusinessLayout>
+        <div className="p-8 space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Experiences</h1>
+              <p className="text-gray-600 mt-1">Manage your water adventure experiences</p>
+            </div>
+            <button 
+              onClick={() => router.push('/business/experiences/new')}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              Sales &amp; Payments
-            </Button>
-            <SettingsMenu.Item icon={<FeatherShapes />} label="Integrations" />
+              <Plus className="w-5 h-5" />
+              Create New Experience
+            </button>
           </div>
-        </div>
-        
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Workspace
-          </span>
-          <SettingsMenu.Item icon={<FeatherUser />} label="Account" />
-          <SettingsMenu.Item icon={<FeatherSettings />} label="Settings" />
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col items-start flex-1 overflow-hidden">
-        {/* Header */}
-        <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4 bg-white">
-          <div className="flex items-center gap-4">
-            <TextField label="" helpText="" className="w-80">
-              <TextField.Input
-                placeholder="Search experiences..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </TextField>
-            <IconButton
-              icon={<FeatherSearch />}
-              onClick={() => {}}
-              aria-label="Search"
-            />
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <IconButton
-              icon={<FeatherBell />}
-              onClick={() => {}}
-              aria-label="Notifications"
-            />
-            <SubframeCore.DropdownMenu.Root>
-              <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                <Button
-                  variant="neutral-tertiary"
-                  iconRight={<FeatherChevronDown />}
-                  onClick={() => {}}
-                >
-                  Ocean Travel
-                </Button>
-              </SubframeCore.DropdownMenu.Trigger>
-              <SubframeCore.DropdownMenu.Portal>
-                <SubframeCore.DropdownMenu.Content
-                  side="bottom"
-                  align="end"
-                  sideOffset={4}
-                  asChild={true}
-                >
-                  <DropdownMenu>
-                    <DropdownMenu.DropdownItem icon={<FeatherUser />}>
-                      Profile
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
-                      Settings
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownDivider />
-                    <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
-                      Logout
-                    </DropdownMenu.DropdownItem>
-                  </DropdownMenu>
-                </SubframeCore.DropdownMenu.Content>
-              </SubframeCore.DropdownMenu.Portal>
-            </SubframeCore.DropdownMenu.Root>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto w-full">
-          <div className="flex flex-col items-start gap-6 px-8 py-8">
-            {/* Page Header */}
-            <div className="flex w-full items-center justify-between">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-heading-1 font-heading-1 text-default-font">
-                  Experiences
-                </h1>
-                <p className="text-body text-subtext-color">
-                  Manage your travel experiences and tours
-                </p>
+          {/* Filters and Search */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search experiences..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
-              
-              <div className="flex items-center gap-3">
-                <SubframeCore.Popover.Root>
-                  <SubframeCore.Popover.Trigger asChild={true}>
-                    <Button
-                      variant="neutral-secondary"
-                      iconRight={<FeatherCalendar />}
-                      onClick={() => {}}
-                    >
-                      Select Date Range
-                    </Button>
-                  </SubframeCore.Popover.Trigger>
-                  <SubframeCore.Popover.Portal>
-                    <SubframeCore.Popover.Content
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      asChild={true}
-                    >
-                      <div className="flex flex-col items-start gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-3 py-3 shadow-lg">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                        />
-                      </div>
-                    </SubframeCore.Popover.Content>
-                  </SubframeCore.Popover.Portal>
-                </SubframeCore.Popover.Root>
-                
-                <SubframeCore.DropdownMenu.Root>
-                  <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                    <Button
-                      variant="neutral-secondary"
-                      iconRight={<FeatherChevronDown />}
-                      icon={<FeatherFilter />}
-                      onClick={() => {}}
-                    >
-                      {selectedFilter}
-                    </Button>
-                  </SubframeCore.DropdownMenu.Trigger>
-                  <SubframeCore.DropdownMenu.Portal>
-                    <SubframeCore.DropdownMenu.Content
-                      side="bottom"
-                      align="end"
-                      sideOffset={4}
-                      asChild={true}
-                    >
-                      <DropdownMenu>
-                        {categories.map((category) => (
-                          <DropdownMenu.DropdownItem
-                            key={category}
-                            onClick={() => setSelectedFilter(category)}
-                          >
-                            {category}
-                          </DropdownMenu.DropdownItem>
-                        ))}
-                      </DropdownMenu>
-                    </SubframeCore.DropdownMenu.Content>
-                  </SubframeCore.DropdownMenu.Portal>
-                </SubframeCore.DropdownMenu.Root>
-                
-                <Button
-                  icon={<FeatherPlus />}
-                  onClick={handleCreateExperience}
-                >
-                  Create Experience
-                </Button>
-              </div>
-            </div>
 
-            {/* Experience Grid */}
-            <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Create New Experience Card */}
-              <div 
-                className="flex flex-col items-center justify-center gap-4 h-32 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 cursor-pointer transition-all hover:border-neutral-400 hover:bg-neutral-100"
-                onClick={handleCreateExperience}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateExperience()}
-              >
+              {/* Filters */}
+              <div className="flex gap-4 items-center">
                 <div className="flex items-center gap-2">
-                  <FeatherPlus className="text-neutral-500" />
-                  <span className="text-body-bold font-body-bold text-neutral-700">
-                    Create New Experience
-                  </span>
+                  <Filter className="w-4 h-4 text-gray-500" />
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="paused">Paused</option>
+                    <option value="archived">Archived</option>
+                  </select>
                 </div>
-                <span className="text-caption text-neutral-500">
-                  Add a new travel experience or tour
-                </span>
-              </div>
 
-              {/* Experience Cards */}
-              {filteredExperiences.map((experience) => (
-                <div
-                  key={experience.id}
-                  className="flex flex-col gap-4 rounded-lg bg-white border border-neutral-200 p-6 hover:shadow-md transition-shadow"
+                <select
+                  value={selectedActivityType}
+                  onChange={(e) => setSelectedActivityType(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <div className="flex gap-4">
-                    <img
-                      className="h-24 w-24 flex-shrink-0 rounded-md object-cover"
-                      src={experience.primary_image_url || experience.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop'}
-                      alt={experience.title}
-                    />
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-heading-3 font-heading-3 text-default-font truncate">
-                          {experience.title}
-                        </h3>
-                        
-                        <div className="flex items-center gap-1 ml-2">
-                          <IconButton
-                            size="small"
-                            icon={<FeatherEdit2 />}
-                            onClick={() => handleEditExperience(experience.id)}
-                            aria-label={`Edit ${experience.title}`}
-                          />
-                          <SubframeCore.DropdownMenu.Root>
-                            <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                              <IconButton
-                                size="small"
-                                icon={<FeatherMoreHorizontal />}
-                                onClick={() => {}}
-                                aria-label={`More options for ${experience.title}`}
-                              />
-                            </SubframeCore.DropdownMenu.Trigger>
-                            <SubframeCore.DropdownMenu.Portal>
-                              <SubframeCore.DropdownMenu.Content
-                                side="bottom"
-                                align="end"
-                                sideOffset={4}
-                                asChild={true}
-                              >
-                                <DropdownMenu>
-                                  <DropdownMenu.DropdownItem
-                                    icon={<FeatherCalendar />}
-                                    onClick={() => handleAddDates(experience.id)}
-                                  >
-                                    Add Dates/Times
-                                  </DropdownMenu.DropdownItem>
-                                  <DropdownMenu.DropdownItem
-                                    icon={<FeatherTrash />}
-                                    onClick={() => handleArchiveExperience(experience.id)}
-                                  >
-                                    Archive
-                                  </DropdownMenu.DropdownItem>
-                                </DropdownMenu>
-                              </SubframeCore.DropdownMenu.Content>
-                            </SubframeCore.DropdownMenu.Portal>
-                          </SubframeCore.DropdownMenu.Root>
-                        </div>
-                      </div>
-                      
-                      <p className="text-body text-subtext-color mb-3 line-clamp-2">
-                        {experience.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge variant="warning">{experience.activity_type || experience.category || 'Other'}</Badge>
-                        {(experience.status === 'active' || !experience.status) && experience.rating && (
-                          <Badge variant="success">Rating {experience.rating}</Badge>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <span className="text-body-bold font-body-bold text-success-600">
-                            {formatPrice(experience.price_per_person || experience.price || 0)}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-caption text-neutral-500">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <FeatherUsers size={14} />
-                            <span>{experience.max_participants || experience.spots || 0} spots</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <FeatherClock size={14} />
-                            <span>{experience.duration_hours ? `${experience.duration_hours}h` : experience.duration || 'N/A'}</span>
-                          </div>
-                        </div>
-                        
-                        <Badge variant={getStatusVariant(experience.status || 'active')}>
-                          {(experience.status || 'active').charAt(0).toUpperCase() + (experience.status || 'active').slice(1)}
-                        </Badge>
-                      </div>
-                    </div>
+                  <option value="all">Filter by Activity Type</option>
+                  {activityTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="updated_at">Recently Updated</option>
+                  <option value="title">Title A-Z</option>
+                  <option value="price">Price High to Low</option>
+                  <option value="rating">Rating</option>
+                  <option value="bookings">Most Booked</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Adventures Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredAdventures.map((adventure) => (
+              <div key={adventure.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                {/* Image */}
+                <div className="aspect-video bg-gray-100 relative">
+                  <img
+                    src={adventure.primary_image_url}
+                    alt={adventure.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-4 left-4">
+                    {getStatusBadge(adventure.status)}
                   </div>
-                  
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-                    <div className="flex items-center gap-2">
-                      <span className="text-caption text-neutral-500">Location:</span>
-                      <span className="text-caption text-neutral-600">
-                        {experience.location || 'Location not set'}
-                      </span>
-                    </div>
+                  <div className="absolute top-4 right-4">
+                    <button className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Footer */}
-            <div className="flex w-full items-center justify-between pt-6 border-t border-neutral-border">
-              <div className="flex items-center gap-2">
-                <span className="text-body text-subtext-color">
-                  Total Experiences:
-                </span>
-                <span className="text-body-bold font-body-bold text-default-font">
-                  {filteredExperiences.length}
-                </span>
-                {searchQuery && (
-                  <>
-                    <span className="text-body text-subtext-color">
-                      (filtered from {experiences.length})
-                    </span>
-                  </>
-                )}
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">{adventure.title}</h3>
+                      <div className="flex items-center text-gray-600 text-sm">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {adventure.location}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(adventure.price_per_person)}
+                      </div>
+                      <div className="text-sm text-gray-500">per person</div>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{adventure.description}</p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-1">
+                        <Activity className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">{adventure.activity_type}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-1">
+                        <Clock className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">{formatDuration(adventure.duration_hours)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-1">
+                        <Users className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">{adventure.max_guests} Spots</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-1">
+                        {adventure.rating > 0 ? (
+                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        ) : (
+                          <Star className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {adventure.rating > 0 ? `${adventure.rating} (${adventure.total_reviews})` : 'No reviews'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex gap-2 mb-4">
+                    {adventure.tags.slice(0, 3).map((tag, index) => (
+                      <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Eye className="w-4 h-4" />
+                      View
+                    </button>
+                    <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      <BarChart3 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Stats Footer */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+                    <span>{adventure.total_bookings} bookings</span>
+                    <span>Updated {new Date(adventure.updated_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <IconButton
-                  icon={<FeatherChevronLeft />}
-                  onClick={() => {}}
-                  disabled
-                  aria-label="Previous page"
-                />
-                <span className="text-body text-subtext-color">
-                  1 of 1
-                </span>
-                <IconButton
-                  icon={<FeatherChevronRight />}
-                  onClick={() => {}}
-                  disabled
-                  aria-label="Next page"
-                />
+            ))}
+          </div>
+
+          {/* Empty State */}
+          {filteredAdventures.length === 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+              <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No experiences found</h3>
+              <p className="text-gray-500 mb-6">
+                {searchQuery || selectedStatus !== 'all' || selectedActivityType !== 'all'
+                  ? 'Try adjusting your filters or search terms.'
+                  : 'Create your first experience to get started.'
+                }
+              </p>
+              {!searchQuery && selectedStatus === 'all' && selectedActivityType === 'all' && (
+                <button 
+                  onClick={() => router.push('/business/experiences/new')}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mx-auto"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Your First Experience
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Stats Summary */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience Summary</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{adventures.length}</div>
+                <div className="text-sm text-gray-500">Total Experiences</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {adventures.filter(a => a.status === 'active').length}
+                </div>
+                <div className="text-sm text-gray-500">Active</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">
+                  {adventures.filter(a => a.status === 'draft').length}
+                </div>
+                <div className="text-sm text-gray-500">Drafts</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {adventures.reduce((sum, a) => sum + a.total_bookings, 0)}
+                </div>
+                <div className="text-sm text-gray-500">Total Bookings</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {adventures.filter(a => a.rating > 0).length > 0 
+                    ? (adventures.reduce((sum, a) => sum + a.rating, 0) / adventures.filter(a => a.rating > 0).length).toFixed(1)
+                    : '0.0'
+                  }
+                </div>
+                <div className="text-sm text-gray-500">Avg Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {formatCurrency(adventures.reduce((sum, a) => sum + (a.price_per_person * a.total_bookings), 0))}
+                </div>
+                <div className="text-sm text-gray-500">Total Revenue</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </BusinessLayout>
+    </BusinessProtectedRoute>
   );
 }

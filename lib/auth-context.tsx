@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js"
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Use the client-side Supabase instance with alias
 import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils" // Import profile fetching and signOut from auth-utils
 import type { UserProfile, BusinessProfile } from "@/types/auth"
+import { createClient } from "@/lib/supabase/client"
 
 interface AuthContextType {
   user: User | null
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const supabase = createBrowserSupabaseClient() // Use the client-side Supabase instance
+  const supabase = createClient()
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-    
+
     getInitialSession();
 
     // Listen for auth state changes
@@ -141,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         console.log("Login successful for user:", data.user.id)
-        
+
         // Check user type from metadata first
         const userTypeFromMetadata = data.user.user_metadata?.user_type;
         console.log("User type from metadata:", userTypeFromMetadata);
