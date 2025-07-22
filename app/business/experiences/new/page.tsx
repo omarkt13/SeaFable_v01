@@ -1,98 +1,76 @@
-
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayout } from "@/components/layouts/BusinessLayout"
+import { createExperience } from "@/lib/supabase-business"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Slider } from "@/components/ui/slider"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { createExperience } from "@/lib/database"
-import { useAuth } from "@/hooks/useAuth"
-import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
-import { 
-  Home,
-  Users,
-  Anchor,
-  MessageCircle,
-  Calendar,
-  Handshake,
-  User,
-  Settings,
-  DollarSign,
-  Shapes,
-  Bell,
-  ChevronDown,
-  LogOut,
-  UserPlus,
-  UserMinus,
+import {
+  X,
+  ChevronRight,
+  ChevronLeft,
   Check,
   MapPin,
   Clock,
-  X,
-  ChevronLeft,
-  Save,
-  ChevronRight,
+  Users,
+  DollarSign,
   Plus,
-  Upload
+  Trash2,
+  Upload,
+  FileText,
+  Camera,
+  Shield,
+  Activity,
+  AlertCircle
 } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
+// Types
 interface ExperienceFormData {
   // Basic Info
   title: string
   description: string
+  short_description: string
+  activity_type: string
+  category: string[]
+
+  // Location
   location: string
-  category: string
+  specific_location: string
+  country: string
 
   // Details
-  price: number
-  groupSize: number
-  duration: number
-  durationType: 'hours' | 'days'
-  difficultyLevel: string
-  tags: string[]
-
-  // Inclusions
-  included: string[]
-  notIncluded: string[]
-  thingsToBring: string[]
-
-  // Dates & Availability
-  availableDates: string[]
+  duration_hours: number
+  duration_display: string
+  max_guests: number
+  min_guests: number
+  price_per_person: number
+  difficulty_level: string
 
   // Media
-  images: string[]
-  videos: string[]
+  primary_image_url: string
+  additional_images: string[]
 
-  // Social Media
-  socialMedia: {
-    instagram: string
-    facebook: string
-    youtube: string
-    tiktok: string
-  }
+  // Inclusions & Requirements
+  included_amenities: string[]
+  what_to_bring: string[]
+  min_age: number
+  max_age: number
+  age_restriction_details: string
 
-  // FAQ
-  faq: Array<{ question: string; answer: string }>
-
-  // Policy
-  cancellationPolicy: string
+  // Additional
+  weather_contingency: string
+  seasonal_availability: string[]
+  tags: string[]
 }
 
 interface FormErrors {
@@ -100,37 +78,46 @@ interface FormErrors {
 }
 
 const STEPS = [
-  { id: 1, title: 'Basic Info', description: 'Title, description, and category' },
-  { id: 2, title: 'Details', description: 'Pricing, duration, and specifications' },
-  { id: 3, title: 'Content', description: 'Inclusions, FAQ, and policies' },
-  { id: 4, title: 'Media', description: 'Photos and videos' },
-  { id: 5, title: 'Social', description: 'Social media integration' },
-  { id: 6, title: 'Review', description: 'Preview and publish' }
+  { id: 1, title: 'Basic Info', description: 'Title, description, and activity type', icon: FileText },
+  { id: 2, title: 'Location', description: 'Where the experience takes place', icon: MapPin },
+  { id: 3, title: 'Details', description: 'Pricing, duration, and specifications', icon: Clock },
+  { id: 4, title: 'Media', description: 'Photos and visual content', icon: Camera },
+  { id: 5, title: 'Inclusions', description: 'What\'s included and requirements', icon: Shield },
+  { id: 6, title: 'Review', description: 'Preview and publish', icon: Check }
+]
+
+const ACTIVITY_TYPES = [
+  { value: 'sailing', label: 'Sailing', icon: '⛵', description: 'Sailing tours and yacht experiences' },
+  { value: 'surfing', label: 'Surfing', icon: '🏄', description: 'Surfing lessons and surf tours' },
+  { value: 'diving', label: 'Diving', icon: '🤿', description: 'Scuba diving and snorkeling' },
+  { value: 'kayaking', label: 'Kayaking', icon: '🚣', description: 'Kayak tours and rentals' },
+  { value: 'fishing', label: 'Fishing', icon: '🎣', description: 'Fishing charters and tours' },
+  { value: 'jet-skiing', label: 'Jet Skiing', icon: '🏄‍♂️', description: 'Jet ski rentals and tours' },
+  { value: 'whale-watching', label: 'Whale Watching', icon: '🐋', description: 'Marine wildlife observation' },
+  { value: 'paddleboarding', label: 'Paddleboarding', icon: '🏄‍♀️', description: 'SUP rentals and lessons' }
+]
+
+const DIFFICULTY_LEVELS = [
+  { value: 'beginner', label: 'Beginner', description: 'No experience required' },
+  { value: 'intermediate', label: 'Intermediate', description: 'Some experience helpful' },
+  { value: 'advanced', label: 'Advanced', description: 'Experienced participants only' },
+  { value: 'expert', label: 'Expert', description: 'Professional level required' }
 ]
 
 const CATEGORIES = [
-  'Sailing Tour', 'Diving Tour', 'Wildlife Tour', 'Beach Vacation', 
-  'Road Trip', 'Hiking Tour', 'Cultural Experience', 'Food & Wine',
-  'Adventure Sports', 'Photography Tour'
+  'Water Sports', 'Marine Wildlife', 'Sailing', 'Adventure', 'Relaxation', 
+  'Family-Friendly', 'Luxury', 'Educational', 'Photography', 'Romantic'
 ]
 
-const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels']
-
 export default function NewExperiencePage() {
-  return (
-    <BusinessProtectedRoute>
-      <CreateNewExperience />
-    </BusinessProtectedRoute>
-  )
-}
+  const router = useRouter()
+  const { user, businessProfile } = useAuth()
+  const { toast } = useToast()
 
-function CreateNewExperience() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [isClient, setIsClient] = useState(false)
-  const router = useRouter()
-  const { user } = useAuth()
 
   // Fix SSR hydration issues
   useEffect(() => {
@@ -140,40 +127,55 @@ function CreateNewExperience() {
   const [formData, setFormData] = useState<ExperienceFormData>({
     title: '',
     description: '',
+    short_description: '',
+    activity_type: '',
+    category: [],
     location: '',
-    category: '',
-    price: 0,
-    groupSize: 1,
-    duration: 1,
-    durationType: 'hours',
-    difficultyLevel: '',
-    tags: [],
-    included: [],
-    notIncluded: [],
-    thingsToBring: [],
-    availableDates: [],
-    images: [],
-    videos: [],
-    socialMedia: {
-      instagram: '',
-      facebook: '',
-      youtube: '',
-      tiktok: ''
-    },
-    faq: [],
-    cancellationPolicy: ''
+    specific_location: '',
+    country: '',
+    duration_hours: 1,
+    duration_display: '',
+    max_guests: 1,
+    min_guests: 1,
+    price_per_person: 0,
+    difficulty_level: 'beginner',
+    primary_image_url: '',
+    additional_images: [],
+    included_amenities: [],
+    what_to_bring: [],
+    min_age: 0,
+    max_age: 100,
+    age_restriction_details: '',
+    weather_contingency: '',
+    seasonal_availability: [],
+    tags: []
   })
 
-  const updateFormData = useCallback((updates: Partial<ExperienceFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }))
+  const updateFormData = useCallback((field: keyof ExperienceFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
     // Clear relevant errors when user starts typing
-    const updatedFields = Object.keys(updates)
-    setErrors(prev => {
-      const newErrors = { ...prev }
-      updatedFields.forEach(field => delete newErrors[field])
-      return newErrors
-    })
-  }, [])
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }, [errors])
+
+  const addToArray = useCallback((field: keyof ExperienceFormData, item: string) => {
+    if (item.trim()) {
+      const currentArray = formData[field] as string[]
+      if (!currentArray.includes(item.trim())) {
+        updateFormData(field, [...currentArray, item.trim()])
+      }
+    }
+  }, [formData, updateFormData])
+
+  const removeFromArray = useCallback((field: keyof ExperienceFormData, index: number) => {
+    const currentArray = formData[field] as string[]
+    updateFormData(field, currentArray.filter((_, i) => i !== index))
+  }, [updateFormData])
 
   const validateStep = (step: number): boolean => {
     const newErrors: FormErrors = {}
@@ -182,19 +184,21 @@ function CreateNewExperience() {
       case 1:
         if (!formData.title.trim()) newErrors.title = 'Title is required'
         if (!formData.description.trim()) newErrors.description = 'Description is required'
-        if (!formData.location.trim()) newErrors.location = 'Location is required'
-        if (!formData.category) newErrors.category = 'Category is required'
+        if (!formData.activity_type) newErrors.activity_type = 'Activity type is required'
         break
-
       case 2:
-        if (formData.price <= 0) newErrors.price = 'Price must be greater than 0'
-        if (formData.groupSize <= 0) newErrors.groupSize = 'Group size must be greater than 0'
-        if (formData.duration <= 0) newErrors.duration = 'Duration must be greater than 0'
-        if (!formData.difficultyLevel) newErrors.difficultyLevel = 'Difficulty level is required'
+        if (!formData.location.trim()) newErrors.location = 'Location is required'
+        if (!formData.country.trim()) newErrors.country = 'Country is required'
         break
-
       case 3:
-        if (formData.included.length === 0) newErrors.included = 'At least one inclusion is required'
+        if (formData.duration_hours <= 0) newErrors.duration_hours = 'Duration must be greater than 0'
+        if (formData.max_guests <= 0) newErrors.max_guests = 'Max guests must be greater than 0'
+        if (formData.min_guests <= 0) newErrors.min_guests = 'Min guests must be greater than 0'
+        if (formData.min_guests > formData.max_guests) newErrors.min_guests = 'Min guests cannot exceed max guests'
+        if (formData.price_per_person <= 0) newErrors.price_per_person = 'Price must be greater than 0'
+        break
+      case 4:
+        if (!formData.primary_image_url.trim()) newErrors.primary_image_url = 'Primary image is required'
         break
     }
 
@@ -212,793 +216,66 @@ function CreateNewExperience() {
     setCurrentStep(prev => Math.max(prev - 1, 1))
   }
 
-  const handleSaveDraft = async () => {
-    setIsLoading(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Draft saved:', formData)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handlePublish = async () => {
-    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
-      alert('Please complete all required fields before publishing')
-      return
-    }
+    if (!validateStep(currentStep)) return
 
-    if (!user?.id) {
-      alert("User not found. Please log in again.")
+    if (!user || !businessProfile) {
+      toast({
+        title: "Authentication Error",
+        description: "Please make sure you're logged in as a business user.",
+        variant: "destructive"
+      })
       return
     }
 
     setIsLoading(true)
     try {
+      // Prepare data for database
       const experienceData = {
-        host_id: user.id,
+        host_id: businessProfile.id,
         title: formData.title,
         description: formData.description,
-        short_description: formData.description.substring(0, 150),
+        short_description: formData.short_description || formData.description.substring(0, 150) + '...',
         location: formData.location,
-        activity_type: formData.category.toLowerCase().replace(/\s+/g, '-'),
-        category: [formData.category],
-        duration_hours: formData.durationType === 'days' ? formData.duration * 24 : formData.duration,
-        max_guests: formData.groupSize,
-        min_guests: 1,
-        price_per_person: formData.price,
-        difficulty_level: formData.difficultyLevel.toLowerCase(),
-        included_amenities: formData.included,
-        what_to_bring: formData.thingsToBring,
+        specific_location: formData.specific_location,
+        country: formData.country,
+        activity_type: formData.activity_type,
+        category: formData.category,
+        duration_hours: formData.duration_hours,
+        duration_display: formData.duration_display || `${formData.duration_hours} hours`,
+        max_guests: formData.max_guests,
+        min_guests: formData.min_guests,
+        price_per_person: formData.price_per_person,
+        difficulty_level: formData.difficulty_level,
+        primary_image_url: formData.primary_image_url,
+        weather_contingency: formData.weather_contingency,
+        included_amenities: formData.included_amenities,
+        what_to_bring: formData.what_to_bring,
+        min_age: formData.min_age || undefined,
+        max_age: formData.max_age > 0 && formData.max_age < 100 ? formData.max_age : undefined,
+        age_restriction_details: formData.age_restriction_details,
         tags: formData.tags,
-        seasonal_availability: ['year-round'],
-        is_active: true,
-        itinerary: formData.faq.map((faqItem, index) => ({
-          time: `${index + 1}:00`,
-          activity: faqItem.question,
-          description: faqItem.answer
-        }))
+        seasonal_availability: formData.seasonal_availability,
+        is_active: true
       }
 
-      const result = await createExperience(experienceData)
+      const newExperience = await createExperience(experienceData)
 
-      if (result.success) {
-        alert('Experience published successfully!')
-        router.push('/business/experiences')
-      } else {
-        alert(result.error || 'Failed to create experience')
-      }
+      toast({
+        title: "Success!",
+        description: "Your experience has been created successfully.",
+      })
+
+      router.push('/business/experiences')
     } catch (error: any) {
-      alert(error.message || 'An unexpected error occurred')
+      console.error('Error creating experience:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create experience. Please try again.",
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const addItem = (field: keyof Pick<ExperienceFormData, 'tags' | 'included' | 'notIncluded' | 'thingsToBring' | 'availableDates'>, item: string) => {
-    if (item.trim()) {
-      updateFormData({
-        [field]: [...formData[field], item.trim()]
-      })
-    }
-  }
-
-  const removeItem = (field: keyof Pick<ExperienceFormData, 'tags' | 'included' | 'notIncluded' | 'thingsToBring' | 'availableDates'>, index: number) => {
-    updateFormData({
-      [field]: formData[field].filter((_, i) => i !== index)
-    })
-  }
-
-  const addFAQ = () => {
-    updateFormData({
-      faq: [...formData.faq, { question: '', answer: '' }]
-    })
-  }
-
-  const updateFAQ = (index: number, field: 'question' | 'answer', value: string) => {
-    const newFaq = [...formData.faq]
-    newFaq[index][field] = value
-    updateFormData({ faq: newFaq })
-  }
-
-  const removeFAQ = (index: number) => {
-    updateFormData({
-      faq: formData.faq.filter((_, i) => i !== index)
-    })
-  }
-
-  const renderProgressBar = () => (
-    <div className="w-full mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Create New Experience
-        </h2>
-        <div className="text-sm text-gray-500">
-          Step {currentStep} of {STEPS.length}
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-4 mb-6">
-        {STEPS.map((step, index) => (
-          <div key={step.id} className="flex items-center">
-            <div className={`
-              flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors
-              ${currentStep > step.id 
-                ? 'bg-blue-600 border-blue-600 text-white' 
-                : currentStep === step.id 
-                  ? 'border-blue-600 text-blue-600 bg-white' 
-                  : 'border-gray-300 text-gray-400 bg-white'
-              }
-            `}>
-              {currentStep > step.id ? (
-                <Check size={16} />
-              ) : (
-                <span className="text-xs font-bold">{step.id}</span>
-              )}
-            </div>
-            {index < STEPS.length - 1 && (
-              <div className={`
-                w-12 h-0.5 mx-2 transition-colors
-                ${currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300'}
-              `} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          {STEPS[currentStep - 1].title}
-        </h3>
-        <p className="text-sm text-gray-600">
-          {STEPS[currentStep - 1].description}
-        </p>
-      </div>
-    </div>
-  )
-
-  const renderBasicInfoStep = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="lg:col-span-2">
-          <Label htmlFor="title">Experience Title *</Label>
-          <Input
-            id="title"
-            placeholder="e.g., Mediterranean Yacht Cruise"
-            value={formData.title}
-            onChange={(e) => updateFormData({ title: e.target.value })}
-            className={errors.title ? "border-red-500" : ""}
-          />
-          {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-          <p className="text-gray-500 text-sm mt-1">Give your experience a catchy, descriptive name</p>
-        </div>
-
-        <div>
-          <Label htmlFor="location">Location *</Label>
-          <Input
-            id="location"
-            placeholder="e.g., Antigua, Caribbean"
-            value={formData.location}
-            onChange={(e) => updateFormData({ location: e.target.value })}
-            className={errors.location ? "border-red-500" : ""}
-          />
-          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
-          <p className="text-gray-500 text-sm mt-1">Where does this experience take place?</p>
-        </div>
-
-        <div>
-          <Label htmlFor="category">Category *</Label>
-          <Select value={formData.category} onValueChange={(value) => updateFormData({ category: value })}>
-            <SelectTrigger className={errors.category ? "border-red-500" : ""}>
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description *</Label>
-        <Textarea
-          id="description"
-          placeholder="Tell potential guests about the amazing experience they'll have..."
-          value={formData.description}
-          onChange={(e) => updateFormData({ description: e.target.value })}
-          className={`h-32 ${errors.description ? "border-red-500" : ""}`}
-        />
-        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-        <p className="text-gray-500 text-sm mt-1">Describe what makes this experience special</p>
-      </div>
-    </div>
-  )
-
-  const renderDetailsStep = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="price">Price per Person * (USD)</Label>
-          <Input
-            id="price"
-            type="number"
-            placeholder="0"
-            value={formData.price || ''}
-            onChange={(e) => updateFormData({ price: Number(e.target.value) })}
-            className={errors.price ? "border-red-500" : ""}
-          />
-          {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-        </div>
-
-        <div>
-          <Label htmlFor="groupSize">Maximum Group Size *</Label>
-          <Input
-            id="groupSize"
-            type="number"
-            placeholder="1"
-            min="1"
-            value={formData.groupSize || ''}
-            onChange={(e) => updateFormData({ groupSize: Number(e.target.value) })}
-            className={errors.groupSize ? "border-red-500" : ""}
-          />
-          {errors.groupSize && <p className="text-red-500 text-sm mt-1">{errors.groupSize}</p>}
-          <p className="text-gray-500 text-sm mt-1">How many people can join?</p>
-        </div>
-
-        <div>
-          <Label>Duration *</Label>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="1"
-              min="1"
-              value={formData.duration || ''}
-              onChange={(e) => updateFormData({ duration: Number(e.target.value) })}
-              className={`flex-1 ${errors.duration ? "border-red-500" : ""}`}
-            />
-            <div className="flex">
-              <Button
-                variant={formData.durationType === 'hours' ? 'default' : 'outline'}
-                onClick={() => updateFormData({ durationType: 'hours' })}
-                className="rounded-r-none"
-                type="button"
-              >
-                Hours
-              </Button>
-              <Button
-                variant={formData.durationType === 'days' ? 'default' : 'outline'}
-                onClick={() => updateFormData({ durationType: 'days' })}
-                className="rounded-l-none"
-                type="button"
-              >
-                Days
-              </Button>
-            </div>
-          </div>
-          {errors.duration && <p className="text-red-500 text-sm mt-1">{errors.duration}</p>}
-          <p className="text-gray-500 text-sm mt-1">How long does it last?</p>
-        </div>
-
-        <div>
-          <Label>Difficulty Level *</Label>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {DIFFICULTY_LEVELS.map((level) => (
-              <Button
-                key={level}
-                variant={formData.difficultyLevel === level ? 'default' : 'outline'}
-                onClick={() => updateFormData({ difficultyLevel: level })}
-                size="sm"
-                type="button"
-              >
-                {level}
-              </Button>
-            ))}
-          </div>
-          {errors.difficultyLevel && <p className="text-red-500 text-sm mt-1">{errors.difficultyLevel}</p>}
-        </div>
-      </div>
-
-      <div>
-        <Label>Tags</Label>
-        <p className="text-gray-500 text-sm mb-3">Add tags to help guests find your experience</p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {formData.tags.map((tag, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-2">
-              {tag}
-              <button
-                onClick={() => removeItem('tags', index)}
-                className="text-gray-600 hover:text-gray-700"
-                type="button"
-              >
-                <X size={12} />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Add a tag..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addItem('tags', e.currentTarget.value)
-                e.currentTarget.value = ''
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              const input = e.currentTarget.parentElement?.querySelector('input')
-              if (input?.value) {
-                addItem('tags', input.value)
-                input.value = ''
-              }
-            }}
-            type="button"
-          >
-            <Plus size={16} />
-            Add
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderContentStep = () => (
-    <div className="space-y-6">
-      {/* What's Included */}
-      <div>
-        <Label>What's Included *</Label>
-        <p className="text-gray-500 text-sm mb-3">List what guests will receive as part of the experience</p>
-        {errors.included && <p className="text-red-500 text-sm mb-2">{errors.included}</p>}
-        <div className="space-y-2 mb-3">
-          {formData.included.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
-              <Check className="text-green-600" size={16} />
-              <span className="flex-1">{item}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeItem('included', index)}
-                type="button"
-              >
-                <X size={16} />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="e.g., Professional guide, Equipment rental"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addItem('included', e.currentTarget.value)
-                e.currentTarget.value = ''
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              const input = e.currentTarget.parentElement?.querySelector('input')
-              if (input?.value) {
-                addItem('included', input.value)
-                input.value = ''
-              }
-            }}
-            type="button"
-          >
-            <Plus size={16} />
-            Add
-          </Button>
-        </div>
-      </div>
-
-      {/* What's Not Included */}
-      <div>
-        <Label>What's Not Included</Label>
-        <div className="space-y-2 mb-3">
-          {formData.notIncluded.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded-md">
-              <X className="text-red-600" size={16} />
-              <span className="flex-1">{item}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeItem('notIncluded', index)}
-                type="button"
-              >
-                <X size={16} />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="e.g., Transportation, Personal insurance"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addItem('notIncluded', e.currentTarget.value)
-                e.currentTarget.value = ''
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              const input = e.currentTarget.parentElement?.querySelector('input')
-              if (input?.value) {
-                addItem('notIncluded', input.value)
-                input.value = ''
-              }
-            }}
-            type="button"
-          >
-            <Plus size={16} />
-            Add
-          </Button>
-        </div>
-      </div>
-
-      {/* Things to Bring */}
-      <div>
-        <Label>Things to Bring</Label>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {formData.thingsToBring.map((item, index) => (
-            <Badge key={index} variant="outline" className="flex items-center gap-2">
-              {item}
-              <button
-                onClick={() => removeItem('thingsToBring', index)}
-                className="text-gray-600 hover:text-gray-700"
-                type="button"
-              >
-                <X size={12} />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="e.g., Sunscreen, Water bottle"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addItem('thingsToBring', e.currentTarget.value)
-                e.currentTarget.value = ''
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              const input = e.currentTarget.parentElement?.querySelector('input')
-              if (input?.value) {
-                addItem('thingsToBring', input.value)
-                input.value = ''
-              }
-            }}
-            type="button"
-          >
-            <Plus size={16} />
-            Add
-          </Button>
-        </div>
-      </div>
-
-      {/* Cancellation Policy */}
-      <div>
-        <Label htmlFor="policy">Cancellation Policy</Label>
-        <Textarea
-          id="policy"
-          placeholder="e.g., Moderate: cancel 14 days before arrival with 50% refund"
-          value={formData.cancellationPolicy}
-          onChange={(e) => updateFormData({ cancellationPolicy: e.target.value })}
-          className="h-24"
-        />
-        <p className="text-gray-500 text-sm mt-1">Describe your cancellation and refund policy</p>
-      </div>
-    </div>
-  )
-
-  const renderMediaStep = () => (
-    <div className="space-y-6">
-      <div>
-        <Label>Photos & Videos</Label>
-        <p className="text-gray-500 text-sm mb-4">Add high-quality images and videos to showcase your experience</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {formData.images.map((image, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={image}
-                alt={`Experience ${index + 1}`}
-                className="w-full h-48 object-cover rounded-lg"
-              />
-              <button
-                onClick={() => {
-                  updateFormData({
-                    images: formData.images.filter((_, i) => i !== index)
-                  })
-                }}
-                className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                type="button"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          ))}
-
-          <div className="border-2 border-dashed border-gray-300 rounded-lg h-48 flex flex-col items-center justify-center hover:border-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
-            <Upload className="text-gray-400 mb-2" size={24} />
-            <span className="text-gray-600">Upload Media</span>
-            <span className="text-sm text-gray-400">Images or Videos</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Available Dates */}
-      <div>
-        <Label>Available Dates</Label>
-        <p className="text-gray-500 text-sm mb-3">Add specific dates when this experience is available</p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {formData.availableDates.map((date, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-2">
-              <Calendar size={12} />
-              {date}
-              <button
-                onClick={() => removeItem('availableDates', index)}
-                className="text-blue-600 hover:text-blue-700"
-                type="button"
-              >
-                <X size={12} />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            type="date"
-            onChange={(e) => {
-              if (e.target.value) {
-                addItem('availableDates', new Date(e.target.value).toLocaleDateString())
-                e.target.value = ''
-              }
-            }}
-            className="flex-1"
-          />
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderSocialStep = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Social Media Integration</h3>
-        <p className="text-gray-600 mb-6">Connect your social media accounts to showcase more content (optional)</p>
-
-        <div className="space-y-4">
-          {/* Instagram */}
-          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
-            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-              <span className="text-pink-600 font-bold">IG</span>
-            </div>
-            <div className="flex-1">
-              <Input
-                placeholder="Instagram profile URL"
-                value={formData.socialMedia.instagram}
-                onChange={(e) => updateFormData({
-                  socialMedia: { ...formData.socialMedia, instagram: e.target.value }
-                })}
-              />
-            </div>
-            <Button
-              variant={formData.socialMedia.instagram ? "destructive" : "default"}
-              size="sm"
-              type="button"
-            >
-              {formData.socialMedia.instagram ? "Unlink" : "Connect"}
-            </Button>
-          </div>
-
-          {/* Facebook */}
-          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-blue-600 font-bold">FB</span>
-            </div>
-            <div className="flex-1">
-              <Input
-                placeholder="Facebook page URL"
-                value={formData.socialMedia.facebook}
-                onChange={(e) => updateFormData({
-                  socialMedia: { ...formData.socialMedia, facebook: e.target.value }
-                })}
-              />
-            </div>
-            <Button
-              variant={formData.socialMedia.facebook ? "destructive" : "default"}
-              size="sm"
-              type="button"
-            >
-              {formData.socialMedia.facebook ? "Unlink" : "Connect"}
-            </Button>
-          </div>
-
-          {/* YouTube */}
-          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <span className="text-red-600 font-bold">YT</span>
-            </div>
-            <div className="flex-1">
-              <Input
-                placeholder="YouTube channel URL"
-                value={formData.socialMedia.youtube}
-                onChange={(e) => updateFormData({
-                  socialMedia: { ...formData.socialMedia, youtube: e.target.value }
-                })}
-              />
-            </div>
-            <Button
-              variant={formData.socialMedia.youtube ? "destructive" : "default"}
-              size="sm"
-              type="button"
-            >
-              {formData.socialMedia.youtube ? "Unlink" : "Connect"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderReviewStep = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience Preview</h3>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-xl font-bold text-gray-900 mb-2">
-              {formData.title || 'Untitled Experience'}
-            </h4>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="flex items-center gap-1">
-                <MapPin size={16} className="text-gray-500" />
-                <span className="text-gray-600">{formData.location || 'No location'}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock size={16} className="text-gray-500" />
-                <span className="text-gray-600">
-                  {formData.duration} {formData.durationType}
-                </span>
-              </div>
-            </div>
-            <p className="text-gray-700 mb-4">
-              {formData.description || 'No description provided'}
-            </p>
-
-            <div className="flex items-center gap-2 mb-4">
-              {formData.category && (
-                <Badge variant="default">{formData.category}</Badge>
-              )}
-              {formData.difficultyLevel && (
-                <Badge variant="outline">{formData.difficultyLevel}</Badge>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="text-lg font-bold text-green-600">
-                  ${formData.price}
-                </div>
-                <div className="text-gray-600">
-                  Max {formData.groupSize} guests
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="space-y-3">
-              <div>
-                <span className="font-semibold text-gray-900">What's Included:</span>
-                <ul className="text-gray-700 ml-4 mt-1">
-                  {formData.included.slice(0, 3).map((item, index) => (
-                    <li key={index} className="list-disc">{item}</li>
-                  ))}
-                  {formData.included.length > 3 && (
-                    <li className="list-disc">...and {formData.included.length - 3} more</li>
-                  )}
-                </ul>
-              </div>
-
-              {formData.tags.length > 0 && (
-                <div>
-                  <span className="font-semibold text-gray-900">Tags:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {formData.tags.slice(0, 4).map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">{tag}</Badge>
-                    ))}
-                    {formData.tags.length > 4 && (
-                      <Badge variant="outline" className="text-xs">+{formData.tags.length - 4}</Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {formData.availableDates.length > 0 && (
-                <div>
-                  <span className="font-semibold text-gray-900">Available Dates:</span>
-                  <div className="text-gray-700 mt-1">
-                    {formData.availableDates.slice(0, 2).join(', ')}
-                    {formData.availableDates.length > 2 && ` ...and ${formData.availableDates.length - 2} more`}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Validation Summary */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Completeness Check</h4>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Check className={`${formData.title && formData.description && formData.location && formData.category ? 'text-green-600' : 'text-gray-400'}`} size={16} />
-            <span className={`${formData.title && formData.description && formData.location && formData.category ? 'text-green-700' : 'text-gray-600'}`}>
-              Basic Information Complete
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Check className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-green-600' : 'text-gray-400'}`} size={16} />
-            <span className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-green-700' : 'text-gray-600'}`}>
-              Pricing & Details Complete
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Check className={`${formData.included.length > 0 ? 'text-green-600' : 'text-gray-400'}`} size={16} />
-            <span className={`${formData.included.length > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-              Content & Inclusions Added
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Check className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-green-600' : 'text-gray-400'}`} size={16} />
-            <span className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-              Media or Dates Added (Optional)
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1: return renderBasicInfoStep()
-      case 2: return renderDetailsStep()
-      case 3: return renderContentStep()
-      case 4: return renderMediaStep()
-      case 5: return renderSocialStep()
-      case 6: return renderReviewStep()
-      default: return null
     }
   }
 
@@ -1006,192 +283,652 @@ function CreateNewExperience() {
     return <div>Loading...</div>
   }
 
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="title">Experience Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => updateFormData('title', e.target.value)}
+                placeholder="e.g., Sunset Sailing Adventure in Santorini"
+                className={errors.title ? 'border-red-500' : ''}
+              />
+              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            </div>
+
+            <div>
+              <Label>Activity Type *</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                {ACTIVITY_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => updateFormData('activity_type', type.value)}
+                    className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                      formData.activity_type === type.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{type.icon}</div>
+                    <div className="font-medium text-gray-900">{type.label}</div>
+                    <div className="text-xs text-gray-500 mt-1">{type.description}</div>
+                  </button>
+                ))}
+              </div>
+              {errors.activity_type && <p className="text-red-500 text-sm mt-1">{errors.activity_type}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="description">Full Description *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => updateFormData('description', e.target.value)}
+                placeholder="Detailed description of the experience, what guests will enjoy..."
+                rows={5}
+                className={errors.description ? 'border-red-500' : ''}
+              />
+              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="short_description">Short Description (Optional)</Label>
+              <Textarea
+                id="short_description"
+                value={formData.short_description}
+                onChange={(e) => updateFormData('short_description', e.target.value)}
+                placeholder="Brief overview for listings (will auto-generate if left empty)"
+                rows={2}
+              />
+            </div>
+          </div>
+        )
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="country">Country *</Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => updateFormData('country', e.target.value)}
+                  placeholder="e.g., Greece"
+                  className={errors.country ? 'border-red-500' : ''}
+                />
+                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="location">City/Location *</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => updateFormData('location', e.target.value)}
+                  placeholder="e.g., Santorini"
+                  className={errors.location ? 'border-red-500' : ''}
+                />
+                {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="specific_location">Specific Location (Optional)</Label>
+              <Input
+                id="specific_location"
+                value={formData.specific_location}
+                onChange={(e) => updateFormData('specific_location', e.target.value)}
+                placeholder="e.g., Oia Marina, Pier 5"
+              />
+            </div>
+
+            <div>
+              <Label>Categories</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => {
+                      const categories = formData.category.includes(category)
+                        ? formData.category.filter(c => c !== category)
+                        : [...formData.category, category]
+                      updateFormData('category', categories)
+                    }}
+                    className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                      formData.category.includes(category)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="duration_hours">Duration (Hours) *</Label>
+                <Input
+                  id="duration_hours"
+                  type="number"
+                  value={formData.duration_hours}
+                  onChange={(e) => updateFormData('duration_hours', parseFloat(e.target.value) || 0)}
+                  min="0.5"
+                  step="0.5"
+                  className={errors.duration_hours ? 'border-red-500' : ''}
+                />
+                {errors.duration_hours && <p className="text-red-500 text-sm mt-1">{errors.duration_hours}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="duration_display">Duration Display (Optional)</Label>
+                <Input
+                  id="duration_display"
+                  value={formData.duration_display}
+                  onChange={(e) => updateFormData('duration_display', e.target.value)}
+                  placeholder="e.g., Half day, 3-4 hours"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="min_guests">Minimum Guests *</Label>
+                <Input
+                  id="min_guests"
+                  type="number"
+                  value={formData.min_guests}
+                  onChange={(e) => updateFormData('min_guests', parseInt(e.target.value) || 0)}
+                  min="1"
+                  className={errors.min_guests ? 'border-red-500' : ''}
+                />
+                {errors.min_guests && <p className="text-red-500 text-sm mt-1">{errors.min_guests}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="max_guests">Maximum Guests *</Label>
+                <Input
+                  id="max_guests"
+                  type="number"
+                  value={formData.max_guests}
+                  onChange={(e) => updateFormData('max_guests', parseInt(e.target.value) || 0)}
+                  min="1"
+                  className={errors.max_guests ? 'border-red-500' : ''}
+                />
+                {errors.max_guests && <p className="text-red-500 text-sm mt-1">{errors.max_guests}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="price_per_person">Price per Person *</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="price_per_person"
+                    type="number"
+                    value={formData.price_per_person}
+                    onChange={(e) => updateFormData('price_per_person', parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                    className={`pl-10 ${errors.price_per_person ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.price_per_person && <p className="text-red-500 text-sm mt-1">{errors.price_per_person}</p>}
+              </div>
+            </div>
+
+            <div>
+              <Label>Difficulty Level</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                {DIFFICULTY_LEVELS.map((level) => (
+                  <button
+                    key={level.value}
+                    type="button"
+                    onClick={() => updateFormData('difficulty_level', level.value)}
+                    className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                      formData.difficulty_level === level.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{level.label}</div>
+                    <div className="text-sm text-gray-500">{level.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="min_age">Minimum Age (Optional)</Label>
+                <Input
+                  id="min_age"
+                  type="number"
+                  value={formData.min_age}
+                  onChange={(e) => updateFormData('min_age', parseInt(e.target.value) || 0)}
+                  min="0"
+                  max="100"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="max_age">Maximum Age (Optional)</Label>
+                <Input
+                  id="max_age"
+                  type="number"
+                  value={formData.max_age}
+                  onChange={(e) => updateFormData('max_age', parseInt(e.target.value) || 100)}
+                  min="0"
+                  max="120"
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="primary_image_url">Primary Image URL *</Label>
+              <Input
+                id="primary_image_url"
+                type="url"
+                value={formData.primary_image_url}
+                onChange={(e) => updateFormData('primary_image_url', e.target.value)}
+                placeholder="https://example.com/your-image.jpg"
+                className={errors.primary_image_url ? 'border-red-500' : ''}
+              />
+              {errors.primary_image_url && <p className="text-red-500 text-sm mt-1">{errors.primary_image_url}</p>}
+
+              {formData.primary_image_url && (
+                <div className="mt-4">
+                  <img
+                    src={formData.primary_image_url}
+                    alt="Primary preview"
+                    className="w-full max-w-md h-48 object-cover rounded-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <Alert>
+              <Camera className="h-4 w-4" />
+              <AlertDescription>
+                Use high-quality images that showcase your experience. The primary image will be the main photo displayed in listings.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label>What's Included</Label>
+              <div className="space-y-2 mt-2">
+                {formData.included_amenities.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg">
+                    <span className="text-green-800">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFromArray('included_amenities', index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex">
+                  <Input
+                    placeholder="Add included item (e.g., Equipment, Guide, Refreshments)"
+                    className="rounded-r-none"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.target as HTMLInputElement
+                        addToArray('included_amenities', input.value)
+                        input.value = ''
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="rounded-l-none"
+                    onClick={(e) => {
+                      const input = (e.target as HTMLElement).parentElement?.querySelector('input')
+                      if (input?.value.trim()) {
+                        addToArray('included_amenities', input.value)
+                        input.value = ''
+                      }
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label>What to Bring</Label>
+              <div className="space-y-2 mt-2">
+                {formData.what_to_bring.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between bg-yellow-50 px-3 py-2 rounded-lg">
+                    <span className="text-yellow-800">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFromArray('what_to_bring', index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex">
+                  <Input
+                    placeholder="Add required item (e.g., Swimsuit, Sunscreen, Hat)"
+                    className="rounded-r-none"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.target as HTMLInputElement
+                        addToArray('what_to_bring', input.value)
+                        input.value = ''
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="rounded-l-none"
+                    onClick={(e) => {
+                      const input = (e.target as HTMLElement).parentElement?.querySelector('input')
+                      if (input?.value.trim()) {
+                        addToArray('what_to_bring', input.value)
+                        input.value = ''
+                      }
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeFromArray('tags', index)}
+                      className="hover:text-red-500"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <Input
+                placeholder="Add tags (press Enter)"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement
+                    addToArray('tags', input.value)
+                    input.value = ''
+                  }
+                }}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="weather_contingency">Weather Contingency Plan</Label>
+              <Textarea
+                id="weather_contingency"
+                value={formData.weather_contingency}
+                onChange={(e) => updateFormData('weather_contingency', e.target.value)}
+                placeholder="What happens in case of bad weather? (e.g., Rescheduling policy, alternative activities)"
+                rows={3}
+              />
+            </div>
+          </div>
+        )
+
+      case 6:
+        return (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Review Your Experience</h3>
+              <p className="text-gray-600">Double-check everything before publishing</p>
+            </div>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    {formData.primary_image_url ? (
+                      <img
+                        src={formData.primary_image_url}
+                        alt={formData.title}
+                        className="w-full h-48 object-cover rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop'
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Camera className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xl font-bold text-gray-900">{formData.title || 'Untitled Experience'}</h4>
+                      <p className="text-gray-600 flex items-center">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {formData.location}{formData.country && `, ${formData.country}`}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Activity:</span>
+                        <div className="font-medium capitalize">{formData.activity_type.replace('-', ' ') || 'Not specified'}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Duration:</span>
+                        <div className="font-medium">{formData.duration_hours}h</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Guests:</span>
+                        <div className="font-medium">{formData.min_guests}-{formData.max_guests}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Price:</span>
+                        <div className="font-medium text-green-600">${formData.price_per_person}</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">Description:</span>
+                      <p className="text-sm text-gray-700 mt-1">{formData.description.substring(0, 150)}...</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {formData.tags.slice(0, 3).map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {formData.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{formData.tags.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Your experience will be created as active and ready to accept bookings. You can always edit it later.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
   return (
-    <div className="container max-w-none flex w-full h-screen items-start border border-solid border-gray-200">
-      {/* Sidebar */}
-      <div className="flex flex-col items-start gap-8 w-80 flex-shrink-0 border-r border-solid border-gray-200 bg-white px-6 py-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-            <Anchor className="text-yellow-600" size={20} />
+    <BusinessProtectedRoute>
+      <BusinessLayout>
+        <div className="max-w-4xl mx-auto p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/business/experiences')}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back to Experiences
+              </Button>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Create New Experience</h1>
+            <p className="text-gray-600 mt-2">Share your amazing water adventures with the world</p>
           </div>
-          <span className="text-xl font-bold text-gray-900">Ocean Travel</span>
-        </div>
 
-        <div className="flex w-full flex-col items-start gap-1">
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Home size={16} />
-              Dashboard
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-gray-700">
+                Step {currentStep} of {STEPS.length}
+              </span>
+              <span className="text-sm text-gray-500">
+                {Math.round((currentStep / STEPS.length) * 100)}% Complete
+              </span>
             </div>
-          </Button>
-        </div>
+            <Progress value={(currentStep / STEPS.length) * 100} className="mb-6" />
 
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Client Management</span>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Users size={16} />
-              Bookings
+            {/* Step indicators */}
+            <div className="flex justify-between">
+              {STEPS.map((step) => {
+                const StepIcon = step.icon
+                return (
+                  <div
+                    key={step.id}
+                    className={`flex flex-col items-center text-center ${
+                      step.id === currentStep
+                        ? 'text-blue-600'
+                        : step.id < currentStep
+                        ? 'text-green-600'
+                        : 'text-gray-400'
+                    }`}
+                  >
+                    <divclassName={`w-10 h-10 rounded-full border-2 flex items-center justify-center mb-2 ${
+                        step.id === currentStep
+                          ? 'border-blue-600 bg-blue-50'
+                          : step.id < currentStep
+                          ? 'border-green-600 bg-green-50'
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      {step.id < currentStep ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <StepIcon className="w-5 h-5" />
+                      )}
+                    </div>
+                    <span className="text-xs font-medium hidden sm:block">{step.title}</span>
+                  </div>
+                )
+              })}
             </div>
-          </Button>
-          <Button variant="default" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Anchor size={16} />
-              Experiences
-            </div>
-          </Button>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <MessageCircle size={16} />
-              Messages
-            </div>
-          </Button>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Calendar size={16} />
-              Calendar
-            </div>
-          </Button>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Handshake size={16} />
-              Clients
-            </div>
-          </Button>
-        </div>
-
-        <div className="flex w-full flex-col items-start gap-2">
-          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Finance</span>
-          <div className="flex w-full flex-col items-start gap-1">
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <div className="flex items-center gap-2">
-                <DollarSign size={16} />
-                Sales & Payments
-              </div>
-            </Button>
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <div className="flex items-center gap-2">
-                <Shapes size={16} />
-                Integrations
-              </div>
-            </Button>
           </div>
-        </div>
 
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Workspace</span>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <User size={16} />
-              Account
-            </div>
-          </Button>
-          <Button variant="ghost" className="w-full justify-start" asChild>
-            <div className="flex items-center gap-2">
-              <Settings size={16} />
-              Settings
-            </div>
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col items-start flex-1 overflow-hidden">
-        {/* Header */}
-        <div className="flex w-full items-center justify-between border-b border-solid border-gray-200 px-8 py-4 bg-white">
-          <Input
-            placeholder="Search..."
-            className="w-80"
-          />
-
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Bell size={16} />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  Ocean Travel
-                  <ChevronDown size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto w-full">
-          <div className="max-w-4xl mx-auto px-8 py-8">
-            {renderProgressBar()}
-
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
+          {/* Form Content */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {React.createElement(STEPS[currentStep - 1]?.icon, { className: "w-5 h-5" })}
+                {STEPS[currentStep - 1]?.title}
+              </CardTitle>
+              <p className="text-gray-600">{STEPS[currentStep - 1]?.description}</p>
+            </CardHeader>
+            <CardContent>
               {renderStepContent()}
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-8">
+          {/* Navigation */}
+          <div className="flex justify-between mt-8">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentStep === 1}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 1}
-                type="button"
+                onClick={() => router.push('/business/experiences')}
               >
-                <ChevronLeft size={16} className="mr-2" />
-                Previous
+                Save as Draft
               </Button>
 
-              <div className="flex items-center gap-3">
+              {currentStep === STEPS.length ? (
                 <Button
-                  variant="outline"
-                  onClick={handleSaveDraft}
+                  onClick={handlePublish}
                   disabled={isLoading}
-                  type="button"
                 >
-                  <Save size={16} className="mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Draft'}
+                  {isLoading ? (
+                    <>Publishing...</>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-1" />
+                      Publish Experience
+                    </>
+                  )}
                 </Button>
-
-                {currentStep === STEPS.length ? (
-                  <Button
-                    onClick={handlePublish}
-                    disabled={isLoading}
-                    type="button"
-                  >
-                    <Check size={16} className="mr-2" />
-                    {isLoading ? 'Publishing...' : 'Publish Experience'}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNext}
-                    type="button"
-                  >
-                    Next
-                    <ChevronRight size={16} className="ml-2" />
-                  </Button>
-                )}
-              </div>
+              ) : (
+                <Button onClick={handleNext}>
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </BusinessLayout>
+    </BusinessProtectedRoute>
   )
 }
-
-export { CreateNewExperience as NewExperienceForm }
