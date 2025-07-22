@@ -1,11 +1,6 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
 
 @layer utilities {
   .text-balance {
@@ -49,6 +44,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -88,93 +84,53 @@ body {
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-family: Arial, Helvetica, sans-serif;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
   }
-  
-  /* Force proper color inheritance for all elements */
+
+  /* Ensure proper color inheritance */
   div, span, p, h1, h2, h3, h4, h5, h6, section, article, main, aside, header, footer, nav {
     color: inherit;
-    background-color: transparent;
   }
-  
-  /* Ensure form elements have proper colors */
+
+  /* Form elements */
+  input, textarea, select {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+
   input:not([class*="bg-"]):not([type="submit"]):not([type="button"]):not([type="reset"]), 
   textarea:not([class*="bg-"]), 
   select:not([class*="bg-"]) {
     @apply bg-background text-foreground border-border;
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
   }
-  
-  /* Ensure buttons have proper colors */
+
+  /* Button elements */
   button:not([class*="bg-"]):not([class*="variant"]) {
     @apply bg-primary text-primary-foreground;
-    color: hsl(var(--primary-foreground)) !important;
-    background-color: hsl(var(--primary)) !important;
   }
-  
-  /* Override any black backgrounds or text */
-  .bg-black {
-    @apply bg-background !important;
-  }
-  
-  .text-black {
-    @apply text-foreground !important;
-  }
-  
-  /* Ensure cards and containers have proper backgrounds */
+
+  /* Cards and containers */
   [class*="card"]:not([class*="bg-"]) {
     @apply bg-card text-card-foreground;
-    background-color: hsl(var(--card)) !important;
-    color: hsl(var(--card-foreground)) !important;
-  }
-  
-  /* Fix any hardcoded black colors */
-  * {
-    &[style*="color: black"], 
-    &[style*="color:#000"], 
-    &[style*="color: #000000"] {
-      color: hsl(var(--foreground)) !important;
-    }
-    
-    &[style*="background-color: black"], 
-    &[style*="background-color:#000"], 
-    &[style*="background-color: #000000"],
-    &[style*="background: black"],
-    &[style*="background:#000"],
-    &[style*="background: #000000"] {
-      background-color: hsl(var(--background)) !important;
-    }
-  }
-  
-  /* Ensure proper text colors for various components */
-  .prose, .prose * {
-    color: hsl(var(--foreground));
-  }
-  
-  /* Fix any remaining black text issues */
-  .text-gray-900, .text-slate-900 {
-    @apply text-foreground;
-  }
-  
-  .bg-gray-900, .bg-slate-900 {
-    @apply bg-background;
   }
 }
 
-/* Additional utility classes to prevent black elements */
+/* Additional utility classes */
 @layer utilities {
-  .force-theme-colors * {
+  .force-theme-colors {
     color: hsl(var(--foreground)) !important;
-    background-color: transparent !important;
+    background-color: hsl(var(--background)) !important;
   }
-  
-  .force-card-colors * {
-    color: hsl(var(--card-foreground)) !important;
-    background-color: hsl(var(--card)) !important;
+
+  .force-theme-colors * {
+    color: inherit !important;
   }
 }
