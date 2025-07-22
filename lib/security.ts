@@ -1,32 +1,87 @@
-import DOMPurify from 'isomorphic-dompurify'
+import DOMPurify from 'isomorphic-dompurify';
 
-// Rate limiting configuration
-export interface RateLimitConfig {
-  windowMs: number
-  maxRequests: number
-  message: string
-}
+// Rate limiting store (in-memory for simplicity, use Redis for production)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-export const RATE_LIMITS = {
-  auth: { windowMs: 15 * 60 * 1000, maxRequests: 5, message: 'Too many authentication attempts' },
-  api: { windowMs: 60 * 1000, maxRequests: 100, message: 'Too many API requests' },
-  booking: { windowMs: 60 * 1000, maxRequests: 10, message: 'Too many booking attempts' },
-  search: { windowMs: 60 * 1000, maxRequests: 50, message: 'Too many search requests' },
-} as const
-
-// Input sanitization
 export function sanitizeInput(input: string): string {
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  })
+  return DOMPurify.sanitize(input, { 
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
+    ALLOWED_ATTR: []
+  });
 }
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
-    ALLOWED_ATTR: ['href', 'target'],
-  })
+  return DOMPurify.sanitize(html);
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+export function validatePhone(phone: string): boolean {
+  const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
+  return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
+}
+
+export interface RateLimitOptions {
+  maxRequests: number;
+  windowMs: number;
+}
+
+export function rateLimit(
+  identifier: string, 
+  options: RateLimitOptions = { maxRequests: 100, windowMs: 60000 }
+): { allowed: boolean; remainingRequests: number; resetTime: number } {
+  const now = Date.now();
+  const windowStart = now - options.windowMs;
+
+  // Clean up expired entries
+  for (const [key, data] of rateLimitStore.entries()) {
+    if (data.resetTime < now) {
+      rateLimitStore.delete(key);
+    }
+  }
+
+  const current = rateLimitStore.get(identifier);
+
+  if (!current || current.resetTime < now) {
+    // First request or window has reset
+    const resetTime = now + options.windowMs;
+    rateLimitStore.set(identifier, { count: 1, resetTime });
+    return {
+      allowed: true,
+      remainingRequests: options.maxRequests - 1,
+      resetTime
+    };
+  }
+
+  if (current.count >= options.maxRequests) {
+    // Rate limit exceeded
+    return {
+      allowed: false,
+      remainingRequests: 0,
+      resetTime: current.resetTime
+    };
+  }
+
+  // Increment and allow
+  current.count++;
+  rateLimitStore.set(identifier, current);
+
+  return {
+    allowed: true,
+    remainingRequests: options.maxRequests - current.count,
+    resetTime: current.resetTime
+  };
+}
+
+export function getRateLimitHeaders(result: ReturnType<typeof rateLimit>) {
+  return {
+    'X-RateLimit-Limit': '100',
+    'X-RateLimit-Remaining': result.remainingRequests.toString(),
+    'X-RateLimit-Reset': Math.ceil(result.resetTime / 1000).toString()
+  };
 }
 
 // Validation helpers
@@ -55,27 +110,27 @@ export function validatePassword(password: string): {
   errors: string[]
 } {
   const errors: string[] = []
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long')
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter')
   }
-  
+
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter')
   }
-  
+
   if (!/\d/.test(password)) {
     errors.push('Password must contain at least one number')
   }
-  
+
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     errors.push('Password must contain at least one special character')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -91,12 +146,12 @@ export function sanitizeSqlInput(input: string): string {
     /(\b(and|or)\b\s+\d+\s*=\s*\d+)/gi,
     /(\b(and|or)\b\s+['"]\w+['"]\s*=\s*['"]\w+['"])/gi,
   ]
-  
+
   let sanitized = input
   sqlPatterns.forEach(pattern => {
     sanitized = sanitized.replace(pattern, '')
   })
-  
+
   return sanitized.trim()
 }
 
@@ -110,12 +165,12 @@ export function preventXSS(input: string): string {
     /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
     /<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi,
   ]
-  
+
   let sanitized = input
   xssPatterns.forEach(pattern => {
     sanitized = sanitized.replace(pattern, '')
   })
-  
+
   return sanitized
 }
 
@@ -160,43 +215,43 @@ export function validateExperienceData(data: any): {
   errors: string[]
 } {
   const errors: string[] = []
-  
+
   if (!data.title || data.title.trim().length < 3) {
     errors.push('Title must be at least 3 characters long')
   }
-  
+
   if (!data.description || data.description.trim().length < 10) {
     errors.push('Description must be at least 10 characters long')
   }
-  
+
   if (!data.location || data.location.trim().length < 2) {
     errors.push('Location is required')
   }
-  
+
   if (!data.activityType || !['sailing', 'surfing', 'kayaking', 'diving', 'jet-skiing', 'fishing', 'whale-watching', 'paddleboarding', 'windsurfing', 'snorkeling'].includes(data.activityType)) {
     errors.push('Valid activity type is required')
   }
-  
+
   if (!data.difficultyLevel || !['beginner', 'intermediate', 'advanced', 'expert'].includes(data.difficultyLevel)) {
     errors.push('Valid difficulty level is required')
   }
-  
+
   if (!data.price || data.price <= 0) {
     errors.push('Price must be greater than 0')
   }
-  
+
   if (!data.duration || data.duration <= 0) {
     errors.push('Duration must be greater than 0')
   }
-  
+
   if (!data.maxParticipants || data.maxParticipants <= 0) {
     errors.push('Maximum participants must be greater than 0')
   }
-  
+
   if (data.minAge && (data.minAge < 0 || data.minAge > 18)) {
     errors.push('Minimum age must be between 0 and 18')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -223,4 +278,4 @@ export function sanitizeExperienceData(data: any): any {
       description: sanitizeHtml(item.description || ''),
     })),
   }
-} 
+}
