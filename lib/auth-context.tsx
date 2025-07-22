@@ -30,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
 
   const supabase = createBrowserSupabaseClient() // Use the client-side Supabase instance
 
@@ -97,8 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    setMounted(true)
-
     // Initial session check
     const getInitialSession = async () => {
       try {
@@ -110,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-
+    
     getInitialSession();
 
     // Listen for auth state changes
@@ -144,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         console.log("Login successful for user:", data.user.id)
-
+        
         // Check user type from metadata first
         const userTypeFromMetadata = data.user.user_metadata?.user_type;
         console.log("User type from metadata:", userTypeFromMetadata);
@@ -230,28 +227,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserProfile(null)
     setBusinessProfile(null)
     setUserType(null)
-  }
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return (
-      <AuthContext.Provider
-        value={{
-          user: null,
-          userProfile: null,
-          businessProfile: null,
-          customerProfile: null,
-          userType: null,
-          isLoading: true,
-          login,
-          signUp,
-          signOut,
-          refreshProfile: () => Promise.resolve(),
-        }}
-      >
-        {children}
-      </AuthContext.Provider>
-    )
   }
 
   return (
