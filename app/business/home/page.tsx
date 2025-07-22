@@ -3,14 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
-  Anchor,
   Home,
   Users,
   MessageCircle,
   Calendar,
   Handshake,
   DollarSign,
-  Shapes,
   Settings,
   Bell,
   ChevronDown,
@@ -27,7 +25,9 @@ import {
   LogOut,
   Search
 } from 'lucide-react';
+import { getHostDashboardData } from '@/lib/database';
 
+// Adapted Types for SeaFable Schema
 interface Booking {
   id: string;
   user_id: string;
@@ -70,7 +70,7 @@ interface HostProfile {
   total_reviews: number;
 }
 
-const BusinessHomePage = () => {
+const BusinessDashboard = () => {
   const [stats, setStats] = useState<Stats>({
     revenue: 0,
     active_bookings: 0,
@@ -84,13 +84,16 @@ const BusinessHomePage = () => {
   const [currentWeek, setCurrentWeek] = useState('March 18 - 24');
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
 
+  // Get current host profile
   useEffect(() => {
     getCurrentHost();
   }, []);
 
+  // Fetch dashboard data when host is loaded
   useEffect(() => {
     if (hostProfile) {
       fetchDashboardData();
@@ -100,7 +103,11 @@ const BusinessHomePage = () => {
   const getCurrentHost = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setError('No authenticated user found');
+        setLoading(false);
+        return;
+      }
 
       const { data: profile, error } = await supabase
         .from('host_profiles')
@@ -110,593 +117,293 @@ const BusinessHomePage = () => {
 
       if (error) {
         console.error('Error fetching host profile:', error);
+        setError(`Error fetching host profile: ${error.message}`);
+        setLoading(false);
         return;
       }
 
       setHostProfile(profile);
     } catch (error) {
-      console.error('Error getting current host:', error);
+      console.error('Error in getCurrentHost:', error);
+      setError('Failed to get current host');
+      setLoading(false);
     }
   };
 
   const fetchDashboardData = async () => {
     if (!hostProfile) return;
 
-    setLoading(true);
     try {
-      await Promise.all([
-        fetchStats(),
-        fetchRecentBookings(),
-        fetchWeeklyBookings()
-      ]);
+      const result = await getHostDashboardData(hostProfile.id);
+
+      if (result.success && result.data) {
+        const dashboardData = result.data;
+
+        // Update stats
+        setStats({
+          revenue: dashboardData.overview.totalRevenue,
+          active_bookings: dashboardData.overview.activeBookings,
+          total_clients: 0, // Calculate from bookings
+          total_experiences: dashboardData.overview.totalExperiences
+        });
+
+        // Update recent bookings
+        const formattedBookings = dashboardData.recentBookings.map(booking => ({
+          id: booking.id,
+          user_id: '',
+          experience_id: '',
+          host_id: hostProfile.id,
+          booking_date: booking.date,
+          departure_time: '',
+          number_of_guests: booking.guests,
+          total_price: booking.amount,
+          booking_status: booking.status as any,
+          created_at: '',
+          updated_at: '',
+          experiences: {
+            title: booking.experienceTitle,
+            duration_hours: 0,
+            max_guests: 0
+          },
+          users: {
+            first_name: booking.customerName.split(' ')[0] || '',
+            last_name: booking.customerName.split(' ')[1] || ''
+          }
+        }));
+
+        setRecentBookings(formattedBookings);
+      } else {
+        setError(result.error || 'Failed to fetch dashboard data');
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    if (!hostProfile) return;
-
-    try {
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-      const { data: earningsData } = await supabase
-        .from('host_earnings')
-        .select('net_amount')
-        .eq('host_profile_id', hostProfile.id)
-        .gte('created_at', startOfMonth);
-
-      const today = new Date().toISOString().split('T')[0];
-      const { data: activeBookingsData, count: activeBookingsCount } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-        .eq('host_id', hostProfile.id)
-        .eq('booking_status', 'confirmed')
-        .gte('booking_date', today);
-
-      const { data: clientsData } = await supabase
-        .from('bookings')
-        .select('user_id')
-        .eq('host_id', hostProfile.id);
-
-      const uniqueClients = new Set(clientsData?.map(booking => booking.user_id) || []);
-
-      const { data: experiencesData, count: experiencesCount } = await supabase
-        .from('experiences')
-        .select('*', { count: 'exact', head: true })
-        .eq('host_id', hostProfile.id)
-        .eq('is_active', true);
-
-      const totalRevenue = earningsData?.reduce((sum, earning) => sum + (earning.net_amount || 0), 0) || 0;
-
-      setStats({
-        revenue: totalRevenue,
-        active_bookings: activeBookingsCount || 0,
-        total_clients: uniqueClients.size,
-        total_experiences: experiencesCount || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  const fetchRecentBookings = async () => {
-    if (!hostProfile) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          experiences (
-            title,
-            duration_hours,
-            max_guests
-          ),
-          users (
-            first_name,
-            last_name
-          )
-        `)
-        .eq('host_id', hostProfile.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      setRecentBookings(data || []);
-    } catch (error) {
-      console.error('Error fetching recent bookings:', error);
-    }
-  };
-
-  const fetchWeeklyBookings = async () => {
-    if (!hostProfile) return;
-
-    try {
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-      const startStr = startOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-      const endStr = endOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-      setCurrentWeek(`${startStr} - ${endStr}`);
-
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          experiences (
-            title,
-            duration_hours,
-            max_guests
-          ),
-          users (
-            first_name,
-            last_name
-          )
-        `)
-        .eq('host_id', hostProfile.id)
-        .gte('booking_date', startOfWeek.toISOString().split('T')[0])
-        .lte('booking_date', endOfWeek.toISOString().split('T')[0])
-        .order('booking_date', { ascending: true });
-
-      if (error) throw error;
-
-      const groupedBookings: WeeklyBookings = {
-        Monday: [],
-        Tuesday: [],
-        Wednesday: [],
-        Thursday: [],
-        Friday: [],
-        Saturday: [],
-        Sunday: []
-      };
-
-      data?.forEach(booking => {
-        const bookingDate = new Date(booking.booking_date);
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const dayName = dayNames[bookingDate.getDay()];
-        if (groupedBookings[dayName]) {
-          groupedBookings[dayName].push(booking);
-        }
-      });
-
-      setWeeklyBookings(groupedBookings);
-    } catch (error) {
-      console.error('Error fetching weekly bookings:', error);
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const getClientName = (booking: Booking) => {
-    if (booking.users) {
-      return `${booking.users.first_name} ${booking.users.last_name}`;
-    }
-    return 'Unknown Client';
-  };
-
-  const getExperienceTitle = (booking: Booking) => {
-    return booking.experiences?.title || 'Unknown Experience';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'cancelled_user':
-      case 'cancelled_host':
-        return 'bg-red-100 text-red-800';
-      case 'rescheduled':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const EmptyState = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <Icon className="w-12 h-12 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500 max-w-sm">{description}</p>
-    </div>
-  );
-
-  const Skeleton = ({ className }: { className?: string }) => (
-    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
-  );
-
-  const renderWeeklyBookings = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
+  if (loading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {days.map(day => (
-          <div key={day} className="flex-shrink-0 w-80 bg-white border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3">{day}</h4>
-            <div className="space-y-3">
-              {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              ) : weeklyBookings[day]?.length > 0 ? (
-                weeklyBookings[day].map(booking => (
-                  <div key={booking.id} className="border border-gray-200 rounded-lg p-3">
-                    <div className="space-y-1">
-                      <h5 className="font-medium text-gray-900 text-sm">{getExperienceTitle(booking)}</h5>
-                      <p className="text-xs text-gray-500">
-                        Client: {getClientName(booking)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatDate(booking.booking_date)} - {booking.departure_time || 'TBD'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Duration: {booking.experiences?.duration_hours || 'N/A'} hours
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Guests: {booking.number_of_guests}/{booking.experiences?.max_guests || 'N/A'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Total: {formatCurrency(booking.total_price)}
-                      </p>
-                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
-                        {booking.booking_status.replace('_', ' ').charAt(0).toUpperCase() + booking.booking_status.replace('_', ' ').slice(1)}
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
-                          <MessageCircle className="w-3 h-3" />
-                          Message
-                        </button>
-                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
-                          <Edit2 className="w-3 h-3" />
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500 text-sm">
-                  No bookings for {day}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
-  };
+  }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Anchor className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">SeaFable</h1>
-              <p className="text-sm text-gray-600">Business Dashboard</p>
-            </div>
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <h2 className="font-bold">Error</h2>
+            <p>{error}</p>
           </div>
         </div>
-
-        <nav className="flex-1 px-6 space-y-8">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg">
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Dashboard</span>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
-              Management
-            </h3>
-            <div className="space-y-1">
-              {[
-                { icon: Users, label: 'Bookings' },
-                { icon: Anchor, label: 'Experiences' },
-                { icon: MessageCircle, label: 'Messages' },
-                { icon: Calendar, label: 'Calendar' },
-                { icon: Handshake, label: 'Customers' }
-              ].map(({ icon: Icon, label }) => (
-                <button key={label} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                  <Icon className="w-5 h-5" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
-              Business
-            </h3>
-            <div className="space-y-1">
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <DollarSign className="w-5 h-5" />
-                <span>Earnings</span>
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Shapes className="w-5 h-5" />
-                <span>Analytics</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
-              Account
-            </h3>
-            <div className="space-y-1">
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <User className="w-5 h-5" />
-                <span>Profile</span>
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Settings className="w-5 h-5" />
-                <span>Settings</span>
-              </button>
-            </div>
-          </div>
-        </nav>
       </div>
+    );
+  }
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search bookings, experiences..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600">
-                <Bell className="w-5 h-5" />
+            <div className="flex items-center space-x-4">
+              <button className="p-2 text-gray-400 hover:text-gray-500">
+                <Bell className="h-6 w-6" />
               </button>
               <div className="relative">
                 <button 
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
                 >
+                  <User className="h-8 w-8 rounded-full bg-gray-200 p-1" />
                   <span>{hostProfile?.name || 'Host'}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="h-4 w-4" />
                 </button>
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
-                    <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left">
-                      <User className="w-4 h-4" />
-                      Profile
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left">
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </button>
-                    <hr className="my-1" />
-                    <button 
-                      onClick={handleSignOut}
-                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
-          {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 m-4 rounded-lg">
-            <div className="flex flex-col gap-4">
-              <h2 className="text-2xl font-bold">Good Morning, {hostProfile?.name?.split(' ')[0]}! 🌊</h2>
-              <p className="text-lg">
-                You have {stats.active_bookings} active booking{stats.active_bookings !== 1 ? 's' : ''} scheduled. Weather conditions are perfect for water adventures!
-              </p>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  <span>Profile Active</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  <span>{hostProfile?.rating ? `${hostProfile.rating}★ Rated` : 'New Host'}</span>
-                </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">€{stats.revenue.toLocaleString()}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-8 space-y-8">
-            {/* Monthly Stats */}
-            <section>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Monthly Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {loading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-white p-6 rounded-lg border border-gray-200">
-                      <Skeleton className="w-12 h-12 rounded-lg mb-4" />
-                      <Skeleton className="h-8 w-20 mb-2" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                        <DollarSign className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.revenue)}</div>
-                      <div className="text-gray-500">Net Earnings</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <Calendar className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-gray-900">{stats.active_bookings}</div>
-                      <div className="text-gray-500">Active Bookings</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <Users className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-gray-900">{stats.total_clients}</div>
-                      <div className="text-gray-500">Customers</div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                        <Anchor className="w-6 h-6 text-orange-600" />
-                      </div>
-                      <div className="text-3xl font-bold text-gray-900">{stats.total_experiences}</div>
-                      <div className="text-gray-500">Live Experiences</div>
-                    </div>
-                  </>
-                )}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Bookings</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.active_bookings}</p>
               </div>
-            </section>
+            </div>
+          </div>
 
-            {/* Quick Actions */}
-            <section>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { icon: Plus, label: 'New Experience', color: 'bg-green-50 hover:bg-green-100', textColor: 'text-green-700' },
-                  { icon: MessageCircle, label: 'Messages', color: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700' },
-                  { icon: Calendar, label: 'Calendar', color: 'bg-purple-50 hover:bg-purple-100', textColor: 'text-purple-700' },
-                  { icon: Cloud, label: 'Weather', color: 'bg-gray-50 hover:bg-gray-100', textColor: 'text-gray-700' }
-                ].map(({ icon: Icon, label, color, textColor }) => (
-                  <button key={label} className={`${color} p-6 rounded-lg text-center transition-colors`}>
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-3 shadow-sm">
-                      <Icon className="w-6 h-6 text-gray-600" />
-                    </div>
-                    <div className={`font-medium ${textColor}`}>{label}</div>
-                  </button>
-                ))}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total_clients}</p>
               </div>
-            </section>
+            </div>
+          </div>
 
-            {/* This Week's Bookings */}
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-semibold text-gray-900">This Week's Bookings</h3>
-                <div className="flex items-center gap-2">
-                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="font-medium text-gray-900">{currentWeek}</span>
-                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <Handshake className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Experiences</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total_experiences}</p>
               </div>
-              {renderWeeklyBookings()}
-            </section>
+            </div>
+          </div>
+        </div>
 
-            {/* Recent Bookings */}
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-semibold text-gray-900">Recent Bookings</h3>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  <Eye className="w-4 h-4" />
-                  View All
-                </button>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                {loading ? (
-                  <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-4 p-4">
-                        <Skeleton className="w-12 h-12 rounded-lg" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                          <Skeleton className="h-3 w-40" />
-                        </div>
-                        <div className="text-right space-y-2">
-                          <Skeleton className="h-4 w-16" />
-                          <Skeleton className="h-6 w-20" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentBookings.map((booking, index) => (
-                      <div key={booking.id} className={`flex items-center gap-4 p-4 ${index !== recentBookings.length - 1 ? 'border-b border-gray-200' : ''}`}>
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <User className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">{getClientName(booking)}</div>
-                          <div className="text-gray-700">{getExperienceTitle(booking)}</div>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>{formatDate(booking.booking_date)}</span>
-                            <span>{booking.number_of_guests} guest{booking.number_of_guests !== 1 ? 's' : ''}</span>
-                            <span>{booking.departure_time || 'Time TBD'}</span>
+        {/* Recent Bookings */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Recent Bookings</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Experience
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Guests
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recentBookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0">
+                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="h-5 w-5 text-gray-500" />
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-gray-900">{formatCurrency(booking.total_price)}</div>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
-                            {booking.booking_status.replace('_', ' ').charAt(0).toUpperCase() + booking.booking_status.replace('_', ' ').slice(1)}
-                          </span>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {booking.users?.first_name} {booking.users?.last_name}
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState 
-                    icon={Calendar}
-                    title="No Recent Bookings"
-                    description="When you receive new bookings, they'll appear here."
-                  />
-                )}
-              </div>
-            </section>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{booking.experiences?.title}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{booking.booking_date}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{booking.number_of_guests}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">€{booking.total_price}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        booking.booking_status === 'confirmed' 
+                          ? 'bg-green-100 text-green-800'
+                          : booking.booking_status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {booking.booking_status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </main>
-      </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <button className="w-full flex items-center px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Experience
+              </button>
+              <button className="w-full flex items-center px-4 py-2 text-sm text-green-600 bg-green-50 rounded-md hover:bg-green-100">
+                <Calendar className="h-4 w-4 mr-2" />
+                View Calendar
+              </button>
+              <button className="w-full flex items-center px-4 py-2 text-sm text-purple-600 bg-purple-50 rounded-md hover:bg-purple-100">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Performance</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Average Rating</span>
+                <span className="text-sm font-medium">{hostProfile?.rating || 0}/5</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total Reviews</span>
+                <span className="text-sm font-medium">{hostProfile?.total_reviews || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Weather</h3>
+            <div className="flex items-center">
+              <Cloud className="h-8 w-8 text-blue-500" />
+              <div className="ml-3">
+                <p className="text-sm text-gray-600">Today's conditions</p>
+                <p className="text-lg font-medium">Partly Cloudy</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-export default BusinessHomePage;
+export default BusinessDashboard;

@@ -11,6 +11,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
+// Also export as default for compatibility
+export default supabase
+
 // Database types based on the schema
 export interface User {
   id: string
