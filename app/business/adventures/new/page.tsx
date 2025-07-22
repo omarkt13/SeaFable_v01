@@ -290,7 +290,7 @@ const ExperienceCreationForm = () => {
     const duration = formData.durationHours ? `${formData.durationHours}-hour` : '';
     const location = formData.location;
 
-    const generated = `Join us for an unforgettable ${duration} ${mainCategory.toLowerCase()} experience in ${location}. Perfect for ${formData.difficultyLevel === 'easy' ? 'beginners and families' : formData.difficultyLevel === 'expert' ? 'experienced adventurers' : 'all skill levels'}, this ${activity?.toLowerCase()} adventure offers${formData.maxGuests <= 6 ? ' an intimate' : ' a group'} setting for up to ${formData.maxGuests} guests.`;
+    const generated = `Join us for an unforgettable ${duration} ${mainCategory.toLowerCase()} experience in ${location}. Perfect for ${formData.difficultyLevel === 'easy' ? 'beginners and families' : formData.difficultyLevel === 'expert' ? 'experienced adventurers' : 'all skill levels'}, this ${activity?.toLowerCase()} adventure offers${parseInt(formData.maxGuests) <= 6 ? ' an intimate' : ' a group'} setting for up to ${formData.maxGuests} guests.`;
 
     updateFormData('shortDescription', generated);
   };
@@ -769,7 +769,6 @@ const ExperienceCreationForm = () => {
               ))}
             </div>
           </div>
-        ```text
         );
 
       case 5:
