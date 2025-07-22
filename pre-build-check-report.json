@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-22T19:01:24.872Z",
+  "timestamp": "2025-07-22T19:24:39.781Z",
   "summary": {
     "total": 20,
     "passed": 18,
@@ -11,106 +11,106 @@
     {
       "message": "Package configuration exists",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.149Z"
     },
     {
       "message": "Script \"build\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.149Z"
     },
     {
       "message": "Script \"start\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.149Z"
     },
     {
       "message": "Script \"dev\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.149Z"
     },
     {
       "message": "Essential dependency \"next\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.149Z"
     },
     {
       "message": "Essential dependency \"react\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.150Z"
     },
     {
       "message": "Essential dependency \"react-dom\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.664Z"
+      "timestamp": "2025-07-22T19:24:34.150Z"
     },
     {
       "message": "Next.js configuration exists: next.config.mjs",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.150Z"
     },
     {
       "message": "TypeScript configuration exists",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.151Z"
     },
     {
       "message": "TypeScript compiler options configured",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.151Z"
     },
     {
       "message": "TypeScript strict mode enabled",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.151Z"
     },
     {
       "message": "Environment file exists: .env.local",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.152Z"
     },
     {
       "message": "Environment file exists: .env.example",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.665Z"
+      "timestamp": "2025-07-22T19:24:34.152Z"
     },
     {
       "message": "Critical directory exists: app",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.666Z"
+      "timestamp": "2025-07-22T19:24:34.153Z"
     },
     {
       "message": "Critical directory exists: components",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.666Z"
+      "timestamp": "2025-07-22T19:24:34.153Z"
     },
     {
       "message": "Critical directory exists: lib",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.666Z"
+      "timestamp": "2025-07-22T19:24:34.154Z"
     },
     {
       "message": "Critical directory exists: public",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:18.666Z"
+      "timestamp": "2025-07-22T19:24:34.154Z"
     },
     {
       "message": "No obvious missing React keys found",
       "type": "success",
-      "timestamp": "2025-07-22T19:01:24.871Z"
+      "timestamp": "2025-07-22T19:24:39.781Z"
     }
   ],
   "warnings": [
     {
       "message": "ESLint found issues",
       "type": "warning",
-      "timestamp": "2025-07-22T19:01:24.755Z"
+      "timestamp": "2025-07-22T19:24:39.664Z"
     }
   ],
   "errors": [
     {
-      "message": "TypeScript check failed: Command failed: npx tsc --noEmit\n",
+      "message": "TypeScript compilation has errors",
       "type": "error",
-      "timestamp": "2025-07-22T19:01:23.332Z"
+      "timestamp": "2025-07-22T19:24:38.629Z"
     }
   ]
 }
