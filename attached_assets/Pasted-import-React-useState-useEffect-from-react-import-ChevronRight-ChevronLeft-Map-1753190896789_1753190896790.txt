@@ -1,0 +1,777 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  MapPin, 
+  Clock, 
+  Users, 
+  Euro, 
+  Plus, 
+  Trash2, 
+  Camera, 
+  AlertTriangle,
+  Check,
+  Star,
+  Activity,
+  Calendar,
+  Settings,
+  Eye,
+  Waves,
+  Mountain,
+  Camera as CameraIcon,
+  Utensils,
+  Binoculars
+} from 'lucide-react';
+
+const ExperienceCreationForm = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    title: '',
+    shortDescription: '',
+    fullDescription: '',
+    location: '',
+    specificLocation: '',
+    activityType: '',
+    difficultyLevel: '',
+    categories: [],
+    pricePerPerson: '',
+    minGuests: 1,
+    maxGuests: '',
+    durationHours: '',
+    durationDisplay: '',
+    itinerary: [],
+    availabilitySlots: [],
+    primaryImageUrl: '',
+    weatherContingency: '',
+    includedAmenities: [],
+    whatToBring: [],
+    minAge: '',
+    maxAge: '',
+    ageRestrictionDetails: '',
+    isActive: true
+  });
+
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+
+  const activityTypes = [
+    { id: 'water_sport', label: 'Water Sport', icon: <Waves className="h-5 w-5" /> },
+    { id: 'land_adventure', label: 'Land Adventure', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'cultural', label: 'Cultural', icon: <CameraIcon className="h-5 w-5" /> },
+    { id: 'food_tour', label: 'Food Tour', icon: <Utensils className="h-5 w-5" /> },
+    { id: 'wildlife', label: 'Wildlife', icon: <Binoculars className="h-5 w-5" /> }
+  ];
+
+  const categoryOptions = {
+    water_sport: ['Kayaking', 'Snorkeling', 'Diving', 'Sailing', 'Surfing', 'Fishing', 'Stand-up Paddleboard'],
+    land_adventure: ['Hiking', 'Rock Climbing', 'Cycling', 'ATV Tours', 'Zip-lining'],
+    cultural: ['City Tour', 'Museum Visit', 'Historical Sites', 'Art Workshop'],
+    food_tour: ['Cooking Class', 'Wine Tasting', 'Local Markets', 'Street Food'],
+    wildlife: ['Bird Watching', 'Marine Life', 'Safari', 'Nature Photography']
+  };
+
+  const amenityOptions = ['Equipment', 'Snacks', 'Drinks', 'Guide', 'Transportation', 'Photos', 'Insurance'];
+  const bringOptions = ['Swimsuit', 'Towel', 'Sunscreen', 'Water Bottle', 'Camera', 'Comfortable Shoes', 'Hat'];
+
+  const steps = [
+    { id: 1, title: 'Experience Basics', icon: <Activity className="h-5 w-5" /> },
+    { id: 2, title: 'Activity Details', icon: <Star className="h-5 w-5" /> },
+    { id: 3, title: 'Pricing & Capacity', icon: <Users className="h-5 w-5" /> },
+    { id: 4, title: 'Itinerary', icon: <Clock className="h-5 w-5" /> },
+    { id: 5, title: 'Logistics', icon: <Settings className="h-5 w-5" /> },
+    { id: 6, title: 'Preview & Publish', icon: <Eye className="h-5 w-5" /> }
+  ];
+
+  // Validation functions
+  const validateStep = (step) => {
+    switch(step) {
+      case 1:
+        return formData.title.length >= 5 && formData.location && formData.activityType;
+      case 2:
+        return formData.shortDescription.length >= 20 && formData.categories.length > 0 && formData.difficultyLevel;
+      case 3:
+        return formData.pricePerPerson && formData.maxGuests && formData.durationHours;
+      case 4:
+        return formData.itinerary.length >= 2;
+      case 5:
+        return formData.includedAmenities.length > 0 && formData.whatToBring.length > 0;
+      default:
+        return true;
+    }
+  };
+
+  // Update completed steps
+  useEffect(() => {
+    const newCompletedSteps = new Set();
+    for (let i = 1; i <= 6; i++) {
+      if (validateStep(i)) {
+        newCompletedSteps.add(i);
+      }
+    }
+    setCompletedSteps(newCompletedSteps);
+  }, [formData]);
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addItineraryItem = () => {
+    const newItem = {
+      id: Date.now(),
+      time: '',
+      title: '',
+      description: '',
+      duration: 30
+    };
+    updateFormData('itinerary', [...formData.itinerary, newItem]);
+  };
+
+  const updateItineraryItem = (id, field, value) => {
+    const updated = formData.itinerary.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    );
+    updateFormData('itinerary', updated);
+  };
+
+  const removeItineraryItem = (id) => {
+    updateFormData('itinerary', formData.itinerary.filter(item => item.id !== id));
+  };
+
+  const generateDescription = () => {
+    if (!formData.title || !formData.activityType || formData.categories.length === 0) return;
+    
+    const activity = activityTypes.find(a => a.id === formData.activityType)?.label;
+    const mainCategory = formData.categories[0];
+    const duration = formData.durationHours ? `${formData.durationHours}-hour` : '';
+    const location = formData.location;
+    
+    const generated = `Join us for an unforgettable ${duration} ${mainCategory.toLowerCase()} experience in ${location}. Perfect for ${formData.difficultyLevel === 'easy' ? 'beginners and families' : formData.difficultyLevel === 'expert' ? 'experienced adventurers' : 'all skill levels'}, this ${activity.toLowerCase()} adventure offers${formData.maxGuests <= 6 ? ' an intimate' : ' a group'} setting for up to ${formData.maxGuests} guests.`;
+    
+    updateFormData('shortDescription', generated);
+  };
+
+  const renderStepContent = () => {
+    switch(currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Experience Title *
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => updateFormData('title', e.target.value)}
+                placeholder="e.g., Sunset Sailing Adventure in San Francisco Bay"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                maxLength="100"
+              />
+              <p className="text-xs text-gray-500 mt-1">{formData.title.length}/100 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Location *
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => updateFormData('location', e.target.value)}
+                  placeholder="City, State/Region"
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Activity Type *
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {activityTypes.map((type) => (
+                  <div
+                    key={type.id}
+                    onClick={() => updateFormData('activityType', type.id)}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.activityType === type.id
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {type.icon}
+                      <span className="font-medium">{type.label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Categories *
+              </label>
+              {formData.activityType && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {categoryOptions[formData.activityType]?.map((category) => (
+                    <label key={category} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={formData.categories.includes(category)}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...formData.categories, category]
+                            : formData.categories.filter(c => c !== category);
+                          updateFormData('categories', updated);
+                        }}
+                        className="rounded text-teal-600"
+                      />
+                      <span className="text-sm">{category}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Difficulty Level *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {['easy', 'moderate', 'challenging', 'expert'].map((level) => (
+                  <div
+                    key={level}
+                    onClick={() => updateFormData('difficultyLevel', level)}
+                    className={`p-3 border-2 rounded-lg cursor-pointer text-center transition-all ${
+                      formData.difficultyLevel === level
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="font-medium capitalize">{level}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Short Description *
+                </label>
+                <button
+                  onClick={generateDescription}
+                  className="text-teal-600 hover:text-teal-700 text-sm font-medium"
+                >
+                  ✨ Generate for me
+                </button>
+              </div>
+              <textarea
+                value={formData.shortDescription}
+                onChange={(e) => updateFormData('shortDescription', e.target.value)}
+                placeholder="A compelling 1-2 sentence description that highlights what makes your experience special..."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                rows="3"
+                maxLength="250"
+              />
+              <p className="text-xs text-gray-500 mt-1">{formData.shortDescription.length}/250 characters</p>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Price per Person (€) *
+                </label>
+                <div className="relative">
+                  <Euro className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    value={formData.pricePerPerson}
+                    onChange={(e) => updateFormData('pricePerPerson', e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Duration (Hours) *
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    value={formData.durationHours}
+                    onChange={(e) => updateFormData('durationHours', e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    min="0.5"
+                    step="0.5"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Minimum Guests
+                </label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    value={formData.minGuests}
+                    onChange={(e) => updateFormData('minGuests', parseInt(e.target.value) || 1)}
+                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Maximum Guests *
+                </label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="number"
+                    value={formData.maxGuests}
+                    onChange={(e) => updateFormData('maxGuests', e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    min="1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Meeting Point
+              </label>
+              <input
+                type="text"
+                value={formData.specificLocation}
+                onChange={(e) => updateFormData('specificLocation', e.target.value)}
+                placeholder="Exact address or meeting instructions"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Experience Itinerary *</h3>
+              <button
+                onClick={addItineraryItem}
+                className="flex items-center space-x-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Step</span>
+              </button>
+            </div>
+
+            {formData.itinerary.length === 0 && (
+              <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Add at least 2 steps to your itinerary</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {formData.itinerary.map((item, index) => (
+                <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center font-semibold">
+                        {index + 1}
+                      </div>
+                      <span className="font-medium text-gray-700">Step {index + 1}</span>
+                    </div>
+                    <button
+                      onClick={() => removeItineraryItem(item.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Time/Duration
+                      </label>
+                      <input
+                        type="text"
+                        value={item.time}
+                        onChange={(e) => updateItineraryItem(item.id, 'time', e.target.value)}
+                        placeholder="e.g., 9:00 AM or 30 minutes"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Activity Title
+                      </label>
+                      <input
+                        type="text"
+                        value={item.title}
+                        onChange={(e) => updateItineraryItem(item.id, 'title', e.target.value)}
+                        placeholder="e.g., Safety briefing and equipment"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={item.description}
+                      onChange={(e) => updateItineraryItem(item.id, 'description', e.target.value)}
+                      placeholder="Brief description of what happens during this step..."
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      rows="2"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                What's Included *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {amenityOptions.map((amenity) => (
+                  <label key={amenity} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.includedAmenities.includes(amenity)}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...formData.includedAmenities, amenity]
+                          : formData.includedAmenities.filter(a => a !== amenity);
+                        updateFormData('includedAmenities', updated);
+                      }}
+                      className="rounded text-teal-600"
+                    />
+                    <span className="text-sm">{amenity}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                What to Bring *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {bringOptions.map((item) => (
+                  <label key={item} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.whatToBring.includes(item)}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...formData.whatToBring, item]
+                          : formData.whatToBring.filter(i => i !== item);
+                        updateFormData('whatToBring', updated);
+                      }}
+                      className="rounded text-teal-600"
+                    />
+                    <span className="text-sm">{item}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Minimum Age
+                </label>
+                <input
+                  type="number"
+                  value={formData.minAge}
+                  onChange={(e) => updateFormData('minAge', e.target.value)}
+                  placeholder="0"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Maximum Age
+                </label>
+                <input
+                  type="number"
+                  value={formData.maxAge}
+                  onChange={(e) => updateFormData('maxAge', e.target.value)}
+                  placeholder="No limit"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  min="1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Weather Contingency Plan
+              </label>
+              <textarea
+                value={formData.weatherContingency}
+                onChange={(e) => updateFormData('weatherContingency', e.target.value)}
+                placeholder="What happens in case of bad weather? Refund policy, rescheduling options, etc."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                rows="3"
+              />
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-8">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{formData.title}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <span>{formData.location}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span>{formData.durationHours} hours</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span>{formData.minGuests}-{formData.maxGuests} guests</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Euro className="h-4 w-4 text-gray-500" />
+                  <span>€{formData.pricePerPerson} per person</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
+              <p className="text-gray-700">{formData.shortDescription}</p>
+            </div>
+
+            {formData.itinerary.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Itinerary</h4>
+                <div className="space-y-3">
+                  {formData.itinerary.map((item, index) => (
+                    <div key={item.id} className="flex space-x-3">
+                      <div className="w-6 h-6 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-medium">{item.title}</div>
+                        {item.time && <div className="text-sm text-gray-500">{item.time}</div>}
+                        {item.description && <div className="text-sm text-gray-700">{item.description}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">What's Included</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  {formData.includedAmenities.map(amenity => (
+                    <li key={amenity}>• {amenity}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">What to Bring</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  {formData.whatToBring.map(item => (
+                    <li key={item}>• {item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={formData.isActive}
+                onChange={(e) => updateFormData('isActive', e.target.checked)}
+                className="rounded text-teal-600"
+              />
+              <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+                Publish this experience (make it visible to customers)
+              </label>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const nextStep = () => {
+    if (currentStep < 6 && validateStep(currentStep)) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    console.log('Form submitted:', formData);
+    alert('Experience created successfully!');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white">
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
+                  currentStep === step.id
+                    ? 'bg-teal-600 text-white'
+                    : completedSteps.has(step.id)
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {completedSteps.has(step.id) && currentStep !== step.id ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  step.icon
+                )}
+              </div>
+              <div className="ml-3 hidden md:block">
+                <div className={`text-sm font-medium ${currentStep === step.id ? 'text-teal-600' : 'text-gray-700'}`}>
+                  {step.title}
+                </div>
+              </div>
+              {index < steps.length - 1 && (
+                <ChevronRight className="h-5 w-5 text-gray-400 mx-4" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step Content */}
+      <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {steps.find(s => s.id === currentStep)?.title}
+          </h2>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / 6) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {renderStepContent()}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all ${
+            currentStep === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          <ChevronLeft className="h-5 w-5" />
+          <span>Previous</span>
+        </button>
+
+        <div className="text-sm text-gray-500">
+          Step {currentStep} of {steps.length}
+        </div>
+
+        {currentStep < 6 ? (
+          <button
+            onClick={nextStep}
+            disabled={!validateStep(currentStep)}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all ${
+              validateStep(currentStep)
+                ? 'bg-teal-600 text-white hover:bg-teal-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <span>Next</span>
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            className="flex items-center space-x-2 bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all font-semibold"
+          >
+            <Check className="h-5 w-5" />
+            <span>Create Experience</span>
+          </button>
+        )}
+      </div>
+
+      {/* Validation Messages */}
+      {!validateStep(currentStep) && (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <span className="text-sm font-medium text-yellow-800">
+              Please complete all required fields to continue
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ExperienceCreationForm;
