@@ -56,6 +56,8 @@ export default function ExperienceDetailPage() {
   })
   const [isBooking, setIsBooking] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<any[]>([])
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -152,6 +154,54 @@ export default function ExperienceDetailPage() {
       )
       .sort((a, b) => a.start_time.localeCompare(b.start_time))
   }, [experience?.host_availability, bookingData.date, bookingData.guests])
+
+  // Check availability when date or guests change
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (bookingData.date && bookingData.guests > 0) {
+        setIsLoadingAvailability(true)
+        try {
+          // Simulate API delay for checking availability
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          // For now, we'll simulate checking availability
+          // In a real app, you'd query the host_availability table
+          const selectedDate = new Date(bookingData.date + 'T00:00:00')
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          // Don't show slots for past dates
+          if (selectedDate < today) {
+            setAvailableTimeSlots([])
+            setIsLoadingAvailability(false)
+            return
+          }
+
+          const simulatedSlots = [
+            { id: 1, start_time: "09:00", available_capacity: experience.max_guests },
+            { id: 2, start_time: "11:00", available_capacity: Math.max(0, experience.max_guests - 2) },
+            { id: 3, start_time: "14:00", available_capacity: experience.max_guests },
+            { id: 4, start_time: "16:00", available_capacity: Math.max(0, experience.max_guests - 1) },
+          ].filter((slot) => slot.available_capacity >= bookingData.guests)
+
+          setAvailableTimeSlots(simulatedSlots)
+        } catch (error) {
+          console.error("Error checking availability:", error)
+          setAvailableTimeSlots([])
+          setBookingError("Failed to check availability. Please try again.")
+        } finally {
+          setIsLoadingAvailability(false)
+        }
+      } else {
+        setAvailableTimeSlots([])
+        setIsLoadingAvailability(false)
+      }
+    }
+
+    // Add a small delay to prevent too many rapid requests
+    const timeoutId = setTimeout(checkAvailability, 300)
+    return () => clearTimeout(timeoutId)
+  }, [bookingData.date, bookingData.guests, experience.max_guests])
 
   if (isLoading) {
     return (
@@ -551,7 +601,9 @@ export default function ExperienceDetailPage() {
                     {bookingData.date && (
                       <div>
                         <Label htmlFor="time">Available Times</Label>
-                        {availableTimeSlots.length > 0 ? (
+                        {isLoadingAvailability ? (
+                          <p>Checking Availability...</p>
+                        ) : availableTimeSlots.length > 0 ? (
                           <Select
                             value={bookingData.time}
                             onValueChange={(value) => {
