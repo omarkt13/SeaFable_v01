@@ -29,7 +29,10 @@ export async function getSession() {
     data: { session },
     error,
   } = await supabase.auth.getSession()
-  if (error || !session) return null
+  if (error) {
+    console.error('Error getting session:', error)
+    return null
+  }
   return session
 }
 

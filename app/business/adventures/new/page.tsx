@@ -59,13 +59,13 @@ const ExperienceCreationForm = () => {
     durationHours: '',
     durationDisplay: '',
     itinerary: [] as any[],
-    availabilityDates: [],
+    availabilityDates: [] as string[],
     primaryImageUrl: '',
-    additionalImages: [],
+    additionalImages: [] as string[],
     weatherContingency: '',
-    includedAmenities: [],
-    notIncludedItems: [],
-    whatToBring: [],
+    includedAmenities: [] as string[],
+    notIncludedItems: [] as string[],
+    whatToBring: [] as string[],
     minAge: '',
     maxAge: '',
     ageRestrictionDetails: '',
@@ -764,7 +764,8 @@ const ExperienceCreationForm = () => {
                       className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       rows={2}
                     />
-                                    </div>
+                                    </div>```python
+
                 </div>
               ))}
             </div>

@@ -28,7 +28,11 @@ import { AuthProvider } from "@/lib/auth-context"
 
 export default function LandingPage() {
   const router = useRouter()
-  const [searchData, setSearchData] = useState({
+  const [searchData, setSearchData] = useState<{
+    service: string;
+    location: string;
+    date: string;
+  }>({
     service: "",
     location: "",
     date: new Date().toISOString().split('T')[0], // Auto-set to today
@@ -86,7 +90,7 @@ export default function LandingPage() {
   }
 
   // Helper function to handle date selection
-  const handleDateSelect = (selectedDate: Date | undefined) => {
+  const handleDateSelect = (selectedDate: string) => {
     setSearchData({ ...searchData, date: selectedDate })
     setShowDatePicker(false)
   }
