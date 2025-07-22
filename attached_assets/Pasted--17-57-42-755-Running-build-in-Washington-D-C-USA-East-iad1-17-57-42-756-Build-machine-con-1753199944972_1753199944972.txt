@@ -1,0 +1,75 @@
+[17:57:42.755] Running build in Washington, D.C., USA (East) – iad1
+[17:57:42.756] Build machine configuration: 2 cores, 8 GB
+[17:57:42.792] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: efdb30b)
+[17:57:42.926] Previous build caches not available
+[17:57:43.324] Cloning completed: 532.000ms
+[17:57:45.215] Running "vercel build"
+[17:57:45.704] Vercel CLI 44.5.0
+[17:57:46.030] Installing dependencies...
+[17:57:49.962] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[17:57:50.711] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[17:58:00.953] 
+[17:58:00.954] added 489 packages in 15s
+[17:58:00.955] 
+[17:58:00.955] 57 packages are looking for funding
+[17:58:00.955]   run `npm fund` for details
+[17:58:01.142] Detected Next.js version: 15.2.4
+[17:58:01.147] Running "npm run build"
+[17:58:01.279] 
+[17:58:01.279] > my-v0-project@0.1.0 build
+[17:58:01.279] > next build
+[17:58:01.279] 
+[17:58:02.457] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[17:58:02.457] This information is used to shape Next.js' roadmap and prioritize features.
+[17:58:02.458] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[17:58:02.458] https://nextjs.org/telemetry
+[17:58:02.458] 
+[17:58:02.621]    ▲ Next.js 15.2.4
+[17:58:02.622]    - Experiments (use with caution):
+[17:58:02.622]      · allowedDevOrigins
+[17:58:02.623] 
+[17:58:02.772]    Creating an optimized production build ...
+[17:58:19.234]  ⚠ Compiled with warnings
+[17:58:19.234] 
+[17:58:19.234] ./components/customer-register-form.tsx
+[17:58:19.234] Attempted import error: 'supabase' is not exported from '@/lib/supabase/client' (imported as 'supabase').
+[17:58:19.234] 
+[17:58:19.234] Import trace for requested module:
+[17:58:19.234] ./components/customer-register-form.tsx
+[17:58:19.234] ./app/register/page.tsx
+[17:58:19.234] 
+[17:58:19.234] ./components/customer-register-form.tsx
+[17:58:19.234] Attempted import error: 'supabase' is not exported from '@/lib/supabase/client' (imported as 'supabase').
+[17:58:19.235] 
+[17:58:19.235] Import trace for requested module:
+[17:58:19.235] ./components/customer-register-form.tsx
+[17:58:19.235] ./app/register/page.tsx
+[17:58:19.235] 
+[17:58:32.944]  ⚠ Compiled with warnings
+[17:58:32.944] 
+[17:58:32.944] ./components/customer-register-form.tsx
+[17:58:32.944] Attempted import error: 'supabase' is not exported from '@/lib/supabase/client' (imported as 'supabase').
+[17:58:32.944] 
+[17:58:32.944] Import trace for requested module:
+[17:58:32.944] ./components/customer-register-form.tsx
+[17:58:32.945] ./app/register/page.tsx
+[17:58:32.945] 
+[17:58:32.945] ./components/customer-register-form.tsx
+[17:58:32.945] Attempted import error: 'supabase' is not exported from '@/lib/supabase/client' (imported as 'supabase').
+[17:58:32.945] 
+[17:58:32.945] Import trace for requested module:
+[17:58:32.945] ./components/customer-register-form.tsx
+[17:58:32.945] ./app/register/page.tsx
+[17:58:32.945] 
+[17:58:32.991]  ✓ Compiled successfully
+[17:58:32.996]    Linting and checking validity of types ...
+[17:58:46.749] Failed to compile.
+[17:58:46.750] 
+[17:58:46.750] app/api/business/experiences/route.ts
+[17:58:46.750] Type error: Route "app/api/business/experiences/route.ts" does not match the required types of a Next.js Route.
+[17:58:46.751]   "CREATE" is not a valid Route export field.
+[17:58:46.751] 
+[17:58:46.780] Next.js build worker exited with code: 1 and signal: null
+[17:58:46.799] Error: Command "npm run build" exited with 1
+[17:58:47.055] 
+[17:58:50.622] Exiting build container
