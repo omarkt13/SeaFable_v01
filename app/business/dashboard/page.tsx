@@ -1,35 +1,57 @@
 
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { BusinessLayout } from "@/components/layouts/BusinessLayout"
 import { useAuth } from "@/lib/auth-context"
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+
+// Import business dashboard components
+import {
+  StatsOverview,
+  RecentBookings,
+  UpcomingBookings,
+  QuickActions,
+  PerformanceMetrics
+} from "@/components/dashboard/business"
 
 export default function BusinessDashboardPage() {
-  const router = useRouter()
-  const { user, userType, isLoading } = useAuth()
-
-  useEffect(() => {
-    // Only redirect after auth state is confirmed
-    if (!isLoading) {
-      if (!user) {
-        router.replace("/business/login")
-      } else if (userType === "business") {
-        router.replace("/business/home")
-      } else if (userType === "customer") {
-        router.replace("/business/register")
-      }
-    }
-  }, [router, user, userType, isLoading])
+  const { user, businessProfile } = useAuth()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">
-          {isLoading ? "Loading..." : "Redirecting to dashboard..."}
-        </p>
-      </div>
-    </div>
+    <BusinessProtectedRoute>
+      <BusinessLayout>
+        <div className="space-y-6">
+          {/* Welcome Header */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Business Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Welcome back, {businessProfile?.contact_name || businessProfile?.name || 'Business Owner'}!
+            </p>
+            <p className="text-gray-600 text-sm">
+              Here's what's happening with your business today
+            </p>
+          </div>
+
+          {/* Stats Overview */}
+          <StatsOverview />
+
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentBookings />
+            <UpcomingBookings />
+          </div>
+
+          {/* Additional Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <QuickActions />
+            <div className="lg:col-span-2">
+              <PerformanceMetrics />
+            </div>
+          </div>
+        </div>
+      </BusinessLayout>
+    </BusinessProtectedRoute>
   )
 }
