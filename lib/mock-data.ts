@@ -1,102 +1,86 @@
-
-import { supabase } from './supabase'
-
-// Helper functions for fetching real data from database
-export async function fetchBusinessProfile(userId: string) {
-  const { data, error } = await supabase
-    .from('host_profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-  
-  if (error) throw error
-  return data
+export const mockBusinessData = {
+  businessProfile: {
+    name: "SeaFable Adventures",
+    type: "Tour Operator",
+    email: "info@seafable.com",
+    phone: "+1 (555) 123-4567",
+    address: "123 Ocean Drive, Coastal City, CA 90210",
+    description: "Providing unforgettable marine experiences.",
+    logoUrl: "/placeholder-logo.png",
+  },
+  dashboardStats: {
+    totalBookings: 120,
+    totalRevenue: 25000,
+    averageRating: 4.8,
+    upcomingBookings: 15,
+  },
+  recentActivity: [
+    { id: "1", type: "New Booking", description: "John Doe booked 'Sunset Cruise'", time: "2 hours ago" },
+    {
+      id: "2",
+      type: "Review",
+      description: "Jane Smith left a 5-star review for 'Dolphin Watching'",
+      time: "1 day ago",
+    },
+    { id: "3", type: "Experience Added", description: "'Deep Sea Fishing' experience created", time: "3 days ago" },
+  ],
+  earningsSummary: {
+    monthly: [
+      { month: "Jan", earnings: 1500 },
+      { month: "Feb", earnings: 2000 },
+      { month: "Mar", earnings: 2800 },
+      { month: "Apr", earnings: 3500 },
+      { month: "May", earnings: 4200 },
+      { month: "Jun", earnings: 5000 },
+    ],
+    yearly: 25000,
+  },
+  performanceMetrics: {
+    bookingConversionRate: "5.2%",
+    customerRetentionRate: "78%",
+    websiteTraffic: "15,000",
+  },
+  quickActions: [
+    { name: "Add New Experience", href: "/business/experiences/new" },
+    { name: "View Bookings", href: "/business/bookings" },
+    { name: "Manage Team", href: "/business/team" },
+  ],
+  recentBookings: [
+    {
+      id: "b1",
+      customerName: "Alice Wonderland",
+      experience: "Coral Reef Snorkel",
+      date: "2024-07-10",
+      status: "Confirmed",
+    },
+    {
+      id: "b2",
+      customerName: "Bob The Builder",
+      experience: "Deep Sea Fishing",
+      date: "2024-07-08",
+      status: "Pending",
+    },
+    { id: "b3", customerName: "Charlie Chaplin", experience: "Sunset Cruise", date: "2024-07-05", status: "Completed" },
+  ],
+  upcomingBookings: [
+    {
+      id: "u1",
+      customerName: "David Copperfield",
+      experience: "Dolphin Watching",
+      date: "2024-07-20",
+      time: "10:00 AM",
+    },
+    {
+      id: "u2",
+      customerName: "Eve Harrington",
+      experience: "Kayaking Adventure",
+      date: "2024-07-22",
+      time: "02:00 PM",
+    },
+  ],
+  experiencePerformance: [
+    { id: "e1", name: "Sunset Cruise", bookings: 50, revenue: 10000, rating: 4.9 },
+    { id: "e2", name: "Dolphin Watching", bookings: 35, revenue: 7000, rating: 4.7 },
+    { id: "e3", name: "Coral Reef Snorkel", bookings: 20, revenue: 4000, rating: 4.8 },
+  ],
 }
-
-export async function fetchBusinessStats(businessId: string) {
-  // Fetch bookings for revenue and booking count
-  const { data: bookings, error: bookingsError } = await supabase
-    .from('bookings')
-    .select(`
-      total_price,
-      status,
-      booking_date,
-      experiences!inner (
-        host_profiles!inner (
-          business_id
-        )
-      )
-    `)
-    .eq('experiences.host_profiles.business_id', businessId)
-
-  if (bookingsError) throw bookingsError
-
-  const totalBookings = bookings?.length || 0
-  const totalRevenue = bookings?.reduce((sum, booking) => sum + (booking.total_price || 0), 0) || 0
-  
-  const now = new Date()
-  const upcomingBookings = bookings?.filter(booking => 
-    new Date(booking.booking_date) > now && booking.status !== 'cancelled'
-  ).length || 0
-
-  // Fetch average rating from experiences
-  const { data: experiences, error: experiencesError } = await supabase
-    .from('experiences')
-    .select('average_rating')
-    .eq('business_id', businessId)
-
-  if (experiencesError) throw experiencesError
-
-  const averageRating = experiences?.length > 0 
-    ? experiences.reduce((sum, exp) => sum + (exp.average_rating || 0), 0) / experiences.length
-    : 0
-
-  return {
-    totalBookings,
-    totalRevenue,
-    averageRating,
-    upcomingBookings
-  }
-}
-
-export async function fetchRecentActivity(businessId: string, limit = 5) {
-  const { data: bookings, error } = await supabase
-    .from('bookings')
-    .select(`
-      id,
-      created_at,
-      status,
-      experiences!inner (
-        title,
-        host_profiles!inner (
-          business_id
-        )
-      )
-    `)
-    .eq('experiences.host_profiles.business_id', businessId)
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-
-  return bookings?.map(booking => ({
-    id: booking.id,
-    type: 'Booking',
-    description: `New booking for ${booking.experiences?.title}`,
-    time: formatTimeAgo(booking.created_at)
-  })) || []
-}
-
-function formatTimeAgo(dateString: string): string {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffMs = now.getTime() - date.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-  if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  return 'Just now'
-}
-
-// Remove all mock data objects - they are no longer needed
