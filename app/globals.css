@@ -93,17 +93,24 @@ body {
     font-family: Arial, Helvetica, sans-serif;
   }
   
-  /* Ensure proper color inheritance */
-  .bg-gray-50 {
+  /* Ensure proper color inheritance for all components */
+  button:not([class*="bg-"]) {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  input:not([class*="bg-"]), 
+  textarea:not([class*="bg-"]), 
+  select:not([class*="bg-"]) {
+    @apply bg-background text-foreground border-border;
+  }
+  
+  /* Override any black backgrounds */
+  .bg-black {
     @apply bg-background;
   }
   
-  /* Fix button and input colors */
-  button {
-    @apply bg-background text-foreground;
-  }
-  
-  input, textarea, select {
-    @apply bg-background text-foreground border-border;
+  /* Ensure cards and containers have proper backgrounds */
+  [class*="card"]:not([class*="bg-"]) {
+    @apply bg-card text-card-foreground;
   }
 }

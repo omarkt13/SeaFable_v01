@@ -851,7 +851,7 @@ const ProfileTab = ({ userProfile, userEmail }: ProfileTabProps) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time of Day</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time of Day                </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
                   <option value="morning">Morning</option>
                   <option value="afternoon">Afternoon</option>
@@ -930,7 +930,11 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
   }, [searchParams])
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   useEffect(() => {
@@ -940,7 +944,11 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
   }, [user, loading, router])
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -989,7 +997,7 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
               </div>
             </div>
           </div>
-          
+
           {/* Mobile Navigation */}
           <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b z-10">
             <div className="flex overflow-x-auto p-2 space-x-1">

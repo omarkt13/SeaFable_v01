@@ -146,9 +146,7 @@ export default function ExperienceDetailPage() {
     const filteredTimeSlots = useMemo(()=>{
         if (!experience?.host_availability || !bookingData.date) return [];
         return experience.host_availability.filter((slot) => 
-          slot.created_at && 
-          slot.available_capacity >= bookingData.guests && 
-          new Date(`${slot.created_at}T${slot.start_time}`) > new Date()
+          slot.date && slot.available_capacity >= bookingData.guests && new Date(`${slot.date}T${slot.start_time}`) > new Date()
         ).sort((a, b) => a.start_time.localeCompare(b.start_time));
     }, [experience?.host_availability, bookingData.date, bookingData.guests]);
 
