@@ -16,9 +16,7 @@ const nextConfig = {
     cpus: 1,
     allowedDevOrigins: [
       '*.replit.dev',
-      '*.spock.replit.dev',
-      /.*\.replit\.dev$/,
-      /.*\.spock\.replit\.dev$/
+      '*.spock.replit.dev'
     ],
   },
   poweredByHeader: false,
