@@ -1,0 +1,49 @@
+[22:47:54.454] Running build in Washington, D.C., USA (East) – iad1
+[22:47:54.463] Build machine configuration: 2 cores, 8 GB
+[22:47:54.507] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: f01a491)
+[22:47:54.628] Previous build caches not available
+[22:47:54.952] Cloning completed: 445.000ms
+[22:47:56.714] Running "vercel build"
+[22:47:57.168] Vercel CLI 44.5.0
+[22:47:57.492] Installing dependencies...
+[22:48:01.629] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[22:48:02.301] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[22:48:12.243] 
+[22:48:12.244] added 490 packages in 15s
+[22:48:12.245] 
+[22:48:12.245] 57 packages are looking for funding
+[22:48:12.245]   run `npm fund` for details
+[22:48:12.305] Detected Next.js version: 15.2.4
+[22:48:12.310] Running "npm run build"
+[22:48:12.425] 
+[22:48:12.426] > my-v0-project@0.1.0 build
+[22:48:12.426] > next build
+[22:48:12.426] 
+[22:48:13.027] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[22:48:13.028] This information is used to shape Next.js' roadmap and prioritize features.
+[22:48:13.029] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[22:48:13.029] https://nextjs.org/telemetry
+[22:48:13.029] 
+[22:48:13.089]    ▲ Next.js 15.2.4
+[22:48:13.089]    - Experiments (use with caution):
+[22:48:13.090]      · allowedDevOrigins
+[22:48:13.090] 
+[22:48:13.166]    Creating an optimized production build ...
+[22:48:43.411]  ✓ Compiled successfully
+[22:48:43.417]    Linting and checking validity of types ...
+[22:48:56.400] Failed to compile.
+[22:48:56.400] 
+[22:48:56.401] ./app/business/adventures/page.tsx:93:24
+[22:48:56.401] Type error: 'user' is possibly 'null'.
+[22:48:56.401] 
+[22:48:56.401] [0m [90m 91 |[39m [32m          bookings!inner(count)[39m[0m
+[22:48:56.402] [0m [90m 92 |[39m [32m        `[39m)[0m
+[22:48:56.402] [0m[31m[1m>[22m[39m[90m 93 |[39m         [33m.[39meq([32m'host_id'[39m[33m,[39m user[33m.[39mid)[0m
+[22:48:56.402] [0m [90m    |[39m                        [31m[1m^[22m[39m[0m
+[22:48:56.402] [0m [90m 94 |[39m         [33m.[39morder([32m'updated_at'[39m[33m,[39m { ascending[33m:[39m [36mfalse[39m })[0m
+[22:48:56.402] [0m [90m 95 |[39m[0m
+[22:48:56.402] [0m [90m 96 |[39m       [36mif[39m (error) [36mthrow[39m error[0m
+[22:48:56.434] Next.js build worker exited with code: 1 and signal: null
+[22:48:56.453] Error: Command "npm run build" exited with 1
+[22:48:56.689] 
+[22:48:59.568] Exiting build container
