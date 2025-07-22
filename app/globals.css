@@ -145,18 +145,44 @@
     color: inherit;
   }
 
-  /* Ensure no element has pure black background */
+  /* Force visible colors for all elements */
+  * {
+    color: hsl(var(--foreground)) !important;
+    background-color: transparent !important;
+  }
+
+  /* Override any black backgrounds */
   [style*="background-color: black"], 
   [style*="background-color: #000"], 
-  [style*="background-color: rgb(0, 0, 0)"] {
+  [style*="background-color: rgb(0, 0, 0)"],
+  [class*="bg-black"] {
     background-color: hsl(var(--background)) !important;
   }
 
-  /* Ensure no element has pure black text color except when intended */
+  /* Override any black text colors */
   [style*="color: black"]:not([class*="text-black"]), 
   [style*="color: #000"]:not([class*="text-black"]), 
-  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]) {
+  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]),
+  [class*="text-black"]:not(.intentionally-black) {
     color: hsl(var(--foreground)) !important;
+  }
+
+  /* Ensure form elements are always visible */
+  input, textarea, select, button {
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+  }
+
+  /* Force visibility for search elements */
+  [role="searchbox"], [type="search"], .search-input {
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+
+  /* Force visibility for all text content */
+  p, span, label, h1, h2, h3, h4, h5, h6, div {
+    color: inherit !important;
   }
 
   /* Fix sidebar elements */
