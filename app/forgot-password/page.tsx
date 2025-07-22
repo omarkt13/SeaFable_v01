@@ -10,7 +10,12 @@ import { Loader2 } from "lucide-react"
 import { sendPasswordResetEmail } from "@/app/actions/auth" // Import the new server action
 
 export default function ForgotPasswordPage() {
-  const [state, formAction, isPending] = useActionState(sendPasswordResetEmail, null)
+  const [state, formAction, isPending] = useActionState(
+    async (prevState: any, formData: FormData) => {
+      return await sendPasswordResetEmail(formData)
+    }, 
+    null
+  )
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

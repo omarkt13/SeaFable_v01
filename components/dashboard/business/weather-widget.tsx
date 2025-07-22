@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Cloud, Sun, CloudRain, Wind, Waves } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { mockBusinessData } from "@/lib/mock-data"
+// import { mockBusinessData } from "@/lib/mock-data" // Not available
 
 export function WeatherWidget() {
   const getWeatherIcon = (condition: string) => {
@@ -54,7 +54,7 @@ export function WeatherWidget() {
 
           <div className="space-y-2">
             <p className="text-sm font-medium">3-Day Forecast</p>
-            {weather.forecast.map((day, index) => {
+            {weather.forecast.map((day: any, index: number) => {
               const DayIcon = getWeatherIcon(day.condition)
               return (
                 <div key={index} className="flex items-center justify-between text-sm">

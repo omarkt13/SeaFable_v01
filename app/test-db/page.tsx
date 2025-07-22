@@ -155,7 +155,7 @@ export default function DatabaseTestPage() {
               ? {
                   ...test,
                   status: "error",
-                  message: error.message || "Unknown error",
+                  message: error instanceof Error ? error.message : "Unknown error",
                 }
               : test,
           ),

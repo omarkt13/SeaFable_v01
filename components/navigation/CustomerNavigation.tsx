@@ -16,7 +16,7 @@ export function CustomerNavigation() {
   }
 
   const userInitials =
-    userProfile?.first_name?.charAt(0) + userProfile?.last_name?.charAt(0) || user?.email?.charAt(0) || "U"
+    (userProfile?.first_name?.charAt(0) || "") + (userProfile?.last_name?.charAt(0) || "") || user?.email?.charAt(0) || "U"
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">

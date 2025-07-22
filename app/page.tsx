@@ -33,14 +33,14 @@ export default function LandingPage() {
     location: "",
     date: new Date().toISOString().split('T')[0], // Auto-set to today
   })
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [isSearching, setIsSearching] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0])
 
   // Close date picker when clicking outside
   React.useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (showDatePicker && !event.target.closest('.date-picker-container')) {
         setShowDatePicker(false)
       }
@@ -86,15 +86,15 @@ export default function LandingPage() {
   }
 
   // Helper function to handle date selection
-  const handleDateSelect = (selectedDate) => {
+  const handleDateSelect = (selectedDate: Date | undefined) => {
     setSearchData({ ...searchData, date: selectedDate })
     setShowDatePicker(false)
   }
 
   const validateSearch = () => {
     const newErrors = {}
-    if (!searchData.service.trim()) newErrors.service = "Please select an activity"
-    if (!searchData.location.trim()) newErrors.location = "Please enter a location"
+    if (!searchData.service?.trim()) newErrors.service = "Please select an activity"
+    if (!searchData.location?.trim()) newErrors.location = "Please enter a location"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -335,7 +335,7 @@ export default function LandingPage() {
                               {getCalendarDays().map((day, index) => {
                                 const isToday = day.date === new Date().toISOString().split('T')[0]
                                 const isSelected = day.date === searchData.date
-                                const isPast = new Date(day.date) < new Date().setHours(0, 0, 0, 0)
+                                const isPast = new Date(day.date).getTime() < new Date().setHours(0, 0, 0, 0)
                                 
                                 return (
                                   <button

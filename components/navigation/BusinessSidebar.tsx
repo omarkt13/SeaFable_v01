@@ -20,9 +20,14 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { mockBusinessData } from "@/lib/mock-data"
+// import { mockBusinessData } from "@/lib/mock-data" // Not available
 
-export function BusinessSidebar({ isOpen, onClose }) {
+interface BusinessSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function BusinessSidebar({ isOpen, onClose }: BusinessSidebarProps) {
   const { businessProfile, signOut } = useAuth()
   const pathname = usePathname();
 

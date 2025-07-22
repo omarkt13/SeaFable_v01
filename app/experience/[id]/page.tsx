@@ -145,7 +145,11 @@ export default function ExperienceDetailPage() {
   // Filter available slots based on selected date
     const filteredTimeSlots = useMemo(()=>{
         if (!experience?.host_availability || !bookingData.date) return [];
-        return experience.host_availability.filter((slot)=>slot.date === bookingData.date && slot.available_capacity >= bookingData.guests && new Date(`${slot.date}T${slot.start_time}`) > new Date()).sort((a, b)=>a.start_time.localeCompare(b.start_time));
+        return experience.host_availability.filter((slot) => 
+          slot.created_at && 
+          slot.available_capacity >= bookingData.guests && 
+          new Date(`${slot.created_at}T${slot.start_time}`) > new Date()
+        ).sort((a, b) => a.start_time.localeCompare(b.start_time));
     }, [experience?.host_availability, bookingData.date, bookingData.guests]);
 
   // Check availability when date or guests change
@@ -171,10 +175,10 @@ export default function ExperienceDetailPage() {
           }
 
           const simulatedSlots = [
-            { id: 1, start_time: "09:00", available_capacity: experience.max_guests },
-            { id: 2, start_time: "11:00", available_capacity: Math.max(0, experience.max_guests - 2) },
-            { id: 3, start_time: "14:00", available_capacity: experience.max_guests },
-            { id: 4, start_time: "16:00", available_capacity: Math.max(0, experience.max_guests - 1) },
+            { id: 1, start_time: "09:00", available_capacity: experience?.max_guests || 0 },
+            { id: 2, start_time: "11:00", available_capacity: Math.max(0, (experience?.max_guests || 0) - 2) },
+            { id: 3, start_time: "14:00", available_capacity: experience?.max_guests || 0 },
+            { id: 4, start_time: "16:00", available_capacity: Math.max(0, (experience?.max_guests || 0) - 1) },
           ].filter((slot) => slot.available_capacity >= bookingData.guests)
 
           setAvailableTimeSlots(simulatedSlots)
@@ -194,7 +198,7 @@ export default function ExperienceDetailPage() {
     // Add a small delay to prevent too many rapid requests
     const timeoutId = setTimeout(checkAvailability, 300)
     return () => clearTimeout(timeoutId)
-  }, [bookingData.date, bookingData.guests, experience.max_guests])
+  }, [bookingData.date, bookingData.guests, experience?.max_guests])
 
   if (isLoading) {
     return (
@@ -326,7 +330,7 @@ export default function ExperienceDetailPage() {
               )}
 
               <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                {hostProfile?.rating >= 4.8 && (
+                {(hostProfile?.rating || 0) >= 4.8 && (
                   <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900">
                     <Award className="h-3 w-3 mr-1" />
                     Superhost

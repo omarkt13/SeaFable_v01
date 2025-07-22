@@ -861,7 +861,7 @@ export default function EnhancedExperiencesSearchPage() {
                                   } else {
                                     handleFilterChange(
                                       "categories",
-                                      filters.categories.filter((c) => c !== category),
+                                      filters.categories.filter((c) => c.value !== category.value),
                                     )
                                   }
                                 }}
@@ -1013,7 +1013,7 @@ export default function EnhancedExperiencesSearchPage() {
                         onClick={() =>
                           handleFilterChange(
                             "categories",
-                            filters.categories.filter((c) => c !== category),
+                            filters.categories.filter((c) => c.value !== category.value),
                           )
                         }
                       >
