@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -82,8 +81,14 @@ export default function AdventuresPage() {
   }, [user, businessProfile])
 
   const fetchAdventures = async () => {
-    setLoading(true)
+    if (!user) {
+      console.error('User not authenticated')
+      return
+    }
+
     try {
+      setLoading(true)
+
       const { data, error } = await supabase
         .from('experiences')
         .select(`
