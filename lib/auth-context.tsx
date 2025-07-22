@@ -110,17 +110,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let mounted = true;
+    let hasInitialized = false;
 
-    // Initial session check with retry logic
+    // Initial session check with retry and persistence logic
     const getInitialSession = async () => {
       try {
-        // Add a small delay to ensure Supabase client is fully initialized
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Check if we have a cached session first
+        let session = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        // Retry logic for session retrieval
+        while (retryCount < maxRetries && !session) {
+          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error(`Session retrieval error (attempt ${retryCount + 1}):`, error);
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 200 * retryCount));
+          } else {
+            session = currentSession;
+            break;
+          }
+        }
         
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial getSession result:", session?.user?.id);
+        console.log("Initial getSession result:", session?.user?.id, `(attempt ${retryCount + 1})`);
         
-        if (mounted) {
+        if (mounted && !hasInitialized) {
+          hasInitialized = true;
           await fetchUserAndProfiles(session?.user || null);
         }
       } catch (error) {
@@ -131,7 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    getInitialSession();
+    // Add a small delay to ensure Supabase client is fully initialized after hot reload
+    const initTimeout = setTimeout(getInitialSession, 50);
 
     // Listen for auth state changes
     const {
@@ -140,12 +158,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id);
       
       if (mounted) {
+        // Don't process INITIAL_SESSION if we've already initialized
+        if (event === 'INITIAL_SESSION' && hasInitialized) {
+          console.log("Skipping duplicate INITIAL_SESSION event");
+          return;
+        }
+        
         await fetchUserAndProfiles(session?.user || null);
       }
     })
 
     return () => {
       mounted = false;
+      clearTimeout(initTimeout);
       subscription.unsubscribe()
     }
   }, []) // Remove supabase dependency to prevent re-initialization
