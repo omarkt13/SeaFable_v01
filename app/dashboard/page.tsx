@@ -952,8 +952,17 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
     return <div>Loading...</div>
   }
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
   if (!user) {
-    router.push("/login")
     return null
   }
 
@@ -977,13 +986,18 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
               </SidebarHeader>
               <SidebarMenu>
                 {tabs.map((tab) => (
-                  <SidebarMenuItem
-                    key={tab.id}
-                    active={activeTab === tab.id}
-                    href={`/dashboard?tab=${tab.id}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.label}
+                  <SidebarMenuItem key={tab.id}>
+                    <SidebarMenuButton 
+                      asChild
+                      isActive={activeTab === tab.id}
+                    >
+                      <Link 
+                        href={`/dashboard?tab=${tab.id}`}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.label}
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

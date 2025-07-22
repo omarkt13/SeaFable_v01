@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
@@ -16,7 +15,7 @@ class CompilationDiagnostics {
         /'[^']+' is declared but its value is never read/g,
         /Variable '.+' is used before being assigned/g,
       ],
-      
+
       // Import/Export issues
       importErrors: [
         /Cannot find module '.+'/g,
@@ -24,7 +23,7 @@ class CompilationDiagnostics {
         /Cannot resolve dependency '.+'/g,
         /Import '.+' conflicts with local declaration/g,
       ],
-      
+
       // React/JSX issues
       reactErrors: [
         /JSX element '.+' has no corresponding closing tag/g,
@@ -33,14 +32,14 @@ class CompilationDiagnostics {
         /React Hook .+ cannot be called inside a callback/g,
         /Each child in a list should have a unique "key" prop/g,
       ],
-      
+
       // Next.js specific issues
       nextjsErrors: [
         /Error: .+ is not a valid .+ component export/g,
         /Dynamic server usage: .+ is not allowed/g,
         /Hydration failed because the server rendered HTML/g,
       ],
-      
+
       // Syntax errors
       syntaxErrors: [
         /Unexpected token/g,
@@ -56,13 +55,13 @@ class CompilationDiagnostics {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
       const relativePath = path.relative(process.cwd(), filePath);
-      
+
       // Check for common compilation patterns
       this.checkImportPatterns(content, relativePath);
       this.checkTypeScriptPatterns(content, relativePath);
       this.checkReactPatterns(content, relativePath);
       this.checkSyntaxPatterns(content, relativePath);
-      
+
     } catch (error) {
       this.issues.push({
         type: 'file_access_error',
@@ -77,11 +76,11 @@ class CompilationDiagnostics {
     // Mixed quote styles in imports
     const importLines = content.match(/^import.*from.*/gm) || [];
     let singleQuotes = 0, doubleQuotes = 0;
-    
+
     importLines.forEach((line, index) => {
       if (line.includes("'")) singleQuotes++;
       if (line.includes('"')) doubleQuotes++;
-      
+
       // Check for missing file extensions in relative imports
       if (line.match(/from\s+['"]\..*[^'"]\s*['"]/) && !line.includes('.ts') && !line.includes('.tsx') && !line.includes('.js') && !line.includes('.jsx')) {
         this.issues.push({
@@ -234,10 +233,10 @@ class CompilationDiagnostics {
 
   async scanDirectory(dir, extensions = ['.ts', '.tsx', '.js', '.jsx']) {
     const files = fs.readdirSync(dir, { withFileTypes: true });
-    
+
     for (const file of files) {
       const fullPath = path.join(dir, file.name);
-      
+
       if (file.isDirectory() && !file.name.startsWith('.') && file.name !== 'node_modules') {
         await this.scanDirectory(fullPath, extensions);
       } else if (file.isFile() && extensions.some(ext => file.name.endsWith(ext))) {
@@ -252,7 +251,7 @@ class CompilationDiagnostics {
         if (error || stderr) {
           const output = stderr || stdout || error.message;
           const lines = output.split('\n').filter(line => line.trim());
-          
+
           lines.forEach(line => {
             if (line.includes('error TS')) {
               const match = line.match(/^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/);
@@ -353,25 +352,25 @@ class CompilationDiagnostics {
 
   async run() {
     console.log('🔍 Starting comprehensive compilation diagnostics...');
-    
+
     // Scan all TypeScript/JavaScript files
     await this.scanDirectory('./app');
     await this.scanDirectory('./components');
     await this.scanDirectory('./lib');
     await this.scanDirectory('./hooks');
     await this.scanDirectory('./types');
-    
+
     // Run TypeScript compiler check
     console.log('🔧 Running TypeScript compilation check...');
     await this.runTypeScriptCheck();
-    
+
     // Run ESLint check
     console.log('🔧 Running ESLint check...');
     await this.runLintCheck();
-    
+
     const report = this.generateReport();
     this.printSummary(report);
-    
+
     return report;
   }
 }

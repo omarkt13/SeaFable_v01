@@ -1,4 +1,3 @@
-
 # Error Fix Log - TypeScript and React Issues
 
 **Session Date:** January 22, 2025
@@ -100,6 +99,34 @@ import { NextRequest, NextResponse } from "next/server"
 - `app/business/earnings/page.tsx`
 - `app/business/experiences/new/page.tsx`
 **Status:** 🔄 IDENTIFIED (Standardization needed)
+
+---
+
+## 8. Customer Dashboard Console Errors
+**Location:** `app/dashboard/page.tsx`
+**Error Type:** React Component and Hydration Errors
+**Issue:** Multiple console errors when logging into customer dashboard
+```
+Received `true` for a non-boolean attribute `active`
+React.Children.only expected to receive a single React element child
+Hydration failed because the server rendered HTML didn't match the client
+Cannot update a component while rendering a different component
+```
+**Status:** 🔄 NEEDS IMMEDIATE FIX
+**Priority:** HIGH - Breaking user experience
+
+---
+
+## 9. Database Query Errors
+**Location:** Business dashboard components
+**Error Type:** PostgreSQL column/relationship errors
+**Issue:** Database queries failing with column and foreign key errors
+```
+column bookings.start_date does not exist
+Could not find a relationship between 'bookings' and 'customer_profiles'
+```
+**Status:** 🔄 NEEDS DATABASE SCHEMA FIX
+**Priority:** HIGH - Data access broken
 
 ---
 
