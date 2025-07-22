@@ -92,7 +92,6 @@ const config: Config = {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
-  presets: [require("./src/ui/tailwind.config.js")]
+  plugins: [require("tailwindcss-animate")]
 };
 export default config;
