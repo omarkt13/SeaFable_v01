@@ -1,0 +1,44 @@
+[18:03:23.102] Running build in Washington, D.C., USA (East) – iad1
+[18:03:23.102] Build machine configuration: 2 cores, 8 GB
+[18:03:23.116] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: bd2f451)
+[18:03:23.307] Previous build caches not available
+[18:03:23.516] Cloning completed: 399.000ms
+[18:03:23.809] Running "vercel build"
+[18:03:24.849] Vercel CLI 44.5.0
+[18:03:25.762] Installing dependencies...
+[18:03:30.661] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:03:31.250] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:03:42.125] 
+[18:03:42.143] added 489 packages in 16s
+[18:03:42.144] 
+[18:03:42.144] 57 packages are looking for funding
+[18:03:42.144]   run `npm fund` for details
+[18:03:42.414] Detected Next.js version: 15.2.4
+[18:03:42.418] Running "npm run build"
+[18:03:42.548] 
+[18:03:42.549] > my-v0-project@0.1.0 build
+[18:03:42.549] > next build
+[18:03:42.549] 
+[18:03:43.649] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:03:43.650] This information is used to shape Next.js' roadmap and prioritize features.
+[18:03:43.652] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:03:43.652] https://nextjs.org/telemetry
+[18:03:43.652] 
+[18:03:43.829]    ▲ Next.js 15.2.4
+[18:03:43.830]    - Experiments (use with caution):
+[18:03:43.830]      · allowedDevOrigins
+[18:03:43.830] 
+[18:03:43.982]    Creating an optimized production build ...
+[18:04:14.074]  ✓ Compiled successfully
+[18:04:14.079]    Linting and checking validity of types ...
+[18:04:28.024] Failed to compile.
+[18:04:28.025] 
+[18:04:28.025] app/dashboard/page.tsx
+[18:04:28.026] Type error: Type 'DashboardPageProps' does not satisfy the constraint 'PageProps'.
+[18:04:28.026]   Types of property 'searchParams' are incompatible.
+[18:04:28.026]     Type '{ [key: string]: string | string[] | undefined; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+[18:04:28.026] 
+[18:04:28.060] Next.js build worker exited with code: 1 and signal: null
+[18:04:28.079] Error: Command "npm run build" exited with 1
+[18:04:28.431] 
+[18:04:31.992] Exiting build container
