@@ -85,6 +85,12 @@ export default function LandingPage() {
     return days
   }
 
+  // Helper function to handle date selection
+  const handleDateSelect = (selectedDate) => {
+    setSearchData({ ...searchData, date: selectedDate })
+    setShowDatePicker(false)
+  }
+
   const validateSearch = () => {
     const newErrors = {}
     if (!searchData.service.trim()) newErrors.service = "Please select an activity"
@@ -246,10 +252,11 @@ export default function LandingPage() {
                     <div className="relative date-picker-container">
                       <Input
                         type="text"
-                        value={searchData.date ? new Date(searchData.date).toLocaleDateString('en-US', { 
+                        value={searchData.date ? new Date(searchData.date + 'T00:00:00').toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
-                          day: 'numeric' 
+                          day: 'numeric',
+                          year: 'numeric'
                         }) : 'Select date'}
                         readOnly
                         onClick={() => setShowDatePicker(!showDatePicker)}
@@ -274,8 +281,7 @@ export default function LandingPage() {
                                   onClick={() => {
                                     const date = new Date()
                                     date.setDate(date.getDate() + option.days)
-                                    setSearchData({ ...searchData, date: date.toISOString().split('T')[0] })
-                                    setShowDatePicker(false)
+                                    handleDateSelect(date.toISOString().split('T')[0])
                                   }}
                                   className="px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-200"
                                 >
@@ -334,24 +340,19 @@ export default function LandingPage() {
                                 return (
                                   <button
                                     key={index}
-                                    onClick={() => {
-                                      if (!isPast && day.inCurrentMonth) {
-                                        setSearchData({ ...searchData, date: day.date })
-                                        setShowDatePicker(false)
-                                      }
-                                    }}
-                                    disabled={isPast || !day.inCurrentMonth}
+                                    onClick={() => handleDateSelect(day.date)}
+                                    disabled={isPast && day.inCurrentMonth}
                                     className={`
                                       p-2 text-sm rounded-lg transition-all duration-200 
-                                      ${day.inCurrentMonth 
-                                        ? isPast 
+                                      ${!day.inCurrentMonth 
+                                        ? 'text-gray-300 cursor-not-allowed' 
+                                        : isPast 
                                           ? 'text-gray-300 cursor-not-allowed' 
                                           : isSelected 
-                                            ? 'bg-blue-600 text-white' 
+                                            ? 'bg-blue-600 text-white font-semibold' 
                                             : isToday 
-                                              ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                                              : 'text-gray-700 hover:bg-gray-100'
-                                        : 'text-gray-300'
+                                              ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium hover:bg-blue-100' 
+                                              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                       }
                                     `}
                                   >
