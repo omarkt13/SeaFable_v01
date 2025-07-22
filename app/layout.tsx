@@ -15,9 +15,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=monospace:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
       </head>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <AuthProvider key="auth-provider">
+      <body suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <AuthProvider>
             <ErrorBoundary fallback={ErrorFallback}>
               {children}
             </ErrorBoundary>
