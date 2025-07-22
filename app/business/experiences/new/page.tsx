@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,44 +19,39 @@ import { useToast } from "@/hooks/use-toast"
 import { createExperience } from "@/lib/database"
 import { useAuth } from "@/hooks/useAuth"
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
-
+import { 
+  Home,
+  Users,
+  Anchor,
+  MessageCircle,
+  Calendar,
+  Handshake,
+  User,
+  Settings,
+  DollarSign,
+  Shapes,
+  Bell,
+  ChevronDown,
+  LogOut,
+  UserPlus,
+  UserMinus,
+  Check,
+  MapPin,
+  Clock,
+  X,
+  ChevronLeft,
+  Save,
+  ChevronRight,
+  Plus,
+  Upload
+} from "lucide-react"
 import {
-  SettingsMenu,
-  TextField,
   DropdownMenu,
-  IconWithBackground,
-  IconButton,
-} from '@storefront-ui/react'
-import {
-  FeatherHome,
-  FeatherUsers,
-  FeatherAnchor,
-  FeatherMessageCircle,
-  FeatherCalendar,
-  FeatherHandshake,
-  FeatherUser,
-  FeatherSettings,
-  FeatherDollarSign,
-  FeatherShapes,
-  FeatherBell,
-  FeatherChevronDown,
-  FeatherLogOut,
-  FeatherUserPlus,
-  FeatherUserMinus,
-  FeatherCheck,
-  FeatherMapPin,
-  FeatherClock,
-  FeatherX,
-  FeatherChevronLeft,
-  FeatherSave,
-  FeatherChevronRight,
-  FeatherPlus,
-  FeatherInstagram,
-  FeatherFacebook,
-  FeatherYoutube,
-  FeatherUpload,
-} from '@storefront-ui/react/icons'
-import * as SubframeCore from '@storefront-ui/react/core'
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface ExperienceFormData {
   // Basic Info
@@ -132,8 +128,14 @@ function CreateNewExperience() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
+  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
   const { user } = useAuth()
+
+  // Fix SSR hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const [formData, setFormData] = useState<ExperienceFormData>({
     title: '',
@@ -162,7 +164,7 @@ function CreateNewExperience() {
     cancellationPolicy: ''
   })
 
-const updateFormData = useCallback((updates: Partial<ExperienceFormData>) => {
+  const updateFormData = useCallback((updates: Partial<ExperienceFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
     // Clear relevant errors when user starts typing
     const updatedFields = Object.keys(updates)
@@ -221,7 +223,7 @@ const updateFormData = useCallback((updates: Partial<ExperienceFormData>) => {
     }
   }
 
-const handlePublish = async () => {
+  const handlePublish = async () => {
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
       alert('Please complete all required fields before publishing')
       return
@@ -306,13 +308,13 @@ const handlePublish = async () => {
     })
   }
 
-const renderProgressBar = () => (
+  const renderProgressBar = () => (
     <div className="w-full mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-heading-2 font-heading-2 text-default-font">
+        <h2 className="text-2xl font-bold text-gray-900">
           Create New Experience
         </h2>
-        <div className="text-body text-subtext-color">
+        <div className="text-sm text-gray-500">
           Step {currentStep} of {STEPS.length}
         </div>
       </div>
@@ -323,22 +325,22 @@ const renderProgressBar = () => (
             <div className={`
               flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors
               ${currentStep > step.id 
-                ? 'bg-brand-600 border-brand-600 text-white' 
+                ? 'bg-blue-600 border-blue-600 text-white' 
                 : currentStep === step.id 
-                  ? 'border-brand-600 text-brand-600 bg-white' 
-                  : 'border-neutral-300 text-neutral-400 bg-white'
+                  ? 'border-blue-600 text-blue-600 bg-white' 
+                  : 'border-gray-300 text-gray-400 bg-white'
               }
             `}>
               {currentStep > step.id ? (
-                <FeatherCheck size={16} />
+                <Check size={16} />
               ) : (
-                <span className="text-caption font-bold">{step.id}</span>
+                <span className="text-xs font-bold">{step.id}</span>
               )}
             </div>
             {index < STEPS.length - 1 && (
               <div className={`
                 w-12 h-0.5 mx-2 transition-colors
-                ${currentStep > step.id ? 'bg-brand-600' : 'bg-neutral-300'}
+                ${currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300'}
               `} />
             )}
           </div>
@@ -346,10 +348,10 @@ const renderProgressBar = () => (
       </div>
 
       <div className="text-center">
-        <h3 className="text-heading-3 font-heading-3 text-default-font mb-1">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">
           {STEPS[currentStep - 1].title}
         </h3>
-        <p className="text-body text-subtext-color">
+        <p className="text-sm text-gray-600">
           {STEPS[currentStep - 1].description}
         </p>
       </div>
@@ -360,87 +362,60 @@ const renderProgressBar = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-2">
-          <TextField 
-            label="Experience Title *" 
-            helpText="Give your experience a catchy, descriptive name"
-            error={errors.title}
-          >
-            <TextField.Input
-              placeholder="e.g., Mediterranean Yacht Cruise"
-              value={formData.title}
-              onChange={(e) => updateFormData({ title: e.target.value })}
-            />
-          </TextField>
+          <Label htmlFor="title">Experience Title *</Label>
+          <Input
+            id="title"
+            placeholder="e.g., Mediterranean Yacht Cruise"
+            value={formData.title}
+            onChange={(e) => updateFormData({ title: e.target.value })}
+            className={errors.title ? "border-red-500" : ""}
+          />
+          {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+          <p className="text-gray-500 text-sm mt-1">Give your experience a catchy, descriptive name</p>
         </div>
 
         <div>
-          <TextField 
-            label="Location *" 
-            helpText="Where does this experience take place?"
-            error={errors.location}
-          >
-            <TextField.Input
-              placeholder="e.g., Antigua, Caribbean"
-              value={formData.location}
-              onChange={(e) => updateFormData({ location: e.target.value })}
-            />
-          </TextField>
+          <Label htmlFor="location">Location *</Label>
+          <Input
+            id="location"
+            placeholder="e.g., Antigua, Caribbean"
+            value={formData.location}
+            onChange={(e) => updateFormData({ location: e.target.value })}
+            className={errors.location ? "border-red-500" : ""}
+          />
+          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
+          <p className="text-gray-500 text-sm mt-1">Where does this experience take place?</p>
         </div>
 
         <div>
-          <label className="block text-body-bold font-body-bold text-default-font mb-2">
-            Category *
-          </label>
-          <SubframeCore.DropdownMenu.Root>
-            <SubframeCore.DropdownMenu.Trigger asChild={true}>
-              <Button
-                variant="neutral-secondary"
-                iconRight={<FeatherChevronDown />}
-                className="w-full justify-between"
-                onClick={() => {}}
-              >
-                {formData.category || 'Select a category'}
-              </Button>
-            </SubframeCore.DropdownMenu.Trigger>
-            <SubframeCore.DropdownMenu.Portal>
-              <SubframeCore.DropdownMenu.Content
-                side="bottom"
-                align="start"
-                sideOffset={4}
-                asChild={true}
-              >
-                <DropdownMenu>
-                  {CATEGORIES.map((category) => (
-                    <DropdownMenu.DropdownItem
-                      key={category}
-                      onClick={() => updateFormData({ category })}
-                    >
-                      {category}
-                    </DropdownMenu.DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </SubframeCore.DropdownMenu.Content>
-            </SubframeCore.DropdownMenu.Portal>
-          </SubframeCore.DropdownMenu.Root>
-          {errors.category && (
-            <p className="text-caption text-error-600 mt-1">{errors.category}</p>
-          )}
+          <Label htmlFor="category">Category *</Label>
+          <Select value={formData.category} onValueChange={(value) => updateFormData({ category: value })}>
+            <SelectTrigger className={errors.category ? "border-red-500" : ""}>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
         </div>
       </div>
 
       <div>
-        <TextField 
-          label="Description *" 
-          helpText="Describe what makes this experience special"
-          error={errors.description}
-        >
-          <textarea
-            className="w-full h-32 px-3 py-2 border border-neutral-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand-600"
-            placeholder="Tell potential guests about the amazing experience they'll have..."
-            value={formData.description}
-            onChange={(e) => updateFormData({ description: e.target.value })}
-          />
-        </TextField>
+        <Label htmlFor="description">Description *</Label>
+        <Textarea
+          id="description"
+          placeholder="Tell potential guests about the amazing experience they'll have..."
+          value={formData.description}
+          onChange={(e) => updateFormData({ description: e.target.value })}
+          className={`h-32 ${errors.description ? "border-red-500" : ""}`}
+        />
+        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+        <p className="text-gray-500 text-sm mt-1">Describe what makes this experience special</p>
       </div>
     </div>
   )
@@ -449,129 +424,117 @@ const renderProgressBar = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <TextField 
-            label="Price per Person *" 
-            helpText="In USD"
-            error={errors.price}
-          >
-            <TextField.Input
-              type="number"
-              placeholder="0"
-              value={formData.price || ''}
-              onChange={(e) => updateFormData({ price: Number(e.target.value) })}
-            />
-          </TextField>
+          <Label htmlFor="price">Price per Person * (USD)</Label>
+          <Input
+            id="price"
+            type="number"
+            placeholder="0"
+            value={formData.price || ''}
+            onChange={(e) => updateFormData({ price: Number(e.target.value) })}
+            className={errors.price ? "border-red-500" : ""}
+          />
+          {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
         </div>
 
         <div>
-          <TextField 
-            label="Maximum Group Size *" 
-            helpText="How many people can join?"
-            error={errors.groupSize}
-          >
-            <TextField.Input
+          <Label htmlFor="groupSize">Maximum Group Size *</Label>
+          <Input
+            id="groupSize"
+            type="number"
+            placeholder="1"
+            min="1"
+            value={formData.groupSize || ''}
+            onChange={(e) => updateFormData({ groupSize: Number(e.target.value) })}
+            className={errors.groupSize ? "border-red-500" : ""}
+          />
+          {errors.groupSize && <p className="text-red-500 text-sm mt-1">{errors.groupSize}</p>}
+          <p className="text-gray-500 text-sm mt-1">How many people can join?</p>
+        </div>
+
+        <div>
+          <Label>Duration *</Label>
+          <div className="flex gap-2">
+            <Input
               type="number"
               placeholder="1"
               min="1"
-              value={formData.groupSize || ''}
-              onChange={(e) => updateFormData({ groupSize: Number(e.target.value) })}
+              value={formData.duration || ''}
+              onChange={(e) => updateFormData({ duration: Number(e.target.value) })}
+              className={`flex-1 ${errors.duration ? "border-red-500" : ""}`}
             />
-          </TextField>
-        </div>
-
-        <div>
-          <TextField 
-            label="Duration *" 
-            helpText="How long does it last?"
-            error={errors.duration}
-          >
-            <div className="flex gap-2">
-              <TextField.Input
-                type="number"
-                placeholder="1"
-                min="1"
-                value={formData.duration || ''}
-                onChange={(e) => updateFormData({ duration: Number(e.target.value) })}
-                className="flex-1"
-              />
-              <div className="flex">
-                <Button
-                  variant={formData.durationType === 'hours' ? 'brand-secondary' : 'neutral-secondary'}
-                  onClick={() => updateFormData({ durationType: 'hours' })}
-                  className="rounded-r-none"
-                >
-                  Hours
-                </Button>
-                <Button
-                  variant={formData.durationType === 'days' ? 'brand-secondary' : 'neutral-secondary'}
-                  onClick={() => updateFormData({ durationType: 'days' })}
-                  className="rounded-l-none"
-                >
-                  Days
-                </Button>
-              </div>
+            <div className="flex">
+              <Button
+                variant={formData.durationType === 'hours' ? 'default' : 'outline'}
+                onClick={() => updateFormData({ durationType: 'hours' })}
+                className="rounded-r-none"
+                type="button"
+              >
+                Hours
+              </Button>
+              <Button
+                variant={formData.durationType === 'days' ? 'default' : 'outline'}
+                onClick={() => updateFormData({ durationType: 'days' })}
+                className="rounded-l-none"
+                type="button"
+              >
+                Days
+              </Button>
             </div>
-          </TextField>
+          </div>
+          {errors.duration && <p className="text-red-500 text-sm mt-1">{errors.duration}</p>}
+          <p className="text-gray-500 text-sm mt-1">How long does it last?</p>
         </div>
 
         <div>
-          <label className="block text-body-bold font-body-bold text-default-font mb-2">
-            Difficulty Level *
-          </label>
-          <div className="flex flex-wrap gap-2">
+          <Label>Difficulty Level *</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
             {DIFFICULTY_LEVELS.map((level) => (
               <Button
                 key={level}
-                variant={formData.difficultyLevel === level ? 'brand-secondary' : 'neutral-secondary'}
+                variant={formData.difficultyLevel === level ? 'default' : 'outline'}
                 onClick={() => updateFormData({ difficultyLevel: level })}
-                size="small"
+                size="sm"
+                type="button"
               >
                 {level}
               </Button>
             ))}
           </div>
-          {errors.difficultyLevel && (
-            <p className="text-caption text-error-600 mt-1">{errors.difficultyLevel}</p>
-          )}
+          {errors.difficultyLevel && <p className="text-red-500 text-sm mt-1">{errors.difficultyLevel}</p>}
         </div>
       </div>
 
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          Tags
-        </label>
-        <p className="text-caption text-subtext-color mb-3">
-          Add tags to help guests find your experience
-        </p>
+        <Label>Tags</Label>
+        <p className="text-gray-500 text-sm mb-3">Add tags to help guests find your experience</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {formData.tags.map((tag, index) => (
-            <Badge key={index} variant="brand-secondary" className="flex items-center gap-2">
+            <Badge key={index} variant="secondary" className="flex items-center gap-2">
               {tag}
               <button
                 onClick={() => removeItem('tags', index)}
-                className="text-brand-600 hover:text-brand-700"
+                className="text-gray-600 hover:text-gray-700"
+                type="button"
               >
-                <FeatherX size={12} />
+                <X size={12} />
               </button>
             </Badge>
           ))}
         </div>
         <div className="flex gap-2">
-          <TextField className="flex-1" label="" helpText="">
-            <TextField.Input
-              placeholder="Add a tag..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addItem('tags', e.currentTarget.value)
-                  e.currentTarget.value = ''
-                }
-              }}
-            />
-          </TextField>
+          <Input
+            placeholder="Add a tag..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addItem('tags', e.currentTarget.value)
+                e.currentTarget.value = ''
+              }
+            }}
+            className="flex-1"
+          />
           <Button
-            variant="neutral-secondary"
-            icon={<FeatherPlus />}
+            variant="outline"
             onClick={(e) => {
               const input = e.currentTarget.parentElement?.querySelector('input')
               if (input?.value) {
@@ -579,7 +542,9 @@ const renderProgressBar = () => (
                 input.value = ''
               }
             }}
+            type="button"
           >
+            <Plus size={16} />
             Add
           </Button>
         </div>
@@ -591,44 +556,39 @@ const renderProgressBar = () => (
     <div className="space-y-6">
       {/* What's Included */}
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          What's Included *
-        </label>
-        <p className="text-caption text-subtext-color mb-3">
-          List what guests will receive as part of the experience
-        </p>
-        {errors.included && (
-          <p className="text-caption text-error-600 mb-2">{errors.included}</p>
-        )}
+        <Label>What's Included *</Label>
+        <p className="text-gray-500 text-sm mb-3">List what guests will receive as part of the experience</p>
+        {errors.included && <p className="text-red-500 text-sm mb-2">{errors.included}</p>}
         <div className="space-y-2 mb-3">
           {formData.included.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-success-50 rounded-md">
-              <FeatherCheck className="text-success-600" size={16} />
-              <span className="flex-1 text-body">{item}</span>
-              <IconButton
-                size="small"
-                icon={<FeatherX />}
+            <div key={index} className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+              <Check className="text-green-600" size={16} />
+              <span className="flex-1">{item}</span>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => removeItem('included', index)}
-              />
+                type="button"
+              >
+                <X size={16} />
+              </Button>
             </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <TextField className="flex-1" label="" helpText="">
-            <TextField.Input
-              placeholder="e.g., Professional guide, Equipment rental"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addItem('included', e.currentTarget.value)
-                  e.currentTarget.value = ''
-                }
-              }}
-            />
-          </TextField>
+          <Input
+            placeholder="e.g., Professional guide, Equipment rental"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addItem('included', e.currentTarget.value)
+                e.currentTarget.value = ''
+              }
+            }}
+            className="flex-1"
+          />
           <Button
-            variant="neutral-secondary"
-            icon={<FeatherPlus />}
+            variant="outline"
             onClick={(e) => {
               const input = e.currentTarget.parentElement?.querySelector('input')
               if (input?.value) {
@@ -636,7 +596,9 @@ const renderProgressBar = () => (
                 input.value = ''
               }
             }}
+            type="button"
           >
+            <Plus size={16} />
             Add
           </Button>
         </div>
@@ -644,38 +606,37 @@ const renderProgressBar = () => (
 
       {/* What's Not Included */}
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          What's Not Included
-        </label>
+        <Label>What's Not Included</Label>
         <div className="space-y-2 mb-3">
           {formData.notIncluded.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-error-50 rounded-md">
-              <FeatherX className="text-error-600" size={16} />
-              <span className="flex-1 text-body">{item}</span>
-              <IconButton
-                size="small"
-                icon={<FeatherX />}
+            <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded-md">
+              <X className="text-red-600" size={16} />
+              <span className="flex-1">{item}</span>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => removeItem('notIncluded', index)}
-              />
+                type="button"
+              >
+                <X size={16} />
+              </Button>
             </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <TextField className="flex-1" label="" helpText="">
-            <TextField.Input
-              placeholder="e.g., Transportation, Personal insurance"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addItem('notIncluded', e.currentTarget.value)
-                  e.currentTarget.value = ''
-                }
-              }}
-            />
-          </TextField>
+          <Input
+            placeholder="e.g., Transportation, Personal insurance"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addItem('notIncluded', e.currentTarget.value)
+                e.currentTarget.value = ''
+              }
+            }}
+            className="flex-1"
+          />
           <Button
-            variant="neutral-secondary"
-            icon={<FeatherPlus />}
+            variant="outline"
             onClick={(e) => {
               const input = e.currentTarget.parentElement?.querySelector('input')
               if (input?.value) {
@@ -683,7 +644,9 @@ const renderProgressBar = () => (
                 input.value = ''
               }
             }}
+            type="button"
           >
+            <Plus size={16} />
             Add
           </Button>
         </div>
@@ -691,38 +654,35 @@ const renderProgressBar = () => (
 
       {/* Things to Bring */}
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          Things to Bring
-        </label>
+        <Label>Things to Bring</Label>
         <div className="flex flex-wrap gap-2 mb-3">
           {formData.thingsToBring.map((item, index) => (
-            <Badge key={index} variant="neutral" className="flex items-center gap-2">
+            <Badge key={index} variant="outline" className="flex items-center gap-2">
               {item}
               <button
                 onClick={() => removeItem('thingsToBring', index)}
-                className="text-neutral-600 hover:text-neutral-700"
+                className="text-gray-600 hover:text-gray-700"
+                type="button"
               >
-                <FeatherX size={12} />
+                <X size={12} />
               </button>
             </Badge>
           ))}
         </div>
         <div className="flex gap-2">
-          <TextField className="flex-1" label="" helpText="">
-            <TextField.Input
-              placeholder="e.g., Sunscreen, Water bottle"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addItem('thingsToBring', e.currentTarget.value)
-                  e.currentTarget.value = ''
-                }
-              }}
-            />
-          </TextField>
+          <Input
+            placeholder="e.g., Sunscreen, Water bottle"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addItem('thingsToBring', e.currentTarget.value)
+                e.currentTarget.value = ''
+              }
+            }}
+            className="flex-1"
+          />
           <Button
-            variant="neutral-secondary"
-            icon={<FeatherPlus />}
+            variant="outline"
             onClick={(e) => {
               const input = e.currentTarget.parentElement?.querySelector('input')
               if (input?.value) {
@@ -730,7 +690,9 @@ const renderProgressBar = () => (
                 input.value = ''
               }
             }}
+            type="button"
           >
+            <Plus size={16} />
             Add
           </Button>
         </div>
@@ -738,17 +700,15 @@ const renderProgressBar = () => (
 
       {/* Cancellation Policy */}
       <div>
-        <TextField 
-          label="Cancellation Policy" 
-          helpText="Describe your cancellation and refund policy"
-        >
-          <textarea
-            className="w-full h-24 px-3 py-2 border border-neutral-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand-600"
-            placeholder="e.g., Moderate: cancel 14 days before arrival with 50% refund"
-            value={formData.cancellationPolicy}
-            onChange={(e) => updateFormData({ cancellationPolicy: e.target.value })}
-          />
-        </TextField>
+        <Label htmlFor="policy">Cancellation Policy</Label>
+        <Textarea
+          id="policy"
+          placeholder="e.g., Moderate: cancel 14 days before arrival with 50% refund"
+          value={formData.cancellationPolicy}
+          onChange={(e) => updateFormData({ cancellationPolicy: e.target.value })}
+          className="h-24"
+        />
+        <p className="text-gray-500 text-sm mt-1">Describe your cancellation and refund policy</p>
       </div>
     </div>
   )
@@ -756,12 +716,8 @@ const renderProgressBar = () => (
   const renderMediaStep = () => (
     <div className="space-y-6">
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          Photos & Videos
-        </label>
-        <p className="text-caption text-subtext-color mb-4">
-          Add high-quality images and videos to showcase your experience
-        </p>
+        <Label>Photos & Videos</Label>
+        <p className="text-gray-500 text-sm mb-4">Add high-quality images and videos to showcase your experience</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {formData.images.map((image, index) => (
@@ -777,55 +733,52 @@ const renderProgressBar = () => (
                     images: formData.images.filter((_, i) => i !== index)
                   })
                 }}
-                className="absolute top-2 right-2 p-1 bg-error-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                type="button"
               >
-                <FeatherX size={16} />
+                <X size={16} />
               </button>
             </div>
           ))}
 
-          <div className="border-2 border-dashed border-neutral-300 rounded-lg h-48 flex flex-col items-center justify-center hover:border-brand-600 hover:bg-brand-50 transition-colors cursor-pointer">
-            <FeatherUpload className="text-neutral-400 mb-2" size={24} />
-            <span className="text-body text-neutral-600">Upload Media</span>
-            <span className="text-caption text-neutral-400">Images or Videos</span>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg h-48 flex flex-col items-center justify-center hover:border-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
+            <Upload className="text-gray-400 mb-2" size={24} />
+            <span className="text-gray-600">Upload Media</span>
+            <span className="text-sm text-gray-400">Images or Videos</span>
           </div>
         </div>
       </div>
 
       {/* Available Dates */}
       <div>
-        <label className="block text-body-bold font-body-bold text-default-font mb-2">
-          Available Dates
-        </label>
-        <p className="text-caption text-subtext-color mb-3">
-          Add specific dates when this experience is available
-        </p>
+        <Label>Available Dates</Label>
+        <p className="text-gray-500 text-sm mb-3">Add specific dates when this experience is available</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {formData.availableDates.map((date, index) => (
-            <Badge key={index} variant="brand-secondary" className="flex items-center gap-2">
-              <FeatherCalendar size={12} />
+            <Badge key={index} variant="secondary" className="flex items-center gap-2">
+              <Calendar size={12} />
               {date}
               <button
                 onClick={() => removeItem('availableDates', index)}
-                className="text-brand-600 hover:text-brand-700"
+                className="text-blue-600 hover:text-blue-700"
+                type="button"
               >
-                <FeatherX size={12} />
+                <X size={12} />
               </button>
             </Badge>
           ))}
         </div>
         <div className="flex gap-2">
-          <TextField className="flex-1" label="" helpText="">
-            <TextField.Input
-              type="date"
-              onChange={(e) => {
-                if (e.target.value) {
-                  addItem('availableDates', new Date(e.target.value).toLocaleDateString())
-                  e.target.value = ''
-                }
-              }}
-            />
-          </TextField>
+          <Input
+            type="date"
+            onChange={(e) => {
+              if (e.target.value) {
+                addItem('availableDates', new Date(e.target.value).toLocaleDateString())
+                e.target.value = ''
+              }
+            }}
+            className="flex-1"
+          />
         </div>
       </div>
     </div>
@@ -834,85 +787,74 @@ const renderProgressBar = () => (
   const renderSocialStep = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-heading-3 font-heading-3 text-default-font mb-2">
-          Social Media Integration
-        </h3>
-        <p className="text-body text-subtext-color mb-6">
-          Connect your social media accounts to showcase more content (optional)
-        </p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Social Media Integration</h3>
+        <p className="text-gray-600 mb-6">Connect your social media accounts to showcase more content (optional)</p>
 
         <div className="space-y-4">
           {/* Instagram */}
-          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
-            <IconButton
-              variant="brand-secondary"
-              icon={<FeatherInstagram />}
-              onClick={() => {}}
-            />
+          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
+            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+              <span className="text-pink-600 font-bold">IG</span>
+            </div>
             <div className="flex-1">
-              <TextField label="" helpText="">
-                <TextField.Input
-                  placeholder="Instagram profile URL"
-                  value={formData.socialMedia.instagram}
-                  onChange={(e) => updateFormData({
-                    socialMedia: { ...formData.socialMedia, instagram: e.target.value }
-                  })}
-                />
-              </TextField>
+              <Input
+                placeholder="Instagram profile URL"
+                value={formData.socialMedia.instagram}
+                onChange={(e) => updateFormData({
+                  socialMedia: { ...formData.socialMedia, instagram: e.target.value }
+                })}
+              />
             </div>
             <Button
-              variant={formData.socialMedia.instagram ? "destructive-secondary" : "brand-secondary"}
-              size="small"
+              variant={formData.socialMedia.instagram ? "destructive" : "default"}
+              size="sm"
+              type="button"
             >
               {formData.socialMedia.instagram ? "Unlink" : "Connect"}
             </Button>
           </div>
 
           {/* Facebook */}
-          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
-            <IconButton
-              icon={<FeatherFacebook />}
-              onClick={() => {}}
-            />
+          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-blue-600 font-bold">FB</span>
+            </div>
             <div className="flex-1">
-              <TextField label="" helpText="">
-                <TextField.Input
-                  placeholder="Facebook page URL"
-                  value={formData.socialMedia.facebook}
-                  onChange={(e) => updateFormData({
-                    socialMedia: { ...formData.socialMedia, facebook: e.target.value }
-                  })}
-                />
-              </TextField>
+              <Input
+                placeholder="Facebook page URL"
+                value={formData.socialMedia.facebook}
+                onChange={(e) => updateFormData({
+                  socialMedia: { ...formData.socialMedia, facebook: e.target.value }
+                })}
+              />
             </div>
             <Button
-              variant={formData.socialMedia.facebook ? "destructive-secondary" : "brand-secondary"}
-              size="small"
+              variant={formData.socialMedia.facebook ? "destructive" : "default"}
+              size="sm"
+              type="button"
             >
               {formData.socialMedia.facebook ? "Unlink" : "Connect"}
             </Button>
           </div>
 
           {/* YouTube */}
-          <div className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg">
-            <IconButton
-              icon={<FeatherYoutube />}
-              onClick={() => {}}
-            />
+          <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <span className="text-red-600 font-bold">YT</span>
+            </div>
             <div className="flex-1">
-              <TextField label="" helpText="">
-                <TextField.Input
-                  placeholder="YouTube channel URL"
-                  value={formData.socialMedia.youtube}
-                  onChange={(e) => updateFormData({
-                    socialMedia: { ...formData.socialMedia, youtube: e.target.value }
-                  })}
-                />
-              </TextField>
+              <Input
+                placeholder="YouTube channel URL"
+                value={formData.socialMedia.youtube}
+                onChange={(e) => updateFormData({
+                  socialMedia: { ...formData.socialMedia, youtube: e.target.value }
+                })}
+              />
             </div>
             <Button
-              variant={formData.socialMedia.youtube ? "destructive-secondary" : "brand-secondary"}
-              size="small"
+              variant={formData.socialMedia.youtube ? "destructive" : "default"}
+              size="sm"
+              type="button"
             >
               {formData.socialMedia.youtube ? "Unlink" : "Connect"}
             </Button>
@@ -924,47 +866,45 @@ const renderProgressBar = () => (
 
   const renderReviewStep = () => (
     <div className="space-y-6">
-      <div className="bg-neutral-50 rounded-lg p-6">
-        <h3 className="text-heading-3 font-heading-3 text-default-font mb-4">
-          Experience Preview
-        </h3>
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience Preview</h3>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-heading-2 font-heading-2 text-default-font mb-2">
+            <h4 className="text-xl font-bold text-gray-900 mb-2">
               {formData.title || 'Untitled Experience'}
             </h4>
             <div className="flex items-center gap-4 mb-3">
               <div className="flex items-center gap-1">
-                <FeatherMapPin size={16} className="text-neutral-500" />
-                <span className="text-body text-neutral-600">{formData.location || 'No location'}</span>
+                <MapPin size={16} className="text-gray-500" />
+                <span className="text-gray-600">{formData.location || 'No location'}</span>
               </div>
               <div className="flex items-center gap-1">
-                <FeatherClock size={16} className="text-neutral-500" />
-                <span className="text-body text-neutral-600">
+                <Clock size={16} className="text-gray-500" />
+                <span className="text-gray-600">
                   {formData.duration} {formData.durationType}
                 </span>
               </div>
             </div>
-            <p className="text-body text-subtext-color mb-4">
+            <p className="text-gray-700 mb-4">
               {formData.description || 'No description provided'}
             </p>
 
             <div className="flex items-center gap-2 mb-4">
               {formData.category && (
-                <Badge variant="brand-secondary">{formData.category}</Badge>
+                <Badge variant="default">{formData.category}</Badge>
               )}
               {formData.difficultyLevel && (
-                <Badge variant="neutral">{formData.difficultyLevel}</Badge>
+                <Badge variant="outline">{formData.difficultyLevel}</Badge>
               )}
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="text-heading-3 font-heading-3 text-success-600">
+                <div className="text-lg font-bold text-green-600">
                   ${formData.price}
                 </div>
-                <div className="text-body text-neutral-600">
+                <div className="text-gray-600">
                   Max {formData.groupSize} guests
                 </div>
               </div>
@@ -974,8 +914,8 @@ const renderProgressBar = () => (
           <div>
             <div className="space-y-3">
               <div>
-                <span className="text-body-bold font-body-bold text-default-font">What's Included:</span>
-                <ul className="text-body text-subtext-color ml-4 mt-1">
+                <span className="font-semibold text-gray-900">What's Included:</span>
+                <ul className="text-gray-700 ml-4 mt-1">
                   {formData.included.slice(0, 3).map((item, index) => (
                     <li key={index} className="list-disc">{item}</li>
                   ))}
@@ -987,13 +927,13 @@ const renderProgressBar = () => (
 
               {formData.tags.length > 0 && (
                 <div>
-                  <span className="text-body-bold font-body-bold text-default-font">Tags:</span>
+                  <span className="font-semibold text-gray-900">Tags:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {formData.tags.slice(0, 4).map((tag, index) => (
-                      <Badge key={index} variant="neutral" size="small">{tag}</Badge>
+                      <Badge key={index} variant="outline" className="text-xs">{tag}</Badge>
                     ))}
                     {formData.tags.length > 4 && (
-                      <Badge variant="neutral" size="small">+{formData.tags.length - 4}</Badge>
+                      <Badge variant="outline" className="text-xs">+{formData.tags.length - 4}</Badge>
                     )}
                   </div>
                 </div>
@@ -1001,8 +941,8 @@ const renderProgressBar = () => (
 
               {formData.availableDates.length > 0 && (
                 <div>
-                  <span className="text-body-bold font-body-bold text-default-font">Available Dates:</span>
-                  <div className="text-body text-subtext-color mt-1">
+                  <span className="font-semibold text-gray-900">Available Dates:</span>
+                  <div className="text-gray-700 mt-1">
                     {formData.availableDates.slice(0, 2).join(', ')}
                     {formData.availableDates.length > 2 && ` ...and ${formData.availableDates.length - 2} more`}
                   </div>
@@ -1014,36 +954,34 @@ const renderProgressBar = () => (
       </div>
 
       {/* Validation Summary */}
-      <div className="bg-white border border-neutral-200 rounded-lg p-6">
-        <h4 className="text-heading-3 font-heading-3 text-default-font mb-4">
-          Completeness Check
-        </h4>
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Completeness Check</h4>
 
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <FeatherCheck className={`${formData.title && formData.description && formData.location && formData.category ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
-            <span className={`text-body ${formData.title && formData.description && formData.location && formData.category ? 'text-success-700' : 'text-neutral-600'}`}>
+            <Check className={`${formData.title && formData.description && formData.location && formData.category ? 'text-green-600' : 'text-gray-400'}`} size={16} />
+            <span className={`${formData.title && formData.description && formData.location && formData.category ? 'text-green-700' : 'text-gray-600'}`}>
               Basic Information Complete
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <FeatherCheck className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
-            <span className={`text-body ${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-success-700' : 'text-neutral-600'}`}>
+            <Check className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-green-600' : 'text-gray-400'}`} size={16} />
+            <span className={`${formData.price > 0 && formData.groupSize > 0 && formData.duration > 0 && formData.difficultyLevel ? 'text-green-700' : 'text-gray-600'}`}>
               Pricing & Details Complete
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <FeatherCheck className={`${formData.included.length > 0 ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
-            <span className={`text-body ${formData.included.length > 0 ? 'text-success-700' : 'text-neutral-600'}`}>
+            <Check className={`${formData.included.length > 0 ? 'text-green-600' : 'text-gray-400'}`} size={16} />
+            <span className={`${formData.included.length > 0 ? 'text-green-700' : 'text-gray-600'}`}>
               Content & Inclusions Added
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <FeatherCheck className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-success-600' : 'text-neutral-400'}`} size={16} />
-            <span className={`text-body ${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-success-700' : 'text-neutral-600'}`}>
+            <Check className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-green-600' : 'text-gray-400'}`} size={16} />
+            <span className={`${formData.images.length > 0 || formData.availableDates.length > 0 ? 'text-green-700' : 'text-gray-600'}`}>
               Media or Dates Added (Optional)
             </span>
           </div>
@@ -1064,117 +1002,136 @@ const renderProgressBar = () => (
     }
   }
 
+  if (!isClient) {
+    return <div>Loading...</div>
+  }
+
   return (
-    <div className="container max-w-none flex w-full h-screen items-start border border-solid border-neutral-border">
+    <div className="container max-w-none flex w-full h-screen items-start border border-solid border-gray-200">
       {/* Sidebar */}
-      <div className="flex flex-col items-start gap-8 w-80 flex-shrink-0 border-r border-solid border-neutral-border bg-default-background px-6 py-8">
+      <div className="flex flex-col items-start gap-8 w-80 flex-shrink-0 border-r border-solid border-gray-200 bg-white px-6 py-8">
         <div className="flex items-center gap-3">
-          <IconWithBackground
-            variant="warning"
-            size="large"
-            icon={<FeatherAnchor />}
-            square={true}
-          />
-          <span className="text-heading-2 font-heading-2 text-default-font">
-            Ocean Travel
-          </span>
+          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <Anchor className="text-yellow-600" size={20} />
+          </div>
+          <span className="text-xl font-bold text-gray-900">Ocean Travel</span>
         </div>
 
         <div className="flex w-full flex-col items-start gap-1">
-          <SettingsMenu.Item icon={<FeatherHome />} label="Dashboard" />
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Home size={16} />
+              Dashboard
+            </div>
+          </Button>
         </div>
 
         <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Client Management
-          </span>
-          <SettingsMenu.Item icon={<FeatherUsers />} label="Bookings" />
-          <SettingsMenu.Item
-            selected={true}
-            icon={<FeatherAnchor />}
-            label="Experiences"
-          />
-          <SettingsMenu.Item icon={<FeatherMessageCircle />} label="Messages" />
-          <SettingsMenu.Item icon={<FeatherCalendar />} label="Calendar" />
-          <SettingsMenu.Item icon={<FeatherHandshake />} label="Clients" />
+          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Client Management</span>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Users size={16} />
+              Bookings
+            </div>
+          </Button>
+          <Button variant="default" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Anchor size={16} />
+              Experiences
+            </div>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <MessageCircle size={16} />
+              Messages
+            </div>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Calendar size={16} />
+              Calendar
+            </div>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Handshake size={16} />
+              Clients
+            </div>
+          </Button>
         </div>
 
         <div className="flex w-full flex-col items-start gap-2">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Finance
-          </span>
+          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Finance</span>
           <div className="flex w-full flex-col items-start gap-1">
-            <Button
-              className="h-8 w-full flex-none justify-start"
-              variant="neutral-tertiary"
-              icon={<FeatherDollarSign />}
-              onClick={() => {}}
-            >
-              Sales &amp; Payments
+            <Button variant="ghost" className="w-full justify-start" asChild>
+              <div className="flex items-center gap-2">
+                <DollarSign size={16} />
+                Sales & Payments
+              </div>
             </Button>
-            <SettingsMenu.Item icon={<FeatherShapes />} label="Integrations" />
+            <Button variant="ghost" className="w-full justify-start" asChild>
+              <div className="flex items-center gap-2">
+                <Shapes size={16} />
+                Integrations
+              </div>
+            </Button>
           </div>
         </div>
 
         <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font mb-2">
-            Workspace
-          </span>
-          <SettingsMenu.Item icon={<FeatherUser />} label="Account" />
-          <SettingsMenu.Item icon={<FeatherSettings />} label="Settings" />
+          <span className="w-full text-sm font-semibold text-gray-900 mb-2">Workspace</span>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <User size={16} />
+              Account
+            </div>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <div className="flex items-center gap-2">
+              <Settings size={16} />
+              Settings
+            </div>
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex flex-col items-start flex-1 overflow-hidden">
         {/* Header */}
-        <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4 bg-white">
-          <TextField label="" helpText="" className="w-80">
-            <TextField.Input
-              placeholder="Search..."
-              value=""
-              onChange={() => {}}
-            />
-          </TextField>
+        <div className="flex w-full items-center justify-between border-b border-solid border-gray-200 px-8 py-4 bg-white">
+          <Input
+            placeholder="Search..."
+            className="w-80"
+          />
 
           <div className="flex items-center gap-4">
-            <IconButton
-              icon={<FeatherBell />}
-              onClick={() => {}}
-              aria-label="Notifications"
-            />
-            <SubframeCore.DropdownMenu.Root>
-              <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                <Button
-                  variant="neutral-tertiary"
-                  iconRight={<FeatherChevronDown />}
-                  onClick={() => {}}
-                >
+            <Button variant="ghost" size="icon">
+              <Bell size={16} />
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
                   Ocean Travel
+                  <ChevronDown size={16} />
                 </Button>
-              </SubframeCore.DropdownMenu.Trigger>
-              <SubframeCore.DropdownMenu.Portal>
-                <SubframeCore.DropdownMenu.Content
-                  side="bottom"
-                  align="end"
-                  sideOffset={4}
-                  asChild={true}
-                >
-                  <DropdownMenu>
-                    <DropdownMenu.DropdownItem icon={<FeatherUser />}>
-                      Profile
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
-                      Settings
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownDivider />
-                    <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
-                      Logout
-                    </DropdownMenu.DropdownItem>
-                  </DropdownMenu>
-                </SubframeCore.DropdownMenu.Content>
-              </SubframeCore.DropdownMenu.Portal>
-            </SubframeCore.DropdownMenu.Root>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -1183,45 +1140,49 @@ const renderProgressBar = () => (
           <div className="max-w-4xl mx-auto px-8 py-8">
             {renderProgressBar()}
 
-            <div className="bg-white rounded-lg border border-neutral-200 p-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-8">
               {renderStepContent()}
             </div>
 
             {/* Navigation */}
             <div className="flex items-center justify-between mt-8">
               <Button
-                variant="neutral-secondary"
-                icon={<FeatherChevronLeft />}
+                variant="outline"
                 onClick={handlePrevious}
                 disabled={currentStep === 1}
+                type="button"
               >
+                <ChevronLeft size={16} className="mr-2" />
                 Previous
               </Button>
 
               <div className="flex items-center gap-3">
                 <Button
-                  variant="neutral-secondary"
-                  icon={<FeatherSave />}
+                  variant="outline"
                   onClick={handleSaveDraft}
                   disabled={isLoading}
+                  type="button"
                 >
+                  <Save size={16} className="mr-2" />
                   {isLoading ? 'Saving...' : 'Save Draft'}
                 </Button>
 
                 {currentStep === STEPS.length ? (
                   <Button
-                    icon={<FeatherCheck />}
                     onClick={handlePublish}
                     disabled={isLoading}
+                    type="button"
                   >
+                    <Check size={16} className="mr-2" />
                     {isLoading ? 'Publishing...' : 'Publish Experience'}
                   </Button>
                 ) : (
                   <Button
-                    iconRight={<FeatherChevronRight />}
                     onClick={handleNext}
+                    type="button"
                   >
                     Next
+                    <ChevronRight size={16} className="ml-2" />
                   </Button>
                 )}
               </div>
@@ -1231,13 +1192,6 @@ const renderProgressBar = () => (
       </div>
     </div>
   )
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-return null
-    }
-  }
 }
 
 export { CreateNewExperience as NewExperienceForm }
