@@ -1,0 +1,105 @@
+# SeaFable v01 - Critical Fixes Required for Deployment
+
+## 🛠️ **Required Changes**
+
+### **1. TypeScript Fixes (Critical - 2-3 hours)**
+
+#### **Fix Property Access Errors**
+**File**: `app/experience/[id]/page.tsx` (Line 148:160)
+```typescript
+// Current (Error):
+kingData.date && slot.available_capacity >= bookingData.guests
+
+// Fix with null checks:
+kingData?.date && slot?.available_capacity >= (bookingData?.guests || 0)
+```
+
+#### **Add Missing Type Annotations**
+**File**: `app/page.tsx`
+```typescript
+// Current (Error):
+const [errors, setErrors] = useState({})
+
+// Fix:
+const [errors, setErrors] = useState<{[key: string]: string}>({})
+```
+
+#### **Fix Array Access**
+**Multiple files**: Add safe array access
+```typescript
+// Current (Error):
+availability[0].date
+
+// Fix:
+availability?.[0]?.date
+```
+
+### **2. Database Query Fixes (Critical - 1 hour)**
+
+#### **Update Column Names**
+**Files**: All business dashboard queries
+```sql
+-- Change from:
+SELECT start_date FROM bookings
+
+-- Change to:  
+SELECT booking_date FROM bookings
+```
+
+#### **Fix Table Relationships**
+**Error**: `'bookings' and 'customer_profiles'` relationship
+```sql
+-- Change foreign key references from:
+customer_profiles → users table
+```
+
+### **3. React Hook Fixes (High Priority - 1-2 hours)**
+
+#### **Fix Conditional Hooks**
+**Files**: `app/business/*/page.tsx` (6+ files)
+```typescript
+// Move all hooks to component top level
+// Use conditions inside useEffect, not around hooks
+```
+
+#### **Fix Component Props**
+**Files**: `CustomerLayout.tsx`, `BusinessLayout.tsx`
+```typescript
+// Remove invalid props:
+<SidebarTrigger active={true} /> // ❌ Remove active prop
+
+// Correct usage:
+<SidebarTrigger /> // ✅
+```
+
+### **4. Authentication Implementation (High Priority - 30 minutes)**
+
+#### **Add Missing getSession Function**
+**File**: `lib/auth-utils.ts`
+```typescript
+export async function getSession() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session
+}
+```
+
+## 🚀 **Build Commands to Run After Fixes**
+
+```bash
+# 1. Type check (must pass)
+npm run type-check
+
+# 2. Build test (must succeed)
+npm run build
+
+# 3. Deploy
+npx vercel  # Recommended platform
+```
+
+## ⏰ **Total Fix Time: 4-6 hours**
+
+**Critical path order**:
+1. TypeScript errors → Build passes
+2. Database queries → Data access works  
+3. React hooks → Runtime stability
+4. Authentication → User flows work
