@@ -14,22 +14,15 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
   const router = useRouter()
 
   useEffect(() => {
-    // Add a small delay to ensure auth context is fully initialized
-    const timeoutId = setTimeout(() => {
-      if (!isLoading) {
-        if (!user) {
-          router.push("/business/login")
-          return
-        }
+    if (!isLoading && !user) {
+      router.push("/business/login")
+      return
+    }
 
-        if (userType !== "business") {
-          router.push("/business/register")
-          return
-        }
-      }
-    }, 100)
-
-    return () => clearTimeout(timeoutId)
+    if (!isLoading && user && userType !== "business") {
+      router.push("/business/register")
+      return
+    }
   }, [user, userType, isLoading, router])
 
   if (isLoading) {

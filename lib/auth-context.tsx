@@ -48,6 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // If we already have this user loaded, don't refetch unnecessarily
+    if (user && user.id === currentUser.id && userType) {
+      console.log("User already loaded, skipping refetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Set user immediately
       setUser(currentUser);
@@ -102,15 +109,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Initial session check
+    let mounted = true;
+
+    // Initial session check with retry logic
     const getInitialSession = async () => {
       try {
+        // Add a small delay to ensure Supabase client is fully initialized
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const { data: { session } } = await supabase.auth.getSession();
         console.log("Initial getSession result:", session?.user?.id);
-        await fetchUserAndProfiles(session?.user || null);
+        
+        if (mounted) {
+          await fetchUserAndProfiles(session?.user || null);
+        }
       } catch (error) {
         console.error("Error getting initial session:", error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -121,13 +138,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id);
-      await fetchUserAndProfiles(session?.user || null);
+      
+      if (mounted) {
+        await fetchUserAndProfiles(session?.user || null);
+      }
     })
 
     return () => {
+      mounted = false;
       subscription.unsubscribe()
     }
-  }, [supabase]) // Depend on supabase client
+  }, []) // Remove supabase dependency to prevent re-initialization
 
   const login = async (
     email: string,
