@@ -1,0 +1,43 @@
+[10:53:44.061] Running build in Washington, D.C., USA (East) – iad1
+[10:53:44.061] Build machine configuration: 2 cores, 8 GB
+[10:53:44.095] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 33c9485)
+[10:53:44.235] Previous build caches not available
+[10:53:44.655] Cloning completed: 559.000ms
+[10:53:45.014] Running "vercel build"
+[10:53:46.212] Vercel CLI 44.5.0
+[10:53:47.538] Installing dependencies...
+[10:53:54.063] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[10:53:54.229] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[10:54:13.698] 
+[10:54:13.699] added 648 packages in 24s
+[10:54:13.700] 
+[10:54:13.700] 59 packages are looking for funding
+[10:54:13.700]   run `npm fund` for details
+[10:54:13.771] Detected Next.js version: 15.2.4
+[10:54:13.778] Running "npm run build"
+[10:54:13.893] 
+[10:54:13.894] > my-v0-project@0.1.0 build
+[10:54:13.894] > next build
+[10:54:13.894] 
+[10:54:14.491] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[10:54:14.492] This information is used to shape Next.js' roadmap and prioritize features.
+[10:54:14.492] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[10:54:14.492] https://nextjs.org/telemetry
+[10:54:14.492] 
+[10:54:14.550]    ▲ Next.js 15.2.4
+[10:54:14.551]    - Experiments (use with caution):
+[10:54:14.551]      · allowedDevOrigins
+[10:54:14.551] 
+[10:54:14.620]    Creating an optimized production build ...
+[10:55:05.455]  ✓ Compiled successfully
+[10:55:05.461]    Linting and checking validity of types ...
+[10:55:20.762] Failed to compile.
+[10:55:20.762] 
+[10:55:20.763] app/business/experiences/new/page.tsx
+[10:55:20.763] Type error: Page "app/business/experiences/new/page.tsx" does not match the required types of a Next.js Page.
+[10:55:20.763]   "NewExperienceForm" is not a valid Page export field.
+[10:55:20.763] 
+[10:55:20.798] Next.js build worker exited with code: 1 and signal: null
+[10:55:20.820] Error: Command "npm run build" exited with 1
+[10:55:21.366] 
+[10:55:24.564] Exiting build container
