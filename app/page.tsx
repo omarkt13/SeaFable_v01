@@ -45,7 +45,7 @@ export default function LandingPage() {
         setShowDatePicker(false)
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showDatePicker])
@@ -64,15 +64,15 @@ export default function LandingPage() {
     const month = new Date(currentMonth)
     const year = month.getFullYear()
     const monthIndex = month.getMonth()
-    
+
     const firstDay = new Date(year, monthIndex, 1)
     const lastDay = new Date(year, monthIndex + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
-    
+
     const days = []
     const current = new Date(startDate)
-    
+
     for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
       days.push({
         date: current.toISOString().split('T')[0],
@@ -81,7 +81,7 @@ export default function LandingPage() {
       })
       current.setDate(current.getDate() + 1)
     }
-    
+
     return days
   }
 
@@ -211,185 +211,77 @@ export default function LandingPage() {
               </p>
 
               {/* Search Bar */}
-              <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-5xl mx-auto mb-16">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <div className="relative md:col-span-2">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="What water adventure?"
-                      value={searchData.service}
-                      onChange={(e) => {
-                        setSearchData({ ...searchData, service: e.target.value })
-                        if (errors.service) setErrors({ ...errors, service: "" })
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 h-auto border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 placeholder-gray-400 ${
-                        errors.service ? "border-red-500" : "border-gray-200"
-                      }`}
-                    />
-                    {errors.service && <p className="text-red-500 text-xs mt-1">{errors.service}</p>}
-                  </div>
+              {/* Enhanced Search Form */}
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 md:p-8 lg:p-10 border border-gray-200/50 max-w-6xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
+                    {/* Service Input */}
+                    <div className="space-y-2 md:space-y-3">
+                      <Label htmlFor="service" className="text-sm font-medium text-gray-700 block">
+                        What adventure?
+                      </Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                        <Input
+                          id="service"
+                          type="text"
+                          placeholder="e.g., Sailing, Surfing"
+                          value={searchData.service}
+                          onChange={(e) => setSearchData({...searchData, service: e.target.value})}
+                          className="pl-10 h-12 md:h-14 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-base rounded-lg w-full"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Where?"
-                      value={searchData.location}
-                      onChange={(e) => {
-                        setSearchData({ ...searchData, location: e.target.value })
-                        if (errors.location) setErrors({ ...errors, location: "" })
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 h-auto border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 placeholder-gray-400 ${
-                        errors.location ? "border-red-500" : "border-gray-200"
-                      }`}
-                    />
-                    {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
-                  </div>
+                    {/* Location Input */}
+                    <div className="space-y-2 md:space-y-3">
+                      <Label htmlFor="location" className="text-sm font-medium text-gray-700 block">
+                        Where?
+                      </Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                        <Input
+                          id="location"
+                          type="text"
+                          placeholder="City, region, or venue"
+                          value={searchData.location}
+                          onChange={(e) => setSearchData({...searchData, location: e.target.value})}
+                          className="pl-10 h-12 md:h-14 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-base rounded-lg w-full"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                    <div className="relative date-picker-container">
-                      <Input
-                        type="text"
-                        value={searchData.date ? new Date(searchData.date + 'T00:00:00').toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        }) : 'Select date'}
-                        readOnly
-                        onClick={() => setShowDatePicker(!showDatePicker)}
-                        className="w-full pl-12 pr-4 py-4 h-auto border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 cursor-pointer"
-                        placeholder="When?"
-                      />
-                      
-                      {showDatePicker && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
-                          {/* Quick Date Options */}
-                          <div className="mb-4">
-                            <p className="text-sm font-medium text-gray-700 mb-2">Quick select:</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {[
-                                { label: 'Today', days: 0 },
-                                { label: 'Tomorrow', days: 1 },
-                                { label: 'This Weekend', days: getDaysUntilWeekend() },
-                                { label: 'Next Week', days: 7 }
-                              ].map((option) => (
-                                <button
-                                  key={option.label}
-                                  onClick={() => {
-                                    const date = new Date()
-                                    date.setDate(date.getDate() + option.days)
-                                    handleDateSelect(date.toISOString().split('T')[0])
-                                  }}
-                                  className="px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-200"
-                                >
-                                  {option.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Calendar Grid */}
-                          <div>
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="text-sm font-medium text-gray-900">
-                                {new Date(currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                              </h3>
-                              <div className="flex space-x-1">
-                                <button
-                                  onClick={() => {
-                                    const newMonth = new Date(currentMonth)
-                                    newMonth.setMonth(newMonth.getMonth() - 1)
-                                    setCurrentMonth(newMonth.toISOString().split('T')[0])
-                                  }}
-                                  className="p-1 hover:bg-gray-100 rounded"
-                                >
-                                  <ChevronRight className="h-4 w-4 rotate-180" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const newMonth = new Date(currentMonth)
-                                    newMonth.setMonth(newMonth.getMonth() + 1)
-                                    setCurrentMonth(newMonth.toISOString().split('T')[0])
-                                  }}
-                                  className="p-1 hover:bg-gray-100 rounded"
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                            
-                            {/* Days of week header */}
-                            <div className="grid grid-cols-7 gap-1 mb-2">
-                              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                                <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
-                                  {day}
-                                </div>
-                              ))}
-                            </div>
-                            
-                            {/* Calendar days */}
-                            <div className="grid grid-cols-7 gap-1">
-                              {getCalendarDays().map((day, index) => {
-                                const isToday = day.date === new Date().toISOString().split('T')[0]
-                                const isSelected = day.date === searchData.date
-                                const isPast = new Date(day.date) < new Date().setHours(0, 0, 0, 0)
-                                
-                                return (
-                                  <button
-                                    key={index}
-                                    onClick={() => handleDateSelect(day.date)}
-                                    disabled={isPast && day.inCurrentMonth}
-                                    className={`
-                                      p-2 text-sm rounded-lg transition-all duration-200 
-                                      ${!day.inCurrentMonth 
-                                        ? 'text-gray-300 cursor-not-allowed' 
-                                        : isPast 
-                                          ? 'text-gray-300 cursor-not-allowed' 
-                                          : isSelected 
-                                            ? 'bg-blue-600 text-white font-semibold' 
-                                            : isToday 
-                                              ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium hover:bg-blue-100' 
-                                              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                                      }
-                                    `}
-                                  >
-                                    {day.day}
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 pt-3 border-t border-gray-200">
-                            <button
-                              onClick={() => setShowDatePicker(false)}
-                              className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                    {/* Date Input */}
+                    <div className="space-y-2 md:space-y-3">
+                      <Label htmlFor="date" className="text-sm font-medium text-gray-700 block">
+                        When?
+                      </Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                        <Input
+                          id="date"
+                          type="date"
+                          value={searchData.date}
+                          onChange={(e) => setSearchData({...searchData, date: e.target.value})}
+                          min={today}
+                          className="pl-10 h-12 md:h-14 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-700 text-base rounded-lg w-full"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Search Button */}
+                    <div className="space-y-2 md:space-y-3 flex flex-col">
+                      <Label className="text-sm font-medium text-transparent block">
+                        Search
+                      </Label>
+                      <Button
+                        onClick={handleSearch}
+                        className="w-full h-12 md:h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-base"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Find Adventures
+                      </Button>
                     </div>
                   </div>
-
-                  <Button
-                    onClick={handleSearch}
-                    disabled={isSearching}
-                    className="bg-black text-white px-8 py-4 h-auto rounded-xl hover:bg-gray-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {isSearching ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      </div>
-                    ) : (
-                      "Search Adventures"
-                    )}
-                  </Button>
-                </div>
 
                 {/* Popular Search Suggestions */}
                 <div className="mt-4 md:mt-6">
