@@ -1,93 +1,63 @@
 "use client"
 
-import { DollarSign, Calendar, Ship, Star, TrendingUp, TrendingDown } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TrendingUp, TrendingDown, Users, Calendar, Star, Euro } from "lucide-react"
 
-interface StatsOverviewProps {
-  overview: {
-    totalRevenue: number
-    activeBookings: number
-    totalExperiences: number
-    averageRating: number
-    revenueGrowth: number
-    bookingGrowth: number
-  }
-}
-
-export function StatsOverview({ overview }: StatsOverviewProps) {
-  // Defensive programming - provide defaults if overview is undefined or missing properties
-  const safeOverview = {
-    totalRevenue: 0,
-    activeBookings: 0,
-    totalExperiences: 0,
-    averageRating: 0,
-    revenueGrowth: 0,
-    bookingGrowth: 0,
-    ...overview
-  }
-
+export function StatsOverview() {
+  // Mock data - replace with real data from your API
   const stats = [
     {
-      name: "Total Revenue",
-      value: `$${safeOverview.totalRevenue.toLocaleString()}`,
-      change: `${safeOverview.revenueGrowth >= 0 ? "+" : ""}${safeOverview.revenueGrowth}%`,
-      changeType: safeOverview.revenueGrowth >= 0 ? "increase" : "decrease",
-      icon: DollarSign,
+      title: "Total Revenue",
+      value: "€12,450",
+      change: "+12.5%",
+      trend: "up",
+      icon: Euro,
     },
     {
-      name: "Active Bookings",
-      value: safeOverview.activeBookings,
-      change: `${safeOverview.bookingGrowth >= 0 ? "+" : ""}${safeOverview.bookingGrowth}%`,
-      changeType: safeOverview.bookingGrowth >= 0 ? "increase" : "decrease",
+      title: "Active Bookings",
+      value: "24",
+      change: "+5.2%",
+      trend: "up",
       icon: Calendar,
     },
     {
-      name: "Total Experiences",
-      value: safeOverview.totalExperiences,
-      change: "", // This was hardcoded, now empty as it's not directly from DB
-      changeType: "increase", // Defaulting to increase
-      icon: Ship,
+      title: "Total Adventures",
+      value: "8",
+      change: "+2",
+      trend: "up",
+      icon: Users,
     },
     {
-      name: "Average Rating",
-      value: safeOverview.averageRating.toFixed(1),
-      change: "", // This was hardcoded, now empty as it's not directly from DB
-      changeType: "increase", // Defaulting to increase
+      title: "Average Rating",
+      value: "4.8",
+      change: "+0.2",
+      trend: "up",
       icon: Star,
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
-        <Card key={stat.name}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <stat.icon className="h-6 w-6 text-gray-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">{stat.name}</dt>
-                  <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">{stat.value}</div>
-                    {stat.change && ( // Only show change if it exists
-                      <div
-                        className={`ml-2 flex items-baseline text-sm font-semibold ${
-                          stat.changeType === "increase" ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {stat.changeType === "increase" ? (
-                          <TrendingUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" />
-                        ) : (
-                          <TrendingDown className="self-center flex-shrink-0 h-4 w-4 text-red-500" />
-                        )}
-                        <span className="ml-1">{stat.change}</span>
-                      </div>
-                    )}
-                  </dd>
-                </dl>
-              </div>
+        <Card key={stat.title}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {stat.trend === "up" ? (
+                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+              ) : (
+                <TrendingDown className="h-3 w-3 mr-1 text-red-500" />
+              )}
+              <span className={stat.trend === "up" ? "text-green-500" : "text-red-500"}>
+                {stat.change}
+              </span>
+              <span className="ml-1">from last month</span>
             </div>
           </CardContent>
         </Card>

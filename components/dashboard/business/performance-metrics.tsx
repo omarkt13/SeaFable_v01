@@ -1,106 +1,91 @@
 "use client"
 
-import { Target, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, TrendingDown, Target, Star, Users, Repeat } from "lucide-react"
 
-interface PerformanceMetricsProps {
-  analytics: {
-    conversionRate: number
-    customerSatisfaction: number
-    repeatCustomerRate: number
-    marketplaceVsDirectRatio: number
-    metricsTrend: { name: string; value: number }[]
-  }
-}
-
-export function PerformanceMetrics({ analytics }: PerformanceMetricsProps) {
-  // Defensive programming - provide defaults if analytics is undefined
-  const safeAnalytics = {
-    conversionRate: 0,
-    customerSatisfaction: 0,
-    repeatCustomerRate: 0,
-    marketplaceVsDirectRatio: 0,
-    metricsTrend: [],
-    ...analytics
-  }
+export function PerformanceMetrics() {
+  // Mock data - replace with real data from your API
+  const metrics = [
+    {
+      title: "Booking Conversion Rate",
+      value: 15.8,
+      target: 20,
+      change: "+2.3%",
+      trend: "up",
+      icon: Target,
+      description: "Visitors who book experiences",
+    },
+    {
+      title: "Customer Satisfaction",
+      value: 4.8,
+      target: 5.0,
+      change: "+0.1",
+      trend: "up",
+      icon: Star,
+      description: "Average rating from reviews",
+      isRating: true,
+    },
+    {
+      title: "Repeat Customer Rate",
+      value: 32,
+      target: 40,
+      change: "-1.2%",
+      trend: "down",
+      icon: Repeat,
+      description: "Customers who book again",
+    },
+    {
+      title: "Capacity Utilization",
+      value: 78,
+      target: 85,
+      change: "+5.4%",
+      trend: "up",
+      icon: Users,
+      description: "Adventure slots filled",
+    },
+  ]
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Target className="h-5 w-5 mr-2" />
-          Performance Metrics
-        </CardTitle>
+        <CardTitle>Performance Metrics</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="h-[200px]">
-            <ChartContainer
-              config={{
-                value: {
-                  label: "Percentage",
-                  color: "hsl(var(--chart-2))",
-                },
-              }}
-              className="h-full w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={safeAnalytics.metricsTrend} layout="vertical" margin={{ left: 20, right: 20 }}>
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                  <Bar dataKey="value" fill="var(--color-value)" radius={5} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Conversion Rate</span>
-                <span>{safeAnalytics.conversionRate}%</span>
+      <CardContent className="space-y-6">
+        {metrics.map((metric) => (
+          <div key={metric.title} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <metric.icon className="h-4 w-4 text-gray-600" />
+                <span className="font-medium">{metric.title}</span>
               </div>
-              <Progress value={safeAnalytics.conversionRate} />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Customer Satisfaction</span>
-                <span>{safeAnalytics.customerSatisfaction}%</span>
-              </div>
-              <Progress value={safeAnalytics.customerSatisfaction} />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Repeat Customer Rate</span>
-                <span>{safeAnalytics.repeatCustomerRate}%</span>
-              </div>
-              <Progress value={safeAnalytics.repeatCustomerRate} />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Marketplace vs Direct</span>
-                <span>
-                  {safeAnalytics.marketplaceVsDirectRatio}% / {100 - safeAnalytics.marketplaceVsDirectRatio}%
+              <div className="flex items-center space-x-2">
+                <span className="text-lg font-bold">
+                  {metric.isRating ? metric.value.toFixed(1) : `${metric.value}%`}
                 </span>
+                <Badge variant={metric.trend === "up" ? "default" : "secondary"} className="text-xs">
+                  {metric.trend === "up" ? (
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 mr-1" />
+                  )}
+                  {metric.change}
+                </Badge>
               </div>
-              <Progress value={safeAnalytics.marketplaceVsDirectRatio} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>{metric.description}</span>
+                <span>Target: {metric.isRating ? metric.target.toFixed(1) : `${metric.target}%`}</span>
+              </div>
+              <Progress 
+                value={metric.isRating ? (metric.value / metric.target) * 100 : (metric.value / metric.target) * 100} 
+                className="h-2"
+              />
             </div>
           </div>
-
-          <Button variant="outline" className="w-full" size="sm" disabled title="Feature Coming Soon">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            View Detailed Analytics
-          </Button>
-        </div>
+        ))}
       </CardContent>
     </Card>
   )

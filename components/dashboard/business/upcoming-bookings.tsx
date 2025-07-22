@@ -1,92 +1,89 @@
+
 "use client"
 
-import Link from "next/link"
-import { Calendar, Clock, Users, Phone, MessageSquare, Edit } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Calendar, Clock, Users } from "lucide-react"
 
-interface UpcomingBooking {
-  id: string
-  customerName: string
-  experienceTitle: string
-  date: string
-  time: string
-  guests: number
-  specialRequests: string
-  phone: string
-}
-
-interface UpcomingBookingsProps {
-  upcomingBookings: UpcomingBooking[]
-}
-
-export function UpcomingBookings({ upcomingBookings }: UpcomingBookingsProps) {
-  // Defensive programming - ensure upcomingBookings is an array
-  const safeUpcomingBookings = upcomingBookings || []
+export function UpcomingBookings() {
+  // Mock data - replace with real data from your API
+  const upcomingBookings = [
+    {
+      id: "1",
+      customerName: "Emma Davis",
+      customerAvatar: null,
+      adventureName: "Morning Surf Lesson",
+      date: "2024-01-26",
+      time: "09:00",
+      guests: 2,
+      status: "confirmed",
+    },
+    {
+      id: "2",
+      customerName: "Robert Brown",
+      customerAvatar: null,
+      adventureName: "Island Hopping Tour",
+      date: "2024-01-27",
+      time: "10:30",
+      guests: 4,
+      status: "confirmed",
+    },
+    {
+      id: "3",
+      customerName: "Lisa Garcia",
+      customerAvatar: null,
+      adventureName: "Snorkeling Adventure",
+      date: "2024-01-28",
+      time: "14:00",
+      guests: 3,
+      status: "pending",
+    },
+  ]
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Upcoming Bookings</CardTitle>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/business/bookings">
-              <Calendar className="h-4 w-4 mr-2" />
-              Calendar View
-            </Link>
-          </Button>
-        </div>
+        <CardTitle>Upcoming Bookings</CardTitle>
       </CardHeader>
-      <CardContent>
-        {safeUpcomingBookings.length > 0 ? (
-          <div className="space-y-4">
-            {safeUpcomingBookings.map((booking) => (
-              <div key={booking.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-medium text-gray-900">{booking.customerName}</p>
-                    <p className="text-sm text-gray-500">{booking.experienceTitle}</p>
-                  </div>
-                  <Badge variant="secondary">{booking.date}</Badge>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center text-gray-600">
-                    <Clock className="h-4 w-4 mr-2" />
+      <CardContent className="space-y-4">
+        {upcomingBookings.map((booking) => (
+          <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                <AvatarImage src={booking.customerAvatar || undefined} />
+                <AvatarFallback>{booking.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{booking.customerName}</p>
+                <p className="text-sm text-gray-600">{booking.adventureName}</p>
+                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                  <span className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {booking.date}
+                  </span>
+                  <span className="flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
                     {booking.time}
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Users className="h-4 w-4 mr-2" />
+                  </span>
+                  <span className="flex items-center">
+                    <Users className="h-3 w-3 mr-1" />
                     {booking.guests} guests
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {booking.phone}
-                  </div>
-                </div>
-                {booking.specialRequests && (
-                  <div className="mt-3 p-2 bg-blue-50 rounded text-sm">
-                    <p className="text-blue-700">
-                      <strong>Special Requests:</strong> {booking.specialRequests}
-                    </p>
-                  </div>
-                )}
-                <div className="flex space-x-2 mt-3">
-                  <Button size="sm" variant="outline" title="Feature Coming Soon">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                  <Button size="sm" variant="outline" title="Feature Coming Soon">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
+                  </span>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                {booking.status}
+              </Badge>
+              <Button size="sm" variant="outline">
+                View Details
+              </Button>
+            </div>
           </div>
-        ) : (
-          <div className="text-center text-gray-500 py-8">No upcoming bookings.</div>
-        )}
+        ))}
       </CardContent>
     </Card>
   )
