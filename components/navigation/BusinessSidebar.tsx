@@ -39,12 +39,12 @@ export function BusinessSidebar({ isOpen, onClose }: BusinessSidebarProps) {
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
   ]
-  
+
   const financeItems = [
     { name: "Sales & Payments", icon: DollarSign, href: "/business/sales" },
     { name: "Integrations", icon: Globe, href: "/business/integrations" },
   ]
-  
+
   const workspaceItems = [
     { name: "Account", icon: Users, href: "/business/account" },
     { name: "Settings", icon: Settings, href: "/business/settings" },
