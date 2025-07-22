@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function CREATE(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
 

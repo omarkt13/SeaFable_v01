@@ -858,4 +858,150 @@ const ProfileTab = ({ userProfile, userEmail }: ProfileTabProps) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Group Size</label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
                   <option value="solo">Solo</option>
-                  <option value="small" selected
+                  <option value="small" selected>
+                    Small Group
+                  </option>
+                  <option value="large">Large Group</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time of Day</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="sunset" selected>
+                    Sunset
+                  </option>
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Danger Zone</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button variant="destructive" onClick={() => signOutAndRedirect()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Log Out
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Main Dashboard Page Component
+interface DashboardPageProps {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("overview")
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null) // Define userProfile state
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (user?.email) {
+        try {
+          const dashboardData = await getUserDashboardData(user.email)
+          setUserProfile(dashboardData?.userProfile || null)
+          setBookings(dashboardData?.bookings || [])
+          setReviews(dashboardData?.reviews || [])
+        } catch (error) {
+          console.error("Error fetching dashboard data:", error)
+        }
+      }
+    }
+
+    if (user?.email) {
+      fetchDashboardData()
+    }
+  }, [user?.email])
+
+  useEffect(() => {
+    const tab = searchParams?.tab
+    if (tab && typeof tab === "string") {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    router.push("/login")
+    return null
+  }
+
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "bookings", label: "Bookings" },
+    { id: "wishlist", label: "Wishlist" },
+    { id: "profile", label: "Profile" },
+  ]
+
+  return (
+    <CustomerLayout>
+      <div className="container mx-auto py-10">
+        <SidebarProvider>
+          <Sidebar className="md:block hidden">
+            <SidebarContent>
+              <SidebarHeader>
+                <Link href="/">
+                  <h1 className="font-semibold text-lg">Dashboard</h1>
+                </Link>
+              </SidebarHeader>
+              <SidebarMenu>
+                {tabs.map((tab) => (
+                  <SidebarMenuItem
+                    key={tab.id}
+                    active={activeTab === tab.id}
+                    href={`/dashboard?tab=${tab.id}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    {tab.label}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarContent>
+            <SidebarFooter>
+              <Button variant="destructive" onClick={() => signOutAndRedirect()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Log Out
+              </Button>
+            </SidebarFooter>
+          </Sidebar>
+          <div className="md:hidden">
+            <SidebarTrigger asChild>
+              <Button variant="outline">Open Menu</Button>
+            </SidebarTrigger>
+          </div>
+          <div className="md:pl-64">
+            {activeTab === "overview" && (
+              <OverviewTab
+                userProfile={userProfile}
+                bookings={bookings}
+                reviews={reviews}
+                userEmail={user.email || ""}
+              />
+            )}
+            {activeTab === "bookings" && <BookingsTab bookings={bookings} reviews={reviews} />}
+            {activeTab === "wishlist" && <WishlistTab />}
+            {activeTab === "profile" && <ProfileTab userProfile={userProfile} userEmail={user.email || ""} />}
+          </div>
+        </SidebarProvider>
+      </div>
+    </CustomerLayout>
+  )
+}
+
+export default DashboardPage
