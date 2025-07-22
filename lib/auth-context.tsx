@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const supabase = createClient()
+  const supabase = typeof window !== 'undefined' ? createClient() : null
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
@@ -97,6 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     // Initial session check
     const getInitialSession = async () => {
       try {
@@ -122,13 +127,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, []) // Empty dependency array ensures this runs once on mount
+  }, [supabase]) // Depend on supabase client
 
   const login = async (
     email: string,
     password: string,
     type: string,
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: "Authentication not initialized" };
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -173,6 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     firstName: string,
     lastName: string,
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: "Authentication not initialized" };
+    }
+
     try {
       // 1. Sign up with Supabase Auth
       const { data, error: authError } = await supabase.auth.signUp({
