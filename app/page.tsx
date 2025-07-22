@@ -29,10 +29,11 @@ import { AuthProvider } from "@/lib/auth-context"
 
 export default function LandingPage() {
   const router = useRouter()
+  const today = new Date().toISOString().split('T')[0] // Define today at component level
   const [searchData, setSearchData] = useState({
     service: "",
     location: "",
-    date: new Date().toISOString().split('T')[0], // Auto-set to today
+    date: today, // Auto-set to today
   })
   const [errors, setErrors] = useState({})
   const [isSearching, setIsSearching] = useState(false)
