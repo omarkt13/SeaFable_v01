@@ -7,9 +7,9 @@ import { CustomerNavigation } from "@/components/navigation/CustomerNavigation"
 export function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <CustomerProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <CustomerNavigation />
-        <main>{children}</main>
+        <main className="bg-background text-foreground">{children}</main>
       </div>
     </CustomerProtectedRoute>
   )

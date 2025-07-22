@@ -943,13 +943,6 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
     resolveSearchParams()
   }, [searchParams])
 
-  useEffect(() => {
-    const tab = resolvedSearchParams?.tab
-    if (tab && typeof tab === "string") {
-      setActiveTab(tab)
-    }
-  }, [resolvedSearchParams])
-
   if (loading) {
     return <div>Loading...</div>
   }
@@ -979,55 +972,47 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
     <CustomerLayout>
       <div className="container mx-auto py-10">
         <SidebarProvider>
-          <Sidebar className="md:block hidden">
-            <SidebarContent>
-              <SidebarHeader>
-                <Link href="/">
-                  <h1 className="font-semibold text-lg">Dashboard</h1>
-                </Link>
-              </SidebarHeader>
-              <SidebarMenu>
-                {tabs.map((tab) => (
-                  <SidebarMenuItem key={tab.id}>
-                    <SidebarMenuButton 
-                      asChild
-                      isActive={activeTab === tab.id}
-                    >
-                      <Link 
-                        href={`/dashboard?tab=${tab.id}`}
+          <div className="flex">
+            <Sidebar className="md:block hidden">
+              <SidebarContent>
+                <SidebarHeader>
+                  <Link href="/">
+                    <h1 className="font-semibold text-lg">Dashboard</h1>
+                  </Link>
+                </SidebarHeader>
+                <SidebarMenu>
+                  {tabs.map((tab) => (
+                    <SidebarMenuItem key={tab.id}>
+                      <SidebarMenuButton 
+                        isActive={activeTab === tab.id}
                         onClick={() => setActiveTab(tab.id)}
                       >
                         {tab.label}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter>
-              <Button variant="destructive" onClick={() => signOutAndRedirect()}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Log Out
-              </Button>
-            </SidebarFooter>
-          </Sidebar>
-          <div className="md:hidden">
-            <SidebarTrigger asChild>
-              <Button variant="outline">Open Menu</Button>
-            </SidebarTrigger>
-          </div>
-          <div className="md:pl-64">
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarContent>
+              <SidebarFooter>
+                <Button variant="destructive" onClick={() => signOutAndRedirect()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Out
+                </Button>
+              </SidebarFooter>
+            </Sidebar>
+            <div className="flex-1 p-6">
             {activeTab === "overview" && (
-              <OverviewTab
-                userProfile={userProfile}
-                bookings={bookings}
-                reviews={reviews}
-                userEmail={user.email || ""}
-              />
-            )}
-            {activeTab === "bookings" && <BookingsTab bookings={bookings} reviews={reviews} />}
-            {activeTab === "wishlist" && <WishlistTab />}
-            {activeTab === "profile" && <ProfileTab userProfile={userProfile} userEmail={user.email || ""} />}
+                <OverviewTab
+                  userProfile={userProfile}
+                  bookings={bookings}
+                  reviews={reviews}
+                  userEmail={user.email || ""}
+                />
+              )}
+              {activeTab === "bookings" && <BookingsTab bookings={bookings} reviews={reviews} />}
+              {activeTab === "wishlist" && <WishlistTab />}
+              {activeTab === "profile" && <ProfileTab userProfile={userProfile} userEmail={user.email || ""} />}
+            </div>
           </div>
         </SidebarProvider>
       </div>
