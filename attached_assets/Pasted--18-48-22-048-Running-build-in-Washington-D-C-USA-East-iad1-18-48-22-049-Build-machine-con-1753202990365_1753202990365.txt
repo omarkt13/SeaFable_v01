@@ -1,0 +1,49 @@
+[18:48:22.048] Running build in Washington, D.C., USA (East) – iad1
+[18:48:22.049] Build machine configuration: 2 cores, 8 GB
+[18:48:22.065] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 1a721bf)
+[18:48:22.195] Previous build caches not available
+[18:48:22.402] Cloning completed: 337.000ms
+[18:48:22.703] Running "vercel build"
+[18:48:24.939] Vercel CLI 44.5.0
+[18:48:25.789] Installing dependencies...
+[18:48:30.016] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:48:30.678] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:48:42.147] 
+[18:48:42.148] added 489 packages in 16s
+[18:48:42.148] 
+[18:48:42.148] 57 packages are looking for funding
+[18:48:42.148]   run `npm fund` for details
+[18:48:42.211] Detected Next.js version: 15.2.4
+[18:48:42.218] Running "npm run build"
+[18:48:42.339] 
+[18:48:42.340] > my-v0-project@0.1.0 build
+[18:48:42.340] > next build
+[18:48:42.340] 
+[18:48:42.974] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:48:42.975] This information is used to shape Next.js' roadmap and prioritize features.
+[18:48:42.975] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:48:42.975] https://nextjs.org/telemetry
+[18:48:42.975] 
+[18:48:43.037]    ▲ Next.js 15.2.4
+[18:48:43.038]    - Experiments (use with caution):
+[18:48:43.038]      · allowedDevOrigins
+[18:48:43.038] 
+[18:48:43.184]    Creating an optimized production build ...
+[18:49:13.747]  ✓ Compiled successfully
+[18:49:13.753]    Linting and checking validity of types ...
+[18:49:28.158] Failed to compile.
+[18:49:28.158] 
+[18:49:28.158] ./app/business/adventures/new/page.tsx:152:27
+[18:49:28.158] Type error: Parameter 'field' implicitly has an 'any' type.
+[18:49:28.158] 
+[18:49:28.159] [0m [90m 150 |[39m   }[33m,[39m [formData])[33m;[39m[0m
+[18:49:28.159] [0m [90m 151 |[39m[0m
+[18:49:28.159] [0m[31m[1m>[22m[39m[90m 152 |[39m   [36mconst[39m updateFormData [33m=[39m (field[33m,[39m value) [33m=>[39m {[0m
+[18:49:28.159] [0m [90m     |[39m                           [31m[1m^[22m[39m[0m
+[18:49:28.159] [0m [90m 153 |[39m     setFormData(prev [33m=>[39m ({ [33m...[39mprev[33m,[39m [field][33m:[39m value }))[33m;[39m[0m
+[18:49:28.159] [0m [90m 154 |[39m   }[33m;[39m[0m
+[18:49:28.159] [0m [90m 155 |[39m[0m
+[18:49:28.196] Next.js build worker exited with code: 1 and signal: null
+[18:49:28.216] Error: Command "npm run build" exited with 1
+[18:49:28.518] 
+[18:49:31.645] Exiting build container
