@@ -991,7 +991,8 @@ export async function testTableAccess() {
       const { data, error } = await supabase.from(table).select("*").limit(1)
 
       if (error) {
-        results[table] = { success: false, error: error.message } else {
+        results[table] = { success: false, error: error.message }
+      } else {
         results[table] = { success: true, count: data?.length || 0 }
       }
     } catch (error: any) {
