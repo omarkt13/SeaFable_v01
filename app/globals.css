@@ -90,121 +90,18 @@
   body {
     @apply bg-background text-foreground;
     font-family: Arial, Helvetica, sans-serif;
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
   }
 
-  /* Ensure proper color inheritance for all elements */
-  *, *::before, *::after {
-    color: inherit;
-  }
-
-  /* Prevent any black backgrounds or colors */
-  div, span, p, h1, h2, h3, h4, h5, h6, section, article, main, aside, header, footer, nav,
-  ul, ol, li, table, tr, td, th, tbody, thead, tfoot {
-    color: inherit !important;
-    background-color: transparent;
-  }
-
-  /* Form elements with proper theme colors */
-  input, textarea, select, option {
-    @apply bg-background text-foreground border-input;
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
-    border-color: hsl(var(--border)) !important;
-  }
-
-  input:focus, textarea:focus, select:focus {
-    @apply ring-ring;
-    outline-color: hsl(var(--ring)) !important;
-  }
-
-  /* Button elements with proper variants */
-  button:not([class*="bg-"]):not([class*="variant"]):not(.btn) {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90;
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-  }
-
-  /* Cards and containers */
-  [class*="card"]:not([class*="bg-"]) {
-    @apply bg-card text-card-foreground border-border;
-    background-color: hsl(var(--card)) !important;
-    color: hsl(var(--card-foreground)) !important;
-  }
-
-  /* Popover and dropdown content */
-  [role="menu"], [role="listbox"], [role="dialog"] {
-    @apply bg-popover text-popover-foreground border-border;
-    background-color: hsl(var(--popover)) !important;
-    color: hsl(var(--popover-foreground)) !important;
-  }
-
-  /* Links should inherit color unless specifically styled */
-  a:not([class*="text-"]):not([class*="bg-"]) {
-    color: inherit;
-  }
-
-  /* Force visible colors for all elements */
-  * {
-    color: hsl(var(--foreground)) !important;
-    background-color: transparent !important;
-  }
-
-  /* Override any black backgrounds */
+  /* Only fix problematic black elements that conflict with theme */
   [style*="background-color: black"], 
   [style*="background-color: #000"], 
-  [style*="background-color: rgb(0, 0, 0)"],
-  [class*="bg-black"] {
+  [style*="background-color: rgb(0, 0, 0)"] {
     background-color: hsl(var(--background)) !important;
   }
 
-  /* Override any black text colors */
   [style*="color: black"]:not([class*="text-black"]), 
   [style*="color: #000"]:not([class*="text-black"]), 
-  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]),
-  [class*="text-black"]:not(.intentionally-black) {
+  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]) {
     color: hsl(var(--foreground)) !important;
-  }
-
-  /* Ensure form elements are always visible */
-  input, textarea, select, button {
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
-    border: 1px solid hsl(var(--border)) !important;
-  }
-
-  /* Force visibility for search elements */
-  [role="searchbox"], [type="search"], .search-input {
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
-  }
-
-  /* Force visibility for all text content */
-  p, span, label, h1, h2, h3, h4, h5, h6, div {
-    color: inherit !important;
-  }
-
-  /* Fix sidebar elements */
-  .sidebar, [data-sidebar] {
-    background-color: hsl(var(--sidebar-background)) !important;
-    color: hsl(var(--sidebar-foreground)) !important;
-    border-color: hsl(var(--sidebar-border)) !important;
-  }
-
-  .sidebar *, [data-sidebar] * {
-    color: inherit;
-  }
-}
-
-/* Additional utility classes */
-@layer utilities {
-  .force-theme-colors {
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background)) !important;
-  }
-
-  .force-theme-colors * {
-    color: inherit !important;
   }
 }
