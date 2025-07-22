@@ -143,12 +143,16 @@ export default function ExperienceDetailPage() {
   }
 
   // Filter available slots based on selected date
-    const filteredTimeSlots = useMemo(()=>{
-        if (!experience?.host_availability || !bookingData.date) return [];
-        return experience.host_availability.filter((slot) => 
-          slot.date && slot.available_capacity >= bookingData.guests && new Date(`${slot.date}T${slot.start_time}`) > new Date()
-        ).sort((a, b) => a.start_time.localeCompare(b.start_time));
-    }, [experience?.host_availability, bookingData.date, bookingData.guests]);
+  const filteredTimeSlots = useMemo(() => {
+    if (!experience?.host_availability || !bookingData.date) return []
+
+    return experience.host_availability.filter((slot): slot is NonNullable<typeof slot> => 
+      slot && 
+      slot.available_date && 
+      slot.max_capacity >= bookingData.guests && 
+      new Date(`${slot.available_date}T${slot.start_time}`) > new Date()
+    ).sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [experience?.host_availability, bookingData.date, bookingData.guests])
 
   // Check availability when date or guests change
   useEffect(() => {

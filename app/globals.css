@@ -3,6 +3,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force proper theme color inheritance */
+* {
+  color: inherit;
+}
+
+/* Ensure form elements use theme colors */
+input, textarea, select, button {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+/* Fix specific component colors */
+[data-radix-collection-item] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Fix sidebar and navigation colors */
+.sidebar-content {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Ensure proper contrast for interactive elements */
+button:not(.bg-primary):not(.bg-secondary):not(.bg-destructive) {
+  color: hsl(var(--foreground));
+}
+
+/* Fix dropdown and popover content colors */
+[data-radix-popper-content-wrapper] {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
