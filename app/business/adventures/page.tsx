@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -207,12 +206,12 @@ export default function AdventuresPage() {
   return (
     <BusinessProtectedRoute>
       <BusinessLayout>
-        <div className="p-8 space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Adventures</h1>
-              <p className="text-gray-600 mt-1">Manage your water adventure experiences</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Adventures</h1>
+              <p className="text-sm lg:text-base text-gray-600 mt-1">Manage your adventure offerings</p>
             </div>
             <button 
               onClick={() => router.push('/business/adventures/new')}

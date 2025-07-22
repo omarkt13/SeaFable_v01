@@ -336,24 +336,24 @@ export default function BusinessHomePage() {
   return (
     <BusinessProtectedRoute>
       <BusinessLayout>
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 rounded-lg">
-            <div className="flex flex-col gap-4">
-              <h1 className="text-2xl font-bold">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 lg:p-8 rounded-xl shadow-lg">
+            <div className="flex flex-col gap-3">
+              <h1 className="text-xl lg:text-2xl font-bold">
                 Welcome back, {businessProfile?.contact_name || businessProfile?.name || 'Business Owner'}! 🌊
               </h1>
-              <p className="text-lg">
+              <p className="text-base lg:text-lg opacity-90">
                 You have {stats.active_bookings} bookings today. Weather conditions are perfect for water adventures!
               </p>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 lg:gap-6 mt-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  <span>Profile Complete</span>
+                  <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <span className="text-sm lg:text-base">Profile Complete</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  <span>Verified Business</span>
+                  <Shield className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <span className="text-sm lg:text-base">Verified Business</span>
                 </div>
               </div>
             </div>
@@ -361,15 +361,15 @@ export default function BusinessHomePage() {
 
           {/* Monthly Stats */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Monthly Stats</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <CreditCard className="w-6 h-6 text-blue-600" />
+            <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Monthly Stats</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-4 lg:p-6">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 lg:mb-4">
+                    <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.revenue)}</div>
-                  <div className="text-gray-500">Revenue</div>
+                  <div className="text-2xl lg:text-3xl font-bold text-gray-900">{formatCurrency(stats.revenue)}</div>
+                  <div className="text-sm lg:text-base text-gray-500 mt-1">Revenue</div>
                 </CardContent>
               </Card>
               <Card>
@@ -404,13 +404,13 @@ export default function BusinessHomePage() {
 
           {/* Quick Action Cards */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/business/adventures/new')}>
-                <CardContent className="p-6 text-center">
-                  <Plus className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                  <h3 className="font-semibold text-gray-900 mb-2">Create Adventure</h3>
-                  <p className="text-sm text-gray-600">Add new adventure offerings</p>
+            <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <Card className="hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.02]" onClick={() => router.push('/business/adventures/new')}>
+                <CardContent className="p-4 lg:p-6 text-center">
+                  <Plus className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-3 text-green-600" />
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm lg:text-base">Create Adventure</h3>
+                  <p className="text-xs lg:text-sm text-gray-600">Add new adventure offerings</p>
                 </CardContent>
               </Card>
 

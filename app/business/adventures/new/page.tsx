@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -166,10 +165,10 @@ const ExperienceCreationForm = () => {
     }
 
     setIsGenerating(true);
-    
+
     // Simulate AI generation with realistic data based on description
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     const aiGenerated = {
       fullDescription: `Experience the magic of ${formData.location || 'this beautiful destination'} through our carefully crafted adventure. ${formData.shortDescription} Our expert guides will ensure you have an unforgettable experience while maintaining the highest safety standards. Perfect for travelers seeking authentic local experiences with professional guidance and premium service.`,
       tags: ['Guided', 'Small Group', 'Photography', 'Adventure'].slice(0, Math.floor(Math.random() * 4) + 2),
@@ -197,9 +196,9 @@ const ExperienceCreationForm = () => {
       ...prev,
       ...aiGenerated
     }));
-    
+
     setIsGenerating(false);
-    
+
     toast({
       title: "Success!",
       description: "AI has generated additional details for your experience.",
@@ -210,7 +209,7 @@ const ExperienceCreationForm = () => {
   const handleImageUpload = (type, file = null) => {
     // Simulate image upload
     const mockImageUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=400&h=300&fit=crop`;
-    
+
     if (type === 'primary') {
       updateFormData('primaryImageUrl', mockImageUrl);
     } else {
@@ -285,14 +284,14 @@ const ExperienceCreationForm = () => {
 
   const generateDescription = () => {
     if (!formData.title || !formData.activityType || formData.categories.length === 0) return;
-    
+
     const activity = activityTypes.find(a => a.id === formData.activityType)?.label;
     const mainCategory = formData.categories[0];
     const duration = formData.durationHours ? `${formData.durationHours}-hour` : '';
     const location = formData.location;
-    
+
     const generated = `Join us for an unforgettable ${duration} ${mainCategory.toLowerCase()} experience in ${location}. Perfect for ${formData.difficultyLevel === 'easy' ? 'beginners and families' : formData.difficultyLevel === 'expert' ? 'experienced adventurers' : 'all skill levels'}, this ${activity.toLowerCase()} adventure offers${formData.maxGuests <= 6 ? ' an intimate' : ' a group'} setting for up to ${formData.maxGuests} guests.`;
-    
+
     updateFormData('shortDescription', generated);
   };
 
@@ -653,7 +652,7 @@ const ExperienceCreationForm = () => {
                   <span>Add Date</span>
                 </button>
               </div>
-              
+
               {formData.availabilityDates.length === 0 ? (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
@@ -779,6 +778,7 @@ const ExperienceCreationForm = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 What's Included *
               </label>
+Adjusting layout of experience creation form for better UI.```text
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {amenityOptions.map((amenity) => (
                   <label key={amenity} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
@@ -973,7 +973,7 @@ const ExperienceCreationForm = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -987,7 +987,7 @@ const ExperienceCreationForm = () => {
                             className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Answer
@@ -1044,7 +1044,7 @@ const ExperienceCreationForm = () => {
                   </div>
                 </div>
               </div>
-              
+
               {formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {formData.tags.map((tag) => (
@@ -1120,7 +1120,7 @@ const ExperienceCreationForm = () => {
                   </ul>
                 </div>
               )}
-              
+
               {formData.notIncludedItems.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">What's NOT Included</h4>
@@ -1226,12 +1226,12 @@ const ExperienceCreationForm = () => {
     try {
       // TODO: Implement adventure creation API call
       console.log('Adventure created:', formData);
-      
+
       toast({
         title: "Success!",
         description: "Your adventure has been created successfully.",
       });
-      
+
       router.push("/business/adventures");
     } catch (error) {
       console.error('Error creating adventure:', error);
@@ -1249,7 +1249,7 @@ const ExperienceCreationForm = () => {
     try {
       // TODO: Implement save as draft API call
       console.log('Saved as draft:', formData);
-      
+
       toast({
         title: "Draft Saved!",
         description: "Your adventure has been saved as a draft.",
@@ -1266,7 +1266,8 @@ const ExperienceCreationForm = () => {
 
   return (
     <BusinessProtectedRoute>
-      <BusinessLayout>
+      
+<BusinessLayout>
         <div className="max-w-5xl mx-auto p-6 bg-white min-h-screen">
           {/* Header */}
           <div className="mb-8">
@@ -1354,7 +1355,7 @@ const ExperienceCreationForm = () => {
               >
                 Save Draft
               </button>
-              
+
               <div className="text-sm text-gray-500">
                 Step {currentStep} of {steps.length}
               </div>

@@ -8,10 +8,16 @@ import { DownloadIcon } from "lucide-react"
 export default function BusinessReportsPage() {
   return (
     <BusinessLayout>
-      <div className="px-6 py-8">
-        <h1 className="text-3xl font-bold mb-6">Reports</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
+        <div className="space-y-6 lg:space-y-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+              <p className="text-sm lg:text-base text-gray-600 mt-1">View detailed insights about your business performance</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:gap-6 md:grid-cols-2">
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle>Sales Report</CardTitle>
               <CardDescription>Detailed breakdown of your sales and revenue.</CardDescription>
@@ -24,7 +30,7 @@ export default function BusinessReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle>Booking Activity Report</CardTitle>
               <CardDescription>Overview of all bookings, cancellations, and completions.</CardDescription>
@@ -37,7 +43,7 @@ export default function BusinessReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle>Client Data Report</CardTitle>
               <CardDescription>Information about your clients and their booking history.</CardDescription>

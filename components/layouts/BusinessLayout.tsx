@@ -35,7 +35,7 @@ export function BusinessLayout({ children }: BusinessLayoutProps) {
 
         {/* Main content area */}
         <div className="flex-1 lg:ml-64">
-          <main className="p-4 sm:px-6 md:p-8">{children}</main>
+          <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</main>
         </div>
       </div>
 

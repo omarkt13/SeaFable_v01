@@ -130,9 +130,14 @@ export default function BusinessSettingsPage() {
 
   return (
     <BusinessLayout>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Business Settings</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="space-y-6 lg:space-y-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Business Settings</h1>
+            <p className="text-sm lg:text-base text-gray-600 mt-1">Manage your business profile and preferences</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           <Card>
             <CardHeader>
               <CardTitle>Company Information</CardTitle>

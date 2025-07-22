@@ -93,8 +93,13 @@ export default function BusinessCalendarPage() {
 
   return (
     <BusinessLayout>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Business Calendar</h1>
+      <div className="space-y-6 lg:space-y-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Calendar & Availability</h1>
+            <p className="text-sm lg:text-base text-gray-600 mt-1">Manage your availability and schedule</p>
+          </div>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Weekly Overview</CardTitle>
