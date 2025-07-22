@@ -22,6 +22,9 @@ interface RecentBookingsProps {
 }
 
 export function RecentBookings({ recentBookings }: RecentBookingsProps) {
+  // Defensive programming - ensure recentBookings is an array
+  const safeRecentBookings = recentBookings || []
+
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
       confirmed: "default",
@@ -46,9 +49,9 @@ export function RecentBookings({ recentBookings }: RecentBookingsProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {recentBookings.length > 0 ? (
+        {safeRecentBookings.length > 0 ? (
           <div className="space-y-4">
-            {recentBookings.map((booking) => (
+            {safeRecentBookings.map((booking) => (
               <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <img

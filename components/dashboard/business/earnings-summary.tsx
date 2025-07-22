@@ -18,8 +18,17 @@ interface EarningsSummaryProps {
 }
 
 export function EarningsSummary({ earnings }: EarningsSummaryProps) {
+  // Defensive programming - provide defaults if earnings is undefined
+  const safeEarnings = {
+    thisMonth: 0,
+    lastMonth: 0,
+    pending: 0,
+    nextPayout: { amount: 0, date: new Date().toLocaleDateString() },
+    monthlyTrend: [],
+    ...earnings
+  }
   const monthlyGrowth =
-    earnings.lastMonth > 0 ? (((earnings.thisMonth - earnings.lastMonth) / earnings.lastMonth) * 100).toFixed(1) : "0.0"
+    safeEarnings.lastMonth > 0 ? (((safeEarnings.thisMonth - safeEarnings.lastMonth) / safeEarnings.lastMonth) * 100).toFixed(1) : "0.0"
   const growthType = Number.parseFloat(monthlyGrowth) >= 0 ? "increase" : "decrease"
 
   return (
@@ -34,7 +43,7 @@ export function EarningsSummary({ earnings }: EarningsSummaryProps) {
         <div className="space-y-6">
           <div>
             <p className="text-sm text-gray-500">This Month</p>
-            <p className="text-3xl font-bold text-green-600">${earnings.thisMonth.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-green-600">${safeEarnings.thisMonth.toLocaleString()}</p>
             <p className={`text-sm flex items-center ${growthType === "increase" ? "text-green-600" : "text-red-600"}`}>
               {growthType === "increase" ? (
                 <TrendingUp className="h-4 w-4 mr-1" />
@@ -48,20 +57,20 @@ export function EarningsSummary({ earnings }: EarningsSummaryProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Last Month</p>
-              <p className="text-xl font-semibold">${earnings.lastMonth.toLocaleString()}</p>
+              <p className="text-xl font-semibold">${safeEarnings.lastMonth.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Pending</p>
-              <p className="text-xl font-semibold text-yellow-600">${earnings.pending.toLocaleString()}</p>
+              <p className="text-xl font-semibold text-yellow-600">${safeEarnings.pending.toLocaleString()}</p>
             </div>
           </div>
 
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium">Next Payout</p>
-              <Badge variant="secondary">{earnings.nextPayout.date}</Badge>
+              <Badge variant="secondary">{safeEarnings.nextPayout.date}</Badge>
             </div>
-            <p className="text-2xl font-bold text-blue-600">${earnings.nextPayout.amount.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-600">${safeEarnings.nextPayout.amount.toLocaleString()}</p>
             <Button className="w-full mt-3" size="sm" disabled title="Feature Coming Soon">
               <CreditCard className="h-4 w-4 mr-2" />
               View Payout Details
@@ -80,7 +89,7 @@ export function EarningsSummary({ earnings }: EarningsSummaryProps) {
               className="h-[200px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={earnings.monthlyTrend}>
+                <LineChart data={safeEarnings.monthlyTrend}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                   <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />

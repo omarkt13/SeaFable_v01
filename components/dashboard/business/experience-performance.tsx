@@ -20,6 +20,9 @@ interface ExperiencePerformanceProps {
 }
 
 export function ExperiencePerformance({ experiences }: ExperiencePerformanceProps) {
+  // Defensive programming - ensure experiences is an array
+  const safeExperiences = experiences || []
+
   return (
     <Card>
       <CardHeader>
@@ -32,9 +35,9 @@ export function ExperiencePerformance({ experiences }: ExperiencePerformanceProp
         </div>
       </CardHeader>
       <CardContent>
-        {experiences.length > 0 ? (
+        {safeExperiences.length > 0 ? (
           <div className="space-y-4">
-            {experiences.map((experience) => (
+            {safeExperiences.map((experience) => (
               <div key={experience.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">

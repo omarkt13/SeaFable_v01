@@ -9,6 +9,9 @@ interface RecentActivityProps {
 }
 
 export function RecentActivity({ recentActivity }: RecentActivityProps) {
+  // Defensive programming - ensure recentActivity is an array
+  const safeRecentActivity = recentActivity || []
+
   return (
     <Card>
       <CardHeader>
@@ -18,9 +21,9 @@ export function RecentActivity({ recentActivity }: RecentActivityProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {recentActivity.length > 0 ? (
+        {safeRecentActivity.length > 0 ? (
           <div className="space-y-3">
-            {recentActivity.map((activity, index) => (
+            {safeRecentActivity.map((activity, index) => (
               <div key={index} className="flex items-center space-x-3">
                 <div className={`w-2 h-2 ${activity.color} rounded-full`}></div>
                 <div className="flex-1">

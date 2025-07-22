@@ -22,6 +22,9 @@ interface UpcomingBookingsProps {
 }
 
 export function UpcomingBookings({ upcomingBookings }: UpcomingBookingsProps) {
+  // Defensive programming - ensure upcomingBookings is an array
+  const safeUpcomingBookings = upcomingBookings || []
+
   return (
     <Card>
       <CardHeader>
@@ -36,9 +39,9 @@ export function UpcomingBookings({ upcomingBookings }: UpcomingBookingsProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {upcomingBookings.length > 0 ? (
+        {safeUpcomingBookings.length > 0 ? (
           <div className="space-y-4">
-            {upcomingBookings.map((booking) => (
+            {safeUpcomingBookings.map((booking) => (
               <div key={booking.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>

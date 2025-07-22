@@ -18,6 +18,16 @@ interface PerformanceMetricsProps {
 }
 
 export function PerformanceMetrics({ analytics }: PerformanceMetricsProps) {
+  // Defensive programming - provide defaults if analytics is undefined
+  const safeAnalytics = {
+    conversionRate: 0,
+    customerSatisfaction: 0,
+    repeatCustomerRate: 0,
+    marketplaceVsDirectRatio: 0,
+    metricsTrend: [],
+    ...analytics
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -39,7 +49,7 @@ export function PerformanceMetrics({ analytics }: PerformanceMetricsProps) {
               className="h-full w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.metricsTrend} layout="vertical" margin={{ left: 20, right: 20 }}>
+                <BarChart data={safeAnalytics.metricsTrend} layout="vertical" margin={{ left: 20, right: 20 }}>
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
@@ -54,35 +64,35 @@ export function PerformanceMetrics({ analytics }: PerformanceMetricsProps) {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Conversion Rate</span>
-                <span>{analytics.conversionRate}%</span>
+                <span>{safeAnalytics.conversionRate}%</span>
               </div>
-              <Progress value={analytics.conversionRate} />
+              <Progress value={safeAnalytics.conversionRate} />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Customer Satisfaction</span>
-                <span>{analytics.customerSatisfaction}%</span>
+                <span>{safeAnalytics.customerSatisfaction}%</span>
               </div>
-              <Progress value={analytics.customerSatisfaction} />
+              <Progress value={safeAnalytics.customerSatisfaction} />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Repeat Customer Rate</span>
-                <span>{analytics.repeatCustomerRate}%</span>
+                <span>{safeAnalytics.repeatCustomerRate}%</span>
               </div>
-              <Progress value={analytics.repeatCustomerRate} />
+              <Progress value={safeAnalytics.repeatCustomerRate} />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Marketplace vs Direct</span>
                 <span>
-                  {analytics.marketplaceVsDirectRatio}% / {100 - analytics.marketplaceVsDirectRatio}%
+                  {safeAnalytics.marketplaceVsDirectRatio}% / {100 - safeAnalytics.marketplaceVsDirectRatio}%
                 </span>
               </div>
-              <Progress value={analytics.marketplaceVsDirectRatio} />
+              <Progress value={safeAnalytics.marketplaceVsDirectRatio} />
             </div>
           </div>
 
