@@ -405,7 +405,7 @@ const ExperienceCreationForm = () => {
                         onChange={(e) => {
                           const updated = e.target.checked
                             ? [...formData.categories, category]
-                            : formData.categories.filter(c => c !== category);
+                            : formData.categories.filter((c: string) => c !== category);
                           updateFormData('categories', updated);
                         }}
                         className="rounded text-teal-600"
@@ -764,7 +764,7 @@ const ExperienceCreationForm = () => {
                       className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       rows={2}
                     />
-                  </div>
+                                    </div>
                 </div>
               ))}
             </div>
