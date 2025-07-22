@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,74 +11,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* SeaFable Light Theme - Ocean-inspired colors */
+    --background: 210 40% 98%;           /* Very light blue-gray */
+    --foreground: 210 20% 10%;           /* Deep navy text */
+    --card: 0 0% 100%;                   /* Pure white cards */
+    --card-foreground: 210 20% 10%;      /* Deep navy card text */
+    --popover: 0 0% 100%;                /* White popovers */
+    --popover-foreground: 210 20% 10%;   /* Deep navy popover text */
+    --primary: 210 20% 8%;               /* Very deep navy for buttons */
+    --primary-foreground: 0 0% 100%;     /* White text on dark buttons */
+    --secondary: 210 40% 95%;            /* Light blue-gray */
+    --secondary-foreground: 210 20% 10%; /* Deep navy on secondary */
+    --muted: 210 40% 95%;                /* Light blue-gray muted */
+    --muted-foreground: 210 10% 40%;     /* Medium gray text */
+    --accent: 180 50% 88%;               /* Light teal accent */
+    --accent-foreground: 180 50% 15%;    /* Dark teal on accent */
+    --destructive: 0 84% 60%;            /* Red for errors */
+    --destructive-foreground: 0 0% 98%;  /* White text on red */
+    --border: 210 30% 85%;               /* Light border */
+    --input: 210 30% 92%;                /* Light input background */
+    --ring: 180 50% 50%;                 /* Teal focus ring */
+    --radius: 0.75rem;                   /* Rounded corners */
+    
+    /* Chart colors - ocean themed */
+    --chart-1: 200 80% 50%;              /* Ocean blue */
+    --chart-2: 180 60% 45%;              /* Teal */
+    --chart-3: 160 50% 40%;              /* Sea green */
+    --chart-4: 220 70% 55%;              /* Deep blue */
+    --chart-5: 195 75% 60%;              /* Light blue */
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* SeaFable Dark Theme - Deep ocean colors */
+    --background: 210 50% 3%;            /* Very deep navy */
+    --foreground: 210 40% 95%;           /* Light blue-white text */
+    --card: 210 50% 5%;                  /* Dark navy cards */
+    --card-foreground: 210 40% 95%;      /* Light text on cards */
+    --popover: 210 50% 5%;               /* Dark navy popovers */
+    --popover-foreground: 210 40% 95%;   /* Light text on popovers */
+    --primary: 180 50% 60%;              /* Bright teal for buttons */
+    --primary-foreground: 210 50% 3%;    /* Dark text on bright buttons */
+    --secondary: 210 50% 8%;             /* Dark secondary */
+    --secondary-foreground: 210 40% 95%; /* Light text on secondary */
+    --muted: 210 50% 8%;                 /* Dark muted */
+    --muted-foreground: 210 20% 60%;     /* Medium light text */
+    --accent: 180 50% 20%;               /* Dark teal accent */
+    --accent-foreground: 180 50% 90%;    /* Light teal on accent */
+    --destructive: 0 75% 55%;            /* Bright red for errors */
+    --destructive-foreground: 0 0% 98%;  /* White text on red */
+    --border: 210 50% 12%;               /* Dark border */
+    --input: 210 50% 8%;                 /* Dark input background */
+    --ring: 180 50% 60%;                 /* Bright teal focus ring */
+    
+    /* Chart colors - bright ocean themed for dark mode */
+    --chart-1: 200 80% 60%;              /* Bright ocean blue */
+    --chart-2: 180 70% 55%;              /* Bright teal */
+    --chart-3: 160 60% 50%;              /* Bright sea green */
+    --chart-4: 220 80% 65%;              /* Bright deep blue */
+    --chart-5: 195 85% 70%;              /* Bright light blue */
   }
 }
 
@@ -89,96 +80,139 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variation-settings: normal;
+    line-height: 1.6;
   }
 
-  /* Only fix problematic black elements that conflict with theme */
-  [style*="background-color: black"], 
-  [style*="background-color: #000"], 
-  [style*="background-color: rgb(0, 0, 0)"] {
-    background-color: hsl(var(--background)) !important;
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
+    font-weight: 600;
+    line-height: 1.2;
   }
 
-  [style*="color: black"]:not([class*="text-black"]), 
-  [style*="color: #000"]:not([class*="text-black"]), 
-  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]) {
-    color: hsl(var(--foreground)) !important;
+  /* Links */
+  a {
+    @apply text-foreground;
+    text-decoration: none;
+    transition: color 0.2s ease;
   }
 
-  /* Debug theme detection */
-  body::before {
-    content: "Theme: " attr(class) " | BG: " hsl(var(--background)) " | FG: " hsl(var(--foreground));
-    position: fixed;
-    top: 0;
-    right: 0;
-    background: red;
-    color: white;
-    padding: 4px 8px;
-    z-index: 9999;
-    font-size: 10px;
-    max-width: 400px;
-    word-break: break-all;
+  a:hover {
+    @apply text-primary;
   }
 
-  /* Debug black elements */
-  [style*="background-color: black"],
-  [style*="background-color: #000"],
-  [style*="background-color: rgb(0, 0, 0)"],
-  [style*="color: black"],
-  [style*="color: #000"],
-  [style*="color: rgb(0, 0, 0)"] {
-    outline: 3px solid lime !important;
-    position: relative;
+  /* Form elements */
+  input, textarea, select {
+    @apply bg-input text-foreground border-border;
+    border-width: 1px;
+    border-radius: calc(var(--radius) - 2px);
+    transition: all 0.2s ease;
   }
 
-  [style*="background-color: black"]:after,
-  [style*="background-color: #000"]:after,
-  [style*="background-color: rgb(0, 0, 0)"]:after,
-  [style*="color: black"]:after,
-  [style*="color: #000"]:after,
-  [style*="color: rgb(0, 0, 0)"]:after {
-    content: "BLACK DETECTED!";
-    position: absolute;
-    top: -20px;
-    left: 0;
-    background: red;
-    color: white;
-    font-size: 8px;
-    padding: 2px;
-    z-index: 10000;
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background outline-none border-ring;
   }
 
-  /* Force all elements to use theme colors */
-  * {
-    color: inherit !important;
-    background-color: inherit !important;
+  input::placeholder, textarea::placeholder {
+    @apply text-muted-foreground;
   }
 
-  /* Override specific problematic elements */
-  input, textarea, select, button {
-    background-color: hsl(var(--background)) !important;
-    color: hsl(var(--foreground)) !important;
-    border-color: hsl(var(--border)) !important;
+  /* Button base styles */
+  button {
+    @apply text-foreground;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
   }
 
-  /* Debug info panel */
-  body::after {
-    content: 
-      "CSS Variables Debug: "
-      "bg=" hsl(var(--background)) " "
-      "fg=" hsl(var(--foreground)) " "
-      "primary=" hsl(var(--primary)) " "
-      "border=" hsl(var(--border));
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    background: orange;
-    color: black;
-    padding: 4px 8px;
-    z-index: 9999;
-    font-size: 8px;
-    max-width: 100%;
-    word-break: break-all;
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
+  /* Card components */
+  .card {
+    @apply bg-card text-card-foreground border-border;
+    border-width: 1px;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
+
+  /* Ensure proper contrast for all interactive elements */
+  [role="button"], 
+  button, 
+  input[type="button"], 
+  input[type="submit"] {
+    @apply text-foreground bg-background border-border;
+  }
+
+  /* Search-specific styling */
+  [type="search"], 
+  [role="searchbox"],
+  .search-input {
+    @apply bg-input text-foreground border-border;
+  }
+
+  /* Dropdown and popover styling */
+  [role="menu"], 
+  [role="listbox"], 
+  [role="combobox"] {
+    @apply bg-popover text-popover-foreground border-border;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Focus visible for accessibility */
+  *:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background outline-none;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+}
+
+/* Component-specific overrides */
+@layer components {
+  /* Ensure black buttons stay black in both themes */
+  .btn-primary, 
+  .bg-black {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  .btn-primary:hover,
+  .bg-black:hover {
+    background-color: hsl(var(--primary) / 0.9) !important;
+  }
+
+  /* White background elements stay white */
+  .bg-white {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  /* Gradient backgrounds for hero sections */
+  .gradient-hero {
+    background: linear-gradient(135deg, 
+      hsl(200 80% 50%) 0%, 
+      hsl(180 60% 45%) 35%, 
+      hsl(160 50% 40%) 100%);
+  }
+
+  .dark .gradient-hero {
+    background: linear-gradient(135deg, 
+      hsl(200 80% 25%) 0%, 
+      hsl(180 60% 20%) 35%, 
+      hsl(160 50% 15%) 100%);
+  }
+}
