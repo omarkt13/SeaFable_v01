@@ -90,36 +90,84 @@
   body {
     @apply bg-background text-foreground;
     font-family: Arial, Helvetica, sans-serif;
-    color: hsl(var(--foreground));
-    background-color: hsl(var(--background));
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
   }
 
-  /* Ensure proper color inheritance */
-  div, span, p, h1, h2, h3, h4, h5, h6, section, article, main, aside, header, footer, nav {
+  /* Ensure proper color inheritance for all elements */
+  *, *::before, *::after {
     color: inherit;
   }
 
-  /* Form elements */
-  input, textarea, select {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    border-color: hsl(var(--border));
+  /* Prevent any black backgrounds or colors */
+  div, span, p, h1, h2, h3, h4, h5, h6, section, article, main, aside, header, footer, nav,
+  ul, ol, li, table, tr, td, th, tbody, thead, tfoot {
+    color: inherit !important;
+    background-color: transparent;
   }
 
-  input:not([class*="bg-"]):not([type="submit"]):not([type="button"]):not([type="reset"]), 
-  textarea:not([class*="bg-"]), 
-  select:not([class*="bg-"]) {
-    @apply bg-background text-foreground border-border;
+  /* Form elements with proper theme colors */
+  input, textarea, select, option {
+    @apply bg-background text-foreground border-input;
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+    border-color: hsl(var(--border)) !important;
   }
 
-  /* Button elements */
-  button:not([class*="bg-"]):not([class*="variant"]) {
-    @apply bg-primary text-primary-foreground;
+  input:focus, textarea:focus, select:focus {
+    @apply ring-ring;
+    outline-color: hsl(var(--ring)) !important;
+  }
+
+  /* Button elements with proper variants */
+  button:not([class*="bg-"]):not([class*="variant"]):not(.btn) {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
   }
 
   /* Cards and containers */
   [class*="card"]:not([class*="bg-"]) {
-    @apply bg-card text-card-foreground;
+    @apply bg-card text-card-foreground border-border;
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  /* Popover and dropdown content */
+  [role="menu"], [role="listbox"], [role="dialog"] {
+    @apply bg-popover text-popover-foreground border-border;
+    background-color: hsl(var(--popover)) !important;
+    color: hsl(var(--popover-foreground)) !important;
+  }
+
+  /* Links should inherit color unless specifically styled */
+  a:not([class*="text-"]):not([class*="bg-"]) {
+    color: inherit;
+  }
+
+  /* Ensure no element has pure black background */
+  [style*="background-color: black"], 
+  [style*="background-color: #000"], 
+  [style*="background-color: rgb(0, 0, 0)"] {
+    background-color: hsl(var(--background)) !important;
+  }
+
+  /* Ensure no element has pure black text color except when intended */
+  [style*="color: black"]:not([class*="text-black"]), 
+  [style*="color: #000"]:not([class*="text-black"]), 
+  [style*="color: rgb(0, 0, 0)"]:not([class*="text-black"]) {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Fix sidebar elements */
+  .sidebar, [data-sidebar] {
+    background-color: hsl(var(--sidebar-background)) !important;
+    color: hsl(var(--sidebar-foreground)) !important;
+    border-color: hsl(var(--sidebar-border)) !important;
+  }
+
+  .sidebar *, [data-sidebar] * {
+    color: inherit;
   }
 }
 

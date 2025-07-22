@@ -7,9 +7,11 @@ import { CustomerNavigation } from "@/components/navigation/CustomerNavigation"
 export function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <CustomerProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      {/* Use a theme-consistent background color.  Consider using a tailwind theme class or a direct color value that aligns with the intended theme. */}
+      <div className="min-h-screen bg-white">
         <CustomerNavigation />
-        <main className="bg-gray-50">{children}</main>
+        {/* Use a theme-consistent background color for the main content area as well. */}
+        <main className="bg-white">{children}</main>
       </div>
     </CustomerProtectedRoute>
   )

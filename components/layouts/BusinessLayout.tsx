@@ -209,3 +209,4 @@ export function BusinessLayout({ children }: BusinessLayoutProps) {
 }
 
 export default BusinessLayout
+```Applying the change to remove the SidebarTrigger component, there isn't any SidebarTrigger.
