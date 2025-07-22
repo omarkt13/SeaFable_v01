@@ -1,0 +1,47 @@
+Found the issue! The problem is in your CSS file. You have conflicting rules that are overriding each other and causing elements to become invisible.
+The Main Problem
+In your globals.css, you have this rule at the end:
+css/* Force visible colors for all elements */
+* {
+  color: hsl(var(--foreground)) !important;
+  background-color: transparent !important;
+}
+This rule is making everything have a transparent background, including your search form elements and buttons that are supposed to be black. When you combine transparent backgrounds with specific styling, elements become invisible.
+Additional Issues
+
+Conflicting Button Styles: Your buttons are supposed to be black (bg-black class in React), but the CSS is overriding this with transparent !important.
+ThemeProvider Conflict: You're using a ThemeProvider with system theme detection, but your CSS is forcing light theme colors. If the system is in dark mode, the foreground color might be very light, making text invisible on light backgrounds.
+
+Quick Fix
+Replace this problematic section in your CSS:
+css/* Force visible colors for all elements */
+* {
+  color: hsl(var(--foreground)) !important;
+  background-color: transparent !important;
+}
+With this instead:
+css/* Ensure proper color inheritance without forcing transparent backgrounds */
+* {
+  color: inherit;
+}
+
+/* Only override problematic black elements, not all elements */
+[style*="background-color: black"], 
+[style*="background-color: #000"], 
+[style*="background-color: rgb(0, 0, 0)"] {
+  background-color: hsl(var(--background)) !important;
+}
+Better Solution
+Remove most of the overly aggressive CSS overrides and let Tailwind handle the styling. Keep only these essential rules:
+css@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+}
+The issue is that your CSS is fighting against your component's intended styling. Your React components specify bg-black and other colors, but the CSS is overriding everything with !important rules.
