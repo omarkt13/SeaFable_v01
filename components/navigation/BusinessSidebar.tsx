@@ -27,7 +27,7 @@ interface BusinessSidebarProps {
   onClose: () => void
 }
 
-export function BusinessSidebar({ isOpen, onClose }: BusinessSidebarProps) {
+export function BusinessSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { businessProfile, signOut } = useAuth()
   const pathname = usePathname();
 

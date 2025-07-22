@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Retry logic for session retrieval
         while (retryCount < maxRetries && !session) {
           const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-          
+
           if (error) {
             console.error(`Session retrieval error (attempt ${retryCount + 1}):`, error);
             retryCount++;
@@ -133,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             break;
           }
         }
-        
+
         console.log("Initial getSession result:", session?.user?.id, `(attempt ${retryCount + 1})`);
-        
+
         if (mounted && !hasInitialized) {
           hasInitialized = true;
           await fetchUserAndProfiles(session?.user || null);
@@ -156,14 +156,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id);
-      
+
       if (mounted) {
         // Don't process INITIAL_SESSION if we've already initialized
         if (event === 'INITIAL_SESSION' && hasInitialized) {
           console.log("Skipping duplicate INITIAL_SESSION event");
           return;
         }
-        
+
         await fetchUserAndProfiles(session?.user || null);
       }
     })

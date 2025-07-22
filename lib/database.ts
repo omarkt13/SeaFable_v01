@@ -679,7 +679,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     // Total revenue from completed/confirmed bookings
     const totalRevenue = bookingsData
       .filter((b) => b.booking_status === "completed" || b.booking_status === "confirmed")
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
+      .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
     // Active bookings (confirmed or pending)
     const activeBookings = bookingsData.filter(
@@ -689,7 +689,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     // Average rating from experiences
     const averageRating =
       experiencesData.length > 0
-        ? experiencesData.reduce((sum, exp) => sum + (exp.rating || 0), 0) / experiencesData.length
+        ? experiencesData.reduce((sum: number, exp: any) => sum + (exp?.rating || 0), 0) / experiencesData.length
         : 0
 
     // Monthly revenue calculations
@@ -702,7 +702,7 @@ export async function getHostDashboardData(userId: string): Promise<{
           (b.booking_status === "completed" || b.booking_status === "confirmed")
         )
       })
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
+      .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
     const lastMonthRevenue = bookingsData
       .filter((b) => {
@@ -713,7 +713,7 @@ export async function getHostDashboardData(userId: string): Promise<{
           (b.booking_status === "completed" || b.booking_status === "confirmed")
         )
       })
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
+      .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
     const revenueGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0
 
@@ -763,7 +763,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     // Earnings calculations
     const pendingEarnings = bookingsData
       .filter((b) => b.payment_status === "pending")
-      .reduce((sum, b) => sum + (b.total_price || 0), 0)
+      .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
     // Generate monthly trend (last 6 months)
     const monthlyTrend = []
@@ -778,7 +778,7 @@ export async function getHostDashboardData(userId: string): Promise<{
             (b.booking_status === "completed" || b.booking_status === "confirmed")
           )
         })
-        .reduce((sum, b) => sum + (b.total_price || 0), 0)
+        .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
       monthlyTrend.push({
         month: date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
@@ -791,7 +791,7 @@ export async function getHostDashboardData(userId: string): Promise<{
       const expBookings = bookingsData.filter((b) => b.experience_id === exp.id)
       const expRevenue = expBookings
         .filter((b) => b.booking_status === "completed" || b.booking_status === "confirmed")
-        .reduce((sum, b) => sum + (b.total_price || 0), 0)
+        .reduce((sum: number, b: any) => sum + (b?.total_price || 0), 0)
 
       return {
         id: exp.id,
@@ -824,7 +824,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     const allReviews = experiencesData.filter((exp) => exp.total_reviews > 0)
     const customerSatisfaction =
       allReviews.length > 0
-        ? (allReviews.reduce((sum, exp) => sum + (exp.rating || 0), 0) / allReviews.length) * 20 // Convert to percentage
+        ? (allReviews.reduce((sum: number, exp: any) => sum + (exp?.rating || 0), 0) / allReviews.length) * 20 // Convert to percentage
         : 0
 
     const uniqueCustomers = new Set(bookingsData.map((b) => b.user_id)).size
@@ -1143,7 +1143,7 @@ export async function getBusinessDashboardData(businessId: string) {
     const totalBookings = bookings?.length || 0
     const upcomingBookings = bookings?.filter(b => new Date(b.booking_date) >= new Date()) || []
     const completedBookings = bookings?.filter(b => new Date(b.booking_date) < new Date()) || []
-    const totalRevenue = completedBookings.reduce((sum, booking) => sum + (booking.total_price || 0), 0)
+    const totalRevenue = completedBookings.reduce((sum: number, booking: any) => sum + (booking.total_price || 0), 0)
 
     // Get recent bookings (last 5)
     const recentBookings = bookings?.slice(0, 5) || []

@@ -5,3 +5,7 @@ export const DEPRECATED_MESSAGE = "Mock data has been replaced with real databas
 
 // If you need sample data for development or testing, 
 // consider creating seed scripts in the scripts/ directory
+
+export const mockBusinessData = {
+  // Add mock data here if needed for testing
+};
