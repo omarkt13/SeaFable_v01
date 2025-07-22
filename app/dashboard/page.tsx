@@ -896,10 +896,11 @@ const ProfileTab = ({ userProfile, userEmail }: ProfileTabProps) => {
 
 // Main Dashboard Page Component
 interface DashboardPageProps {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
+  const resolvedSearchParams = await searchParams
   const { user, loading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
@@ -927,11 +928,11 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
   }, [user?.email])
 
   useEffect(() => {
-    const tab = searchParams?.tab
+    const tab = resolvedSearchParams?.tab
     if (tab && typeof tab === "string") {
       setActiveTab(tab)
     }
-  }, [searchParams])
+  }, [resolvedSearchParams])
 
   if (loading) {
     return <div>Loading...</div>
