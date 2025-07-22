@@ -34,7 +34,7 @@ interface BusinessLayoutProps {
   children: React.ReactNode
 }
 
-export default function BusinessLayout({ children }: BusinessLayoutProps) {
+export function BusinessLayout({ children }: BusinessLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const { isMobile, isTablet, screenSize } = useResponsive()
@@ -208,3 +208,5 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
     </div>
   )
 }
+
+export default BusinessLayout
