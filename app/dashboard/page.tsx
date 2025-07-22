@@ -703,6 +703,7 @@ const ProfileTab = ({ userProfile, userEmail }: ProfileTabProps) => {
     }
     return result
   }, null)
+
   // Mock data for totalSpent, totalBookings, membershipLevel, preferences
   const mockCustomerData = {
     totalSpent: 2850,
