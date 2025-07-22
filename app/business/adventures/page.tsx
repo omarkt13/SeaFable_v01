@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -64,7 +63,7 @@ export default function BusinessAdventuresPage() {
       setError(null);
 
       const result = await getExperiences(businessProfile.id);
-      
+
       if (result.success) {
         setAdventures(Array.isArray(result.data) ? result.data : []);
       } else {
@@ -336,7 +335,7 @@ export default function BusinessAdventuresPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Performance Stats */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="grid grid-cols-3 gap-4 text-center">
