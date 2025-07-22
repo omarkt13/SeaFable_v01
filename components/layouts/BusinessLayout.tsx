@@ -21,7 +21,7 @@ export function BusinessLayout({ children }: BusinessLayoutProps) {
       {/* Mobile header */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900">
-          {businessProfile?.business_name || businessProfile?.name || "Business Dashboard"}
+          {businessProfile?.business_name || businessProfile?.contact_name || businessProfile?.name || "Business Dashboard"}
         </h1>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
           {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

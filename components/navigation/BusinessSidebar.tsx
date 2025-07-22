@@ -27,11 +27,13 @@ export function BusinessSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
 
   const navigation = [
-    { name: "Home", icon: Home, href: "/business/home" }, // Confirmed: Updated href to /business/home
+    { name: "Home", icon: Home, href: "/business/home" },
+    { name: "Dashboard", icon: BarChart, href: "/business/dashboard" },
+    { name: "Adventures", icon: BookOpen, href: "/business/adventures" },
+    { name: "Bookings", icon: Users, href: "/business/bookings" },
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
     { name: "Sales", icon: DollarSign, href: "/business/sales" },
-    { name: "Adventures", icon: BookOpen, href: "/business/experiences" },
     { name: "Team", icon: Users2, href: "/business/team" },
     { name: "Online bookings", icon: Globe, href: "/business/online-bookings" },
     { name: "Reports", icon: BarChart, href: "/business/reports" },
@@ -88,7 +90,7 @@ export function BusinessSidebar({ isOpen, onClose }) {
               onClick={onClose}
             >
               <Plus className="mr-3 h-5 w-5" />
-              Add New Experience
+              Add New Adventure
             </Link>
             <Link
               href="/"
@@ -120,10 +122,10 @@ export function BusinessSidebar({ isOpen, onClose }) {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900">
-                {businessProfile?.businessName || mockBusinessData.businessProfile.name}
+                {businessProfile?.business_name || businessProfile?.contact_name || businessProfile?.name || "Business"}
               </p>
               <p className="text-xs text-gray-500">
-                {businessProfile?.businessType || mockBusinessData.businessProfile.type}
+                {businessProfile?.business_type || "Adventure Business"}
               </p>
             </div>
           </div>
