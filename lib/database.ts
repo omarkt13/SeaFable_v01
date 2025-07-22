@@ -988,7 +988,7 @@ export async function testTableAccess() {
 
   for (const table of tables) {
     try {
-      const { data, error } = await supabase.from(table).select("*").limit(1)
+      const { data, error } = await supabase.from(table).select("*.limit(1)
 
       if (error) {
         results[table] = { success: false, error: error.message }
@@ -1226,4 +1226,55 @@ export interface BusinessDashboardData {
     message: string
     time: string
   }>
+}
+
+export async function getWeeklyBookings() {
+  const startOfWeek = new Date()
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(endOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .gte('booking_date', startOfWeek.toISOString())
+    .lte('booking_date', endOfWeek.toISOString())
+    .order('booking_date', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching weekly bookings:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function getRecentBookings(limit: number = 5) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      host_profiles (
+        name,
+        contact_name,
+        email
+      ),
+      experiences (
+        title,
+        location,
+        duration
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Error fetching recent bookings:', error)
+    return []
+  }
+
+  return data || []
 }
