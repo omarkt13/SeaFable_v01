@@ -559,95 +559,157 @@ export default function ExperienceDetailPage() {
                     Book Now
                   </Button>
                 ) : (
-                  <div className="space-y-4">
-                    {bookingError && <div className="text-red-500 text-sm text-center">{bookingError}</div>}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="date">Date</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={bookingData.date}
-                          onChange={(e) => {
-                            setBookingData({ ...bookingData, date: e.target.value, time: "" }) // Reset time on date change
-                            setBookingError(null)
-                          }}
-                          min={new Date().toISOString().split("T")[0]}
-                        />
+                  <div className="space-y-6">
+                    {bookingError && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm text-center">
+                        {bookingError}
                       </div>
-                      <div>
-                        <Label htmlFor="guests">Guests</Label>
-                        <Select
-                          value={bookingData.guests.toString()}
-                          onValueChange={(value) => {
-                            setBookingData({ ...bookingData, guests: Number.parseInt(value), time: "" }) // Reset time on guests change
-                            setBookingError(null)
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.from({ length: experience.max_guests }, (_, i) => i + 1).map((num) => (
-                              <SelectItem key={num} value={num.toString()}>
-                                {num} guest{num > 1 ? "s" : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                    )}
 
-                    {bookingData.date && (
-                      <div>
-                        <Label htmlFor="time">Available Times</Label>
-                        {isLoadingAvailability ? (
-                          <p>Checking Availability...</p>
-                        ) : availableTimeSlots.length > 0 ? (
+                    {/* Date and Guests Selection */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="date" className="text-sm font-medium text-gray-700 flex items-center">
+                            <CalendarDays className="h-4 w-4 mr-1" />
+                            Select Date
+                          </Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            value={bookingData.date}
+                            onChange={(e) => {
+                              setBookingData({ ...bookingData, date: e.target.value, time: "" })
+                              setBookingError(null)
+                            }}
+                            min={new Date().toISOString().split("T")[0]}
+                            className="w-full"
+                          />
+                          {bookingData.date && (
+                            <p className="text-xs text-green-600 flex items-center">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Date selected: {new Date(bookingData.date).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="guests" className="text-sm font-medium text-gray-700 flex items-center">
+                            <Users className="h-4 w-4 mr-1" />
+                            Number of Guests
+                          </Label>
                           <Select
-                            value={bookingData.time}
+                            value={bookingData.guests.toString()}
                             onValueChange={(value) => {
-                              setBookingData({ ...bookingData, time: value })
+                              setBookingData({ ...bookingData, guests: Number.parseInt(value), time: "" })
                               setBookingError(null)
                             }}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a time" />
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {availableTimeSlots.map((slot) => (
-                                <SelectItem key={slot.id} value={slot.start_time}>
-                                  {slot.start_time} ({slot.available_capacity} spots left)
+                              {Array.from({ length: experience.max_guests }, (_, i) => i + 1).map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num} guest{num > 1 ? "s" : ""}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time Selection */}
+                    {bookingData.date && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                        <Label htmlFor="time" className="text-sm font-medium text-gray-700 flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          Available Times
+                        </Label>
+                        {isLoadingAvailability ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span className="ml-2 text-sm text-gray-600">Checking availability...</span>
+                          </div>
+                        ) : availableTimeSlots.length > 0 ? (
+                          <div className="space-y-2">
+                            <Select
+                              value={bookingData.time}
+                              onValueChange={(value) => {
+                                setBookingData({ ...bookingData, time: value })
+                                setBookingError(null)
+                              }}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose your preferred time" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableTimeSlots.map((slot) => (
+                                  <SelectItem key={slot.id} value={slot.start_time}>
+                                    <div className="flex justify-between items-center w-full">
+                                      <span>{slot.start_time}</span>
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        ({slot.available_capacity} spots left)
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {bookingData.time && (
+                              <p className="text-xs text-green-600 flex items-center">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Time selected: {bookingData.time}
+                              </p>
+                            )}
+                          </div>
                         ) : (
-                          <p className="text-sm text-gray-500 flex items-center mt-2">
-                            <CalendarDays className="h-4 w-4 mr-1" /> No available slots for this date and guest count.
-                          </p>
+                          <div className="text-center py-4">
+                            <CalendarDays className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">
+                              No available slots for {bookingData.guests} guest{bookingData.guests > 1 ? 's' : ''} on this date
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Try selecting a different date or reducing the number of guests
+                            </p>
+                          </div>
                         )}
                       </div>
                     )}
 
-                    <div>
-                      <Label htmlFor="special-requests">Special Requests (Optional)</Label>
-                      <Input
-                        id="special-requests"
-                        placeholder="Any special requests?"
-                        value={bookingData.specialRequests}
-                        onChange={(e) => setBookingData({ ...bookingData, specialRequests: e.target.value })}
-                      />
-                    </div>
+                    {/* Additional Information */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="special-requests" className="text-sm font-medium text-gray-700">
+                          Special Requests (Optional)
+                        </Label>
+                        <Input
+                          id="special-requests"
+                          placeholder="e.g., celebration, accessibility needs, photography requests..."
+                          value={bookingData.specialRequests}
+                          onChange={(e) => setBookingData({ ...bookingData, specialRequests: e.target.value })}
+                          className="w-full"
+                        />
+                      </div>
 
-                    <div>
-                      <Label htmlFor="dietary">Dietary Requirements (Optional)</Label>
-                      <Input
-                        id="dietary"
-                        placeholder="Any dietary restrictions?"
-                        value={bookingData.dietaryRequirements}
-                        onChange={(e) => setBookingData({ ...bookingData, dietaryRequirements: e.target.value })}
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="dietary" className="text-sm font-medium text-gray-700">
+                          Dietary Requirements (Optional)
+                        </Label>
+                        <Input
+                          id="dietary"
+                          placeholder="e.g., vegetarian, gluten-free, allergies..."
+                          value={bookingData.dietaryRequirements}
+                          onChange={(e) => setBookingData({ ...bookingData, dietaryRequirements: e.target.value })}
+                          className="w-full"
+                        />
+                      </div>
                     </div>
 
                     <Separator />
