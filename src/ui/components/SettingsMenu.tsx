@@ -29,8 +29,10 @@ const Item = React.forwardRef<HTMLElement, ItemProps>(function Item(
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/cd4ad3a1 flex h-8 w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1 hover:bg-default-background active:bg-brand-50",
-        { "bg-brand-100 hover:bg-brand-100 active:bg-brand-50": selected },
+        "group/cd4ad3a1 flex h-8 w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1 hover:bg-default-background active:bg-[#275edfff]",
+        {
+          "bg-[#275edfff] hover:bg-[#275edfff] active:bg-[#275edfff]": selected,
+        },
         className
       )}
       ref={ref as any}
@@ -39,8 +41,11 @@ const Item = React.forwardRef<HTMLElement, ItemProps>(function Item(
       {icon ? (
         <SubframeCore.IconWrapper
           className={SubframeUtils.twClassNames(
-            "text-body font-body text-default-font",
-            { "text-brand-700": selected }
+            "text-body font-body text-default-font group-active/cd4ad3a1:text-white",
+            {
+              "text-white group-hover/cd4ad3a1:text-white group-active/cd4ad3a1:text-white":
+                selected,
+            }
           )}
         >
           {icon}
@@ -49,9 +54,9 @@ const Item = React.forwardRef<HTMLElement, ItemProps>(function Item(
       {label ? (
         <span
           className={SubframeUtils.twClassNames(
-            "line-clamp-1 grow shrink-0 basis-0 text-body font-body text-default-font",
+            "line-clamp-1 grow shrink-0 basis-0 text-body font-body text-default-font group-active/cd4ad3a1:text-white",
             {
-              "text-body-bold font-body-bold text-brand-700 group-hover/cd4ad3a1:text-brand-700 group-active/cd4ad3a1:text-brand-700":
+              "text-body-bold font-body-bold text-white group-hover/cd4ad3a1:text-white group-active/cd4ad3a1:text-white":
                 selected,
             }
           )}
@@ -76,7 +81,7 @@ const SettingsMenuRoot = React.forwardRef<HTMLElement, SettingsMenuRootProps>(
     return children ? (
       <div
         className={SubframeUtils.twClassNames(
-          "group/786775dd flex h-full w-60 flex-col items-start gap-8 border-r border-solid border-neutral-border bg-default-background px-6 py-6",
+          "flex h-full w-60 flex-col items-start gap-8 border-r border-solid border-neutral-border bg-default-background px-6 py-6",
           className
         )}
         ref={ref as any}

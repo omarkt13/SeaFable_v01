@@ -48,7 +48,7 @@ const ButtonRoot = React.forwardRef<HTMLElement, ButtonRootProps>(
     return (
       <button
         className={SubframeUtils.twClassNames(
-          "group/3b777358 flex h-8 cursor-pointer items-center justify-center gap-2 rounded-md border-none bg-brand-600 px-3 hover:bg-brand-500 active:bg-brand-600 disabled:cursor-default disabled:bg-neutral-200 hover:disabled:cursor-default hover:disabled:bg-neutral-200 active:disabled:cursor-default active:disabled:bg-neutral-200",
+          "group/3b777358 flex h-8 cursor-pointer items-center justify-center gap-2 rounded-md border-none bg-[#275fe0ff] px-3 hover:bg-[#275fe0ff] active:bg-[#275fe0ff] disabled:cursor-default disabled:bg-neutral-200 hover:disabled:cursor-default hover:disabled:bg-neutral-200 active:disabled:cursor-default active:disabled:bg-neutral-200",
           {
             "h-6 w-auto flex-row flex-nowrap gap-1 px-2 py-0": size === "small",
             "h-10 w-auto px-4 py-0": size === "large",
@@ -68,7 +68,7 @@ const ButtonRoot = React.forwardRef<HTMLElement, ButtonRootProps>(
               variant === "neutral-primary",
             "bg-transparent hover:bg-brand-50 active:bg-brand-100":
               variant === "brand-tertiary",
-            "bg-brand-50 hover:bg-brand-100 active:bg-brand-50":
+            "bg-[#000000ff] hover:bg-[#87e1dbff] active:bg-[#a1f0e1ff]":
               variant === "brand-secondary",
           },
           className
@@ -143,8 +143,8 @@ const ButtonRoot = React.forwardRef<HTMLElement, ButtonRootProps>(
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||
                   variant === "neutral-primary",
-                "text-brand-700":
-                  variant === "brand-tertiary" || variant === "brand-secondary",
+                "text-brand-700": variant === "brand-tertiary",
+                "text-[#ffffffff]": variant === "brand-secondary",
               }
             )}
           >
@@ -158,7 +158,8 @@ const ButtonRoot = React.forwardRef<HTMLElement, ButtonRootProps>(
               {
                 "text-body font-body": size === "small",
                 "text-heading-3 font-heading-3": size === "large",
-                "text-white": variant === "inverse",
+                "text-white":
+                  variant === "inverse" || variant === "brand-secondary",
                 "text-error-700":
                   variant === "destructive-tertiary" ||
                   variant === "destructive-secondary",
@@ -166,8 +167,7 @@ const ButtonRoot = React.forwardRef<HTMLElement, ButtonRootProps>(
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||
                   variant === "neutral-primary",
-                "text-brand-700":
-                  variant === "brand-tertiary" || variant === "brand-secondary",
+                "text-brand-700": variant === "brand-tertiary",
               }
             )}
           >

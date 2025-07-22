@@ -43,8 +43,8 @@ const IconWithBackgroundRoot = React.forwardRef<
           "h-12 w-12": size === "large",
           "h-16 w-16": size === "x-large",
           "bg-warning-100": variant === "warning",
-          "bg-success-100": variant === "success",
-          "bg-error-100": variant === "error",
+          "bg-[#2fc463ff]": variant === "success",
+          "bg-[#dd524cff]": variant === "error",
           "bg-neutral-100": variant === "neutral",
         },
         className
@@ -62,8 +62,7 @@ const IconWithBackgroundRoot = React.forwardRef<
               "text-heading-2 font-heading-2": size === "large",
               "text-heading-1 font-heading-1": size === "x-large",
               "text-warning-800": variant === "warning",
-              "text-success-800": variant === "success",
-              "text-error-800": variant === "error",
+              "text-[#ffffffff]": variant === "success" || variant === "error",
               "text-neutral-700": variant === "neutral",
             }
           )}
