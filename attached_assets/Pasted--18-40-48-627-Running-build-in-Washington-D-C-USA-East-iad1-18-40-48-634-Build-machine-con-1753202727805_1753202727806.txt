@@ -1,0 +1,49 @@
+[18:40:48.627] Running build in Washington, D.C., USA (East) – iad1
+[18:40:48.634] Build machine configuration: 2 cores, 8 GB
+[18:40:48.709] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: a3627d9)
+[18:40:48.973] Previous build caches not available
+[18:40:49.235] Cloning completed: 526.000ms
+[18:40:51.690] Running "vercel build"
+[18:40:52.183] Vercel CLI 44.5.0
+[18:40:52.506] Installing dependencies...
+[18:40:56.232] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:40:56.941] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:41:06.784] 
+[18:41:06.785] added 489 packages in 14s
+[18:41:06.785] 
+[18:41:06.789] 57 packages are looking for funding
+[18:41:06.789]   run `npm fund` for details
+[18:41:06.841] Detected Next.js version: 15.2.4
+[18:41:06.846] Running "npm run build"
+[18:41:06.958] 
+[18:41:06.959] > my-v0-project@0.1.0 build
+[18:41:06.959] > next build
+[18:41:06.959] 
+[18:41:07.544] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:41:07.545] This information is used to shape Next.js' roadmap and prioritize features.
+[18:41:07.546] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:41:07.546] https://nextjs.org/telemetry
+[18:41:07.546] 
+[18:41:07.606]    ▲ Next.js 15.2.4
+[18:41:07.606]    - Experiments (use with caution):
+[18:41:07.607]      · allowedDevOrigins
+[18:41:07.607] 
+[18:41:07.677]    Creating an optimized production build ...
+[18:41:37.999]  ✓ Compiled successfully
+[18:41:38.004]    Linting and checking validity of types ...
+[18:41:51.929] Failed to compile.
+[18:41:51.930] 
+[18:41:51.930] ./app/business/adventures/new/page.tsx:122:25
+[18:41:51.930] Type error: Parameter 'step' implicitly has an 'any' type.
+[18:41:51.930] 
+[18:41:51.930] [0m [90m 120 |[39m[0m
+[18:41:51.930] [0m [90m 121 |[39m   [90m// Validation functions[39m[0m
+[18:41:51.930] [0m[31m[1m>[22m[39m[90m 122 |[39m   [36mconst[39m validateStep [33m=[39m (step) [33m=>[39m {[0m
+[18:41:51.930] [0m [90m     |[39m                         [31m[1m^[22m[39m[0m
+[18:41:51.930] [0m [90m 123 |[39m     [36mswitch[39m(step) {[0m
+[18:41:51.931] [0m [90m 124 |[39m       [36mcase[39m [35m1[39m[33m:[39m[0m
+[18:41:51.931] [0m [90m 125 |[39m         [36mreturn[39m formData[33m.[39mtitle[33m.[39mlength [33m>=[39m [35m5[39m [33m&&[39m formData[33m.[39mlocation [33m&&[39m formData[33m.[39mactivityType[33m;[39m[0m
+[18:41:51.961] Next.js build worker exited with code: 1 and signal: null
+[18:41:51.980] Error: Command "npm run build" exited with 1
+[18:41:52.272] 
+[18:41:55.185] Exiting build container
