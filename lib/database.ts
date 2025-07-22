@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
+
+const supabase = createClient()
 import type { BusinessProfile } from "../types/auth"
 import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
 import type { HostAvailability } from "@/types/business" // Import HostAvailability type

@@ -14,6 +14,7 @@ localPort = 3000
 externalPort = 80
 
 [workflows]
+runButton = "Run Development Server"
 
 [[workflows.workflow]]
 name = "Deploy Readiness Check"
@@ -35,3 +36,12 @@ args = "node scripts/pre-deployment-test.js"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "echo \"✅ Deployment readiness check complete!\""
+
+[[workflows.workflow]]
+name = "Run Development Server"
+author = 45011712
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
