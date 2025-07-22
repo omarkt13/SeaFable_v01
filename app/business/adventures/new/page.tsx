@@ -77,7 +77,7 @@ const ExperienceCreationForm = () => {
   });
 
   const [completedSteps, setCompletedSteps] = useState(new Set());
-  const [expandedFaq, setExpandedFaq] = useState(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -223,18 +223,18 @@ const ExperienceCreationForm = () => {
     updateFormData('availabilityDates', [...formData.availabilityDates, today]);
   };
 
-  const removeAvailabilityDate = (index) => {
+  const removeAvailabilityDate = (index: number) => {
     updateFormData('availabilityDates', formData.availabilityDates.filter((_, i) => i !== index));
   };
 
   // Tag management
-  const addTag = (tag) => {
+  const addTag = (tag: string) => {
     if (!formData.tags.includes(tag)) {
       updateFormData('tags', [...formData.tags, tag]);
     }
   };
 
-  const removeTag = (tag) => {
+  const removeTag = (tag: string) => {
     updateFormData('tags', formData.tags.filter(t => t !== tag));
   };
 
@@ -248,14 +248,14 @@ const ExperienceCreationForm = () => {
     updateFormData('faqItems', [...formData.faqItems, newFaq]);
   };
 
-  const updateFaqItem = (id, field, value) => {
+  const updateFaqItem = (id: number, field: string, value: string) => {
     const updated = formData.faqItems.map(item => 
       item.id === id ? { ...item, [field]: value } : item
     );
     updateFormData('faqItems', updated);
   };
 
-  const removeFaqItem = (id) => {
+  const removeFaqItem = (id: number) => {
     updateFormData('faqItems', formData.faqItems.filter(item => item.id !== id));
   };
 
@@ -271,14 +271,14 @@ const ExperienceCreationForm = () => {
     updateFormData('itinerary', [...formData.itinerary, newItem]);
   };
 
-  const updateItineraryItem = (id, field, value) => {
+  const updateItineraryItem = (id: number, field: string, value: string | number) => {
     const updated = formData.itinerary.map(item => 
       item.id === id ? { ...item, [field]: value } : item
     );
     updateFormData('itinerary', updated);
   };
 
-  const removeItineraryItem = (id) => {
+  const removeItineraryItem = (id: number) => {
     updateFormData('itinerary', formData.itinerary.filter(item => item.id !== id));
   };
 
