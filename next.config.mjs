@@ -14,7 +14,12 @@ const nextConfig = {
     gzipSize: true,
     workerThreads: false,
     cpus: 1,
-    allowedDevOrigins: ['*.replit.dev'],
+    allowedDevOrigins: [
+      '*.replit.dev',
+      '*.spock.replit.dev',
+      /.*\.replit\.dev$/,
+      /.*\.spock\.replit\.dev$/
+    ],
   },
   poweredByHeader: false,
   generateEtags: false,
