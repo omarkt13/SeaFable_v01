@@ -1,0 +1,54 @@
+[19:08:22.643] Running build in Washington, D.C., USA (East) – iad1
+[19:08:22.648] Build machine configuration: 2 cores, 8 GB
+[19:08:22.699] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: ec029bb)
+[19:08:22.954] Previous build caches not available
+[19:08:23.311] Cloning completed: 612.000ms
+[19:08:25.286] Running "vercel build"
+[19:08:25.749] Vercel CLI 44.5.0
+[19:08:26.073] Installing dependencies...
+[19:08:29.866] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:08:30.585] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:08:41.054] 
+[19:08:41.055] added 489 packages in 15s
+[19:08:41.056] 
+[19:08:41.056] 57 packages are looking for funding
+[19:08:41.056]   run `npm fund` for details
+[19:08:41.226] Detected Next.js version: 15.2.4
+[19:08:41.231] Running "npm run build"
+[19:08:41.588] 
+[19:08:41.588] > my-v0-project@0.1.0 build
+[19:08:41.589] > next build
+[19:08:41.589] 
+[19:08:42.941] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[19:08:42.941] This information is used to shape Next.js' roadmap and prioritize features.
+[19:08:42.941] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[19:08:42.941] https://nextjs.org/telemetry
+[19:08:42.941] 
+[19:08:43.078]    ▲ Next.js 15.2.4
+[19:08:43.079]    - Experiments (use with caution):
+[19:08:43.079]      · allowedDevOrigins
+[19:08:43.079] 
+[19:08:43.339]    Creating an optimized production build ...
+[19:09:13.677]  ✓ Compiled successfully
+[19:09:13.682]    Linting and checking validity of types ...
+[19:09:27.804] Failed to compile.
+[19:09:27.805] 
+[19:09:27.805] ./app/business/adventures/new/page.tsx:195:17
+[19:09:27.805] Type error: Argument of type '(prev: { title: string; shortDescription: string; fullDescription: string; location: string; specificLocation: string; activityType: string; difficultyLevel: string; categories: never[]; pricePerPerson: string; ... 19 more ...; isActive: boolean; }) => { ...; }' is not assignable to parameter of type 'SetStateAction<{ title: string; shortDescription: string; fullDescription: string; location: string; specificLocation: string; activityType: string; difficultyLevel: string; categories: never[]; pricePerPerson: string; ... 19 more ...; isActive: boolean; }>'.
+[19:09:27.805]   Type '(prev: { title: string; shortDescription: string; fullDescription: string; location: string; specificLocation: string; activityType: string; difficultyLevel: string; categories: never[]; pricePerPerson: string; ... 19 more ...; isActive: boolean; }) => { ...; }' is not assignable to type '(prevState: { title: string; shortDescription: string; fullDescription: string; location: string; specificLocation: string; activityType: string; difficultyLevel: string; categories: never[]; pricePerPerson: string; ... 19 more ...; isActive: boolean; }) => { ...; }'.
+[19:09:27.806]     Call signature return types '{ fullDescription: string; tags: string[]; faqItems: { id: number; question: string; answer: string; }[]; cancellationDetails: string; title: string; shortDescription: string; location: string; specificLocation: string; ... 20 more ...; isActive: boolean; }' and '{ title: string; shortDescription: string; fullDescription: string; location: string; specificLocation: string; activityType: string; difficultyLevel: string; categories: never[]; pricePerPerson: string; ... 19 more ...; isActive: boolean; }' are incompatible.
+[19:09:27.806]       The types of 'tags' are incompatible between these types.
+[19:09:27.806]         Type 'string[]' is not assignable to type 'never[]'.
+[19:09:27.806]           Type 'string' is not assignable to type 'never'.
+[19:09:27.806] 
+[19:09:27.806] [0m [90m 193 |[39m     }[33m;[39m[0m
+[19:09:27.806] [0m [90m 194 |[39m[0m
+[19:09:27.806] [0m[31m[1m>[22m[39m[90m 195 |[39m     setFormData(prev [33m=>[39m ({[0m
+[19:09:27.806] [0m [90m     |[39m                 [31m[1m^[22m[39m[0m
+[19:09:27.806] [0m [90m 196 |[39m       [33m...[39mprev[33m,[39m[0m
+[19:09:27.806] [0m [90m 197 |[39m       [33m...[39maiGenerated[0m
+[19:09:27.806] [0m [90m 198 |[39m     }))[33m;[39m[0m
+[19:09:27.837] Next.js build worker exited with code: 1 and signal: null
+[19:09:27.857] Error: Command "npm run build" exited with 1
+[19:09:28.094] 
+[19:09:31.369] Exiting build container
