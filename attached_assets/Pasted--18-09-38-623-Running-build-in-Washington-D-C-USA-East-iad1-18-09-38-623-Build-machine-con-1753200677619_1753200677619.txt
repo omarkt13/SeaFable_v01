@@ -1,0 +1,49 @@
+[18:09:38.623] Running build in Washington, D.C., USA (East) – iad1
+[18:09:38.623] Build machine configuration: 2 cores, 8 GB
+[18:09:38.642] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: ea1bfbe)
+[18:09:38.763] Previous build caches not available
+[18:09:39.067] Cloning completed: 424.000ms
+[18:09:39.435] Running "vercel build"
+[18:09:40.883] Vercel CLI 44.5.0
+[18:09:41.770] Installing dependencies...
+[18:09:46.085] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:09:46.740] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:09:56.711] 
+[18:09:56.713] added 489 packages in 15s
+[18:09:56.713] 
+[18:09:56.713] 57 packages are looking for funding
+[18:09:56.714]   run `npm fund` for details
+[18:09:56.769] Detected Next.js version: 15.2.4
+[18:09:56.773] Running "npm run build"
+[18:09:56.967] 
+[18:09:56.967] > my-v0-project@0.1.0 build
+[18:09:56.968] > next build
+[18:09:56.968] 
+[18:09:57.706] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:09:57.706] This information is used to shape Next.js' roadmap and prioritize features.
+[18:09:57.707] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:09:57.707] https://nextjs.org/telemetry
+[18:09:57.707] 
+[18:09:57.804]    ▲ Next.js 15.2.4
+[18:09:57.805]    - Experiments (use with caution):
+[18:09:57.805]      · allowedDevOrigins
+[18:09:57.806] 
+[18:09:57.875]    Creating an optimized production build ...
+[18:10:28.281]  ✓ Compiled successfully
+[18:10:28.286]    Linting and checking validity of types ...
+[18:10:42.142] Failed to compile.
+[18:10:42.142] 
+[18:10:42.142] ./app/api/business/dashboard/route.ts:57:15
+[18:10:42.142] Type error: Property 'getBusinessDashboardData' does not exist on type 'typeof import("/vercel/path0/lib/database")'.
+[18:10:42.142] 
+[18:10:42.142] [0m [90m 55 |[39m     [36mtry[39m {[0m
+[18:10:42.142] [0m [90m 56 |[39m       [90m// Import the database function[39m[0m
+[18:10:42.142] [0m[31m[1m>[22m[39m[90m 57 |[39m       [36mconst[39m { getBusinessDashboardData } [33m=[39m [36mawait[39m [36mimport[39m([32m"@/lib/database"[39m)[0m
+[18:10:42.142] [0m [90m    |[39m               [31m[1m^[22m[39m[0m
+[18:10:42.142] [0m [90m 58 |[39m       [0m
+[18:10:42.143] [0m [90m 59 |[39m       [90m// Get comprehensive dashboard data[39m[0m
+[18:10:42.143] [0m [90m 60 |[39m       [36mconst[39m fullDashboardData [33m=[39m [36mawait[39m getBusinessDashboardData(user[33m.[39mid)[0m
+[18:10:42.171] Next.js build worker exited with code: 1 and signal: null
+[18:10:42.191] Error: Command "npm run build" exited with 1
+[18:10:42.432] 
+[18:10:45.685] Exiting build container
