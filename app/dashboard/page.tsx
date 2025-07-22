@@ -913,9 +913,11 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
       if (user?.email) {
         try {
           const dashboardData = await getUserDashboardData(user.email)
-          setUserProfile(dashboardData?.userProfile || null)
-          setBookings(dashboardData?.bookings || [])
-          setReviews(dashboardData?.reviews || [])
+        if (dashboardData.success && dashboardData.data) {
+          setUserProfile(dashboardData.data.user || null)
+          setBookings(dashboardData.data.bookings || [])
+          setReviews(dashboardData.data.reviews || [])
+        }
         } catch (error) {
           console.error("Error fetching dashboard data:", error)
         }
@@ -931,13 +933,13 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
     const resolveSearchParams = async () => {
       const params = await searchParams
       setResolvedSearchParams(params)
-      
+
       const tab = params?.tab
       if (tab && typeof tab === "string") {
         setActiveTab(tab)
       }
     }
-    
+
     resolveSearchParams()
   }, [searchParams])
 
