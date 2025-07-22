@@ -329,34 +329,34 @@ export async function getExperiences(filters?: any) {
       if (filters.search) {
         query = query.or(`title.ilike.%${filters.search}%, description.ilike.%${filters.search}%`)
       }
-      
+
       if (filters.location) {
         query = query.or(`location.ilike.%${filters.location}%, country.ilike.%${filters.location}%`)
       }
-      
+
       if (filters.activityTypes && filters.activityTypes.length > 0) {
         query = query.in("activity_type", filters.activityTypes)
       }
-      
+
       if (filters.priceRange && filters.priceRange.length === 2) {
         query = query.gte("price_per_person", filters.priceRange[0])
         if (filters.priceRange[1] < 500) {
           query = query.lte("price_per_person", filters.priceRange[1])
         }
       }
-      
+
       if (filters.difficultyLevels && filters.difficultyLevels.length > 0) {
         query = query.in("difficulty_level", filters.difficultyLevels)
       }
-      
+
       if (filters.minGuests) {
         query = query.gte("max_guests", filters.minGuests)
       }
-      
+
       if (filters.rating) {
         query = query.gte("rating", filters.rating)
       }
-      
+
       if (filters.hostId) {
         query = query.eq("host_id", filters.hostId)
       }
@@ -547,7 +547,77 @@ export async function getHostEarnings(hostId: string) {
 }
 
 // Optimized host dashboard data function
-export async function getHostDashboardData(hostId: string): Promise<{
+export async function getUserDashboardData(userId: string): Promise<{ success: boolean; data?: { user: any, bookings: any[], reviews: any[] }; error?: string }> {
+  try {
+    const supabase = createClient()
+
+    // Get user profile
+    const { data: userProfile, error: userError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (userError && userError.code !== 'PGRST116') {
+      console.error("Error fetching user profile:", userError)
+      return { success: false, error: userError.message }
+    }
+
+    // Get user bookings
+    const { data: bookings, error: bookingsError } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        experiences (
+          id,
+          title,
+          location,
+          price_per_person,
+          images
+        )
+      `)
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (bookingsError) {
+      console.error("Error fetching bookings:", bookingsError)
+      return { success: false, error: bookingsError.message }
+    }
+
+    // Get user reviews
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        experiences (
+          id,
+          title,
+          images
+        )
+      `)
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (reviewsError) {
+      console.error("Error fetching reviews:", reviewsError)
+      return { success: false, error: reviewsError.message }
+    }
+
+    return {
+      success: true,
+      data: {
+        user: userProfile,
+        bookings: bookings || [],
+        reviews: reviews || []
+      }
+    }
+  } catch (error) {
+    console.error("Error in getUserDashboardData:", error)
+    return { success: false, error: "Failed to fetch dashboard data" }
+  }
+}
+
+export async function getHostDashboardData(userId: string): Promise<{
   success: boolean
   error?: string
   data: BusinessDashboardData | null
@@ -557,7 +627,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
     const { data: hostProfile, error: hostError } = await supabase
       .from("host_profiles")
       .select("*")
-      .eq("id", hostId)
+      .eq("id", userId)
       .single()
 
     if (hostError) {
@@ -566,7 +636,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
     }
 
     // 2. Get Experiences with booking counts
-    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", hostId)
+    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", userId)
 
     if (expError) {
       console.error("Error fetching experiences:", expError)
@@ -592,7 +662,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
           avatar_url
         )
       `)
-      .eq("host_id", hostId)
+      .eq("host_id", userId)
       .order("booked_at", { ascending: false }) // Already correct, no change needed here
 
     if (bookingsError) {
@@ -807,7 +877,7 @@ export async function getHostDashboardData(hostId: string): Promise<{
 }
 
 // Get user dashboard data
-export async function getUserDashboardData(userId: string) {
+export async function getUserDashboardDataOriginal(userId: string) {
   try {
     // Get user profile using the centralized function from auth-utils
     const user = await getUserProfile(userId)
