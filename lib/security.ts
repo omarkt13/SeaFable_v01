@@ -1,12 +1,86 @@
-import DOMPurify from 'isomorphic-dompurify'
+import DOMPurify from 'isomorphic-dompurify';
 
-// Rate limiting configuration
-export interface RateLimitConfig {
-  windowMs: number
-  maxRequests: number
-  message: string
+interface RateLimitConfig {
+  windowMs: number;
+  maxRequests: number;
 }
 
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+export function sanitize(input: string): string {
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
+    ALLOWED_ATTR: []
+  });
+}
+
+export function rateLimit(
+  identifier: string,
+  config: RateLimitConfig = { windowMs: 60000, maxRequests: 100 }
+): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(identifier);
+
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(identifier, {
+      count: 1,
+      resetTime: now + config.windowMs
+    });
+    return true;
+  }
+
+  if (record.count >= config.maxRequests) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+export function validatePassword(password: string): {
+  isValid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+export function hashPassword(password: string): Promise<string> {
+  const bcrypt = require('bcryptjs');
+  return bcrypt.hash(password, 12);
+}
+
+export function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const bcrypt = require('bcryptjs');
+  return bcrypt.compare(password, hash);
+}
+
+// Rate limiting configuration
 export const RATE_LIMITS = {
   auth: { windowMs: 15 * 60 * 1000, maxRequests: 5, message: 'Too many authentication attempts' },
   api: { windowMs: 60 * 1000, maxRequests: 100, message: 'Too many API requests' },
@@ -29,56 +103,17 @@ export function sanitizeHtml(html: string): string {
   })
 }
 
-// Validation helpers
-export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
 export function validatePhone(phone: string): boolean {
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
-  return phoneRegex.test(phone.replace(/\s/g, ''))
+  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+  return phoneRegex.test(phone.replace(/\s/g, ''));
 }
 
 export function validateUrl(url: string): boolean {
   try {
-    new URL(url)
-    return true
+    new URL(url);
+    return true;
   } catch {
-    return false
-  }
-}
-
-// Password strength validation
-export function validatePassword(password: string): {
-  isValid: boolean
-  errors: string[]
-} {
-  const errors: string[] = []
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long')
-  }
-  
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter')
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter')
-  }
-  
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number')
-  }
-  
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push('Password must contain at least one special character')
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
+    return false;
   }
 }
 
@@ -90,14 +125,14 @@ export function sanitizeSqlInput(input: string): string {
     /(--|#|\/\*|\*\/)/g,
     /(\b(and|or)\b\s+\d+\s*=\s*\d+)/gi,
     /(\b(and|or)\b\s+['"]\w+['"]\s*=\s*['"]\w+['"])/gi,
-  ]
-  
-  let sanitized = input
+  ];
+
+  let sanitized = input;
   sqlPatterns.forEach(pattern => {
-    sanitized = sanitized.replace(pattern, '')
-  })
-  
-  return sanitized.trim()
+    sanitized = sanitized.replace(pattern, '');
+  });
+
+  return sanitized.trim();
 }
 
 // XSS prevention
@@ -109,23 +144,23 @@ export function preventXSS(input: string): string {
     /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
     /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
     /<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi,
-  ]
-  
-  let sanitized = input
+  ];
+
+  let sanitized = input;
   xssPatterns.forEach(pattern => {
-    sanitized = sanitized.replace(pattern, '')
-  })
-  
-  return sanitized
+    sanitized = sanitized.replace(pattern, '');
+  });
+
+  return sanitized;
 }
 
 // CSRF token generation and validation
 export function generateCSRFToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
 export function validateCSRFToken(token: string, storedToken: string): boolean {
-  return token === storedToken
+  return token === storedToken;
 }
 
 // Content Security Policy headers
@@ -160,43 +195,43 @@ export function validateExperienceData(data: any): {
   errors: string[]
 } {
   const errors: string[] = []
-  
+
   if (!data.title || data.title.trim().length < 3) {
     errors.push('Title must be at least 3 characters long')
   }
-  
+
   if (!data.description || data.description.trim().length < 10) {
     errors.push('Description must be at least 10 characters long')
   }
-  
+
   if (!data.location || data.location.trim().length < 2) {
     errors.push('Location is required')
   }
-  
+
   if (!data.activityType || !['sailing', 'surfing', 'kayaking', 'diving', 'jet-skiing', 'fishing', 'whale-watching', 'paddleboarding', 'windsurfing', 'snorkeling'].includes(data.activityType)) {
     errors.push('Valid activity type is required')
   }
-  
+
   if (!data.difficultyLevel || !['beginner', 'intermediate', 'advanced', 'expert'].includes(data.difficultyLevel)) {
     errors.push('Valid difficulty level is required')
   }
-  
+
   if (!data.price || data.price <= 0) {
     errors.push('Price must be greater than 0')
   }
-  
+
   if (!data.duration || data.duration <= 0) {
     errors.push('Duration must be greater than 0')
   }
-  
+
   if (!data.maxParticipants || data.maxParticipants <= 0) {
     errors.push('Maximum participants must be greater than 0')
   }
-  
+
   if (data.minAge && (data.minAge < 0 || data.minAge > 18)) {
     errors.push('Minimum age must be between 0 and 18')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -223,4 +258,4 @@ export function sanitizeExperienceData(data: any): any {
       description: sanitizeHtml(item.description || ''),
     })),
   }
-} 
+}

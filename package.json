@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:production": "NODE_ENV=production next build",
     "dev": "next dev --hostname 0.0.0.0",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start --hostname 0.0.0.0",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
