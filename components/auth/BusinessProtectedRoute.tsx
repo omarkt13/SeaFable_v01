@@ -10,11 +10,11 @@ interface BusinessProtectedRouteProps {
 }
 
 export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps) {
-  const { user, userType, loading } = useAuth()
+  const { user, userType, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       if (!user) {
         router.push("/business/login")
         return
@@ -25,9 +25,9 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
         return
       }
     }
-  }, [user, userType, loading, router])
+  }, [user, userType, isLoading, router])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
