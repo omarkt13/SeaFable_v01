@@ -2,34 +2,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { IconWithBackground } from "@/src/ui/components/IconWithBackground";
-import { FeatherAnchor } from "@subframe/core";
-import { SettingsMenu } from "@/src/ui/components/SettingsMenu";
-import { FeatherHome } from "@subframe/core";
-import { FeatherUsers } from "@subframe/core";
-import { FeatherMessageCircle } from "@subframe/core";
-import { FeatherCalendar } from "@subframe/core";
-import { FeatherHandshake } from "@subframe/core";
-import { Button } from "@/src/ui/components/Button";
-import { FeatherDollarSign } from "@subframe/core";
-import { FeatherShapes } from "@subframe/core";
-import { FeatherSettings } from "@subframe/core";
-import { TextField } from "@/src/ui/components/TextField";
-import { IconButton } from "@/src/ui/components/IconButton";
-import { FeatherBell } from "@subframe/core";
-import { DropdownMenu } from "@/src/ui/components/DropdownMenu";
-import { FeatherUser } from "@subframe/core";
-import { FeatherLogOut } from "@subframe/core";
-import * as SubframeCore from "@subframe/core";
-import { FeatherChevronDown } from "@subframe/core";
-import { Calendar } from "@/src/ui/components/Calendar";
-import { FeatherPlus } from "@subframe/core";
-import { FeatherEdit2 } from "@subframe/core";
-import { FeatherTrash } from "@subframe/core";
-import { FeatherMoreHorizontal } from "@subframe/core";
-import { Badge } from "@/src/ui/components/Badge";
-import { FeatherClock } from "@subframe/core";
-import { FeatherChevronLeft } from "@subframe/core";
+import { 
+  Anchor, 
+  Home, 
+  Users, 
+  MessageCircle, 
+  Calendar as CalendarIcon, 
+  Handshake, 
+  DollarSign, 
+  Shapes, 
+  Settings, 
+  Bell, 
+  User, 
+  LogOut, 
+  ChevronDown, 
+  Plus, 
+  Edit2, 
+  Trash, 
+  MoreHorizontal, 
+  Clock, 
+  ChevronLeft,
+  Search
+} from "lucide-react";
 import { FeatherChevronRight } from "@subframe/core";
 import { FeatherSearch } from "@subframe/core";
 import { FeatherFilter } from "@subframe/core";

@@ -1,816 +1,702 @@
-
 "use client";
 
-import React from "react";
-import { IconWithBackground } from "@/ui/components/IconWithBackground";
-import { FeatherAnchor } from "@subframe/core";
-import { SettingsMenu } from "@/ui/components/SettingsMenu";
-import { FeatherHome } from "@subframe/core";
-import { FeatherUsers } from "@subframe/core";
-import { FeatherMessageCircle } from "@subframe/core";
-import { FeatherCalendar } from "@subframe/core";
-import { FeatherHandshake } from "@subframe/core";
-import { Button } from "@/ui/components/Button";
-import { FeatherDollarSign } from "@subframe/core";
-import { FeatherShapes } from "@subframe/core";
-import { FeatherSettings } from "@subframe/core";
-import { TextField } from "@/ui/components/TextField";
-import { IconButton } from "@/ui/components/IconButton";
-import { FeatherBell } from "@subframe/core";
-import { DropdownMenu } from "@/ui/components/DropdownMenu";
-import { FeatherUser } from "@subframe/core";
-import { FeatherLogOut } from "@subframe/core";
-import * as SubframeCore from "@subframe/core";
-import { FeatherChevronDown } from "@subframe/core";
-import { FeatherCheckCircle } from "@subframe/core";
-import { FeatherShield } from "@subframe/core";
-import { FeatherCreditCard } from "@subframe/core";
-import { FeatherPlus } from "@subframe/core";
-import { FeatherCloud } from "@subframe/core";
-import { FeatherChevronLeft } from "@subframe/core";
-import { FeatherChevronRight } from "@subframe/core";
-import { FeatherEdit2 } from "@subframe/core";
-import { FeatherEye } from "@subframe/core";
-import { FeatherImage } from "@subframe/core";
-import { Badge } from "@/ui/components/Badge";
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import {
+  Anchor,
+  Home,
+  Users,
+  MessageCircle,
+  Calendar,
+  Handshake,
+  DollarSign,
+  Shapes,
+  Settings,
+  Bell,
+  ChevronDown,
+  CheckCircle,
+  Shield,
+  CreditCard,
+  Plus,
+  Cloud,
+  ChevronLeft,
+  ChevronRight,
+  Edit2,
+  Eye,
+  User,
+  LogOut,
+  Search
+} from 'lucide-react';
 
-function BusinessDashboard_Home() {
+interface Booking {
+  id: string;
+  user_id: string;
+  experience_id: string;
+  host_id: string;
+  booking_date: string;
+  departure_time: string;
+  number_of_guests: number;
+  total_price: number;
+  booking_status: 'pending' | 'confirmed' | 'cancelled_user' | 'cancelled_host' | 'completed' | 'rescheduled';
+  created_at: string;
+  updated_at: string;
+  experiences?: {
+    title: string;
+    duration_hours: number;
+    max_guests: number;
+  };
+  users?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
+interface Stats {
+  revenue: number;
+  active_bookings: number;
+  total_clients: number;
+  total_experiences: number;
+}
+
+interface WeeklyBookings {
+  [key: string]: Booking[];
+}
+
+interface HostProfile {
+  id: string;
+  name: string;
+  bio?: string;
+  rating: number;
+  total_reviews: number;
+}
+
+const BusinessHomePage = () => {
+  const [stats, setStats] = useState<Stats>({
+    revenue: 0,
+    active_bookings: 0,
+    total_clients: 0,
+    total_experiences: 0
+  });
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [weeklyBookings, setWeeklyBookings] = useState<WeeklyBookings>({});
+  const [hostProfile, setHostProfile] = useState<HostProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentWeek, setCurrentWeek] = useState('March 18 - 24');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    getCurrentHost();
+  }, []);
+
+  useEffect(() => {
+    if (hostProfile) {
+      fetchDashboardData();
+    }
+  }, [hostProfile]);
+
+  const getCurrentHost = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile, error } = await supabase
+        .from('host_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching host profile:', error);
+        return;
+      }
+
+      setHostProfile(profile);
+    } catch (error) {
+      console.error('Error getting current host:', error);
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    if (!hostProfile) return;
+
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchStats(),
+        fetchRecentBookings(),
+        fetchWeeklyBookings()
+      ]);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!hostProfile) return;
+
+    try {
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const { data: earningsData } = await supabase
+        .from('host_earnings')
+        .select('net_amount')
+        .eq('host_profile_id', hostProfile.id)
+        .gte('created_at', startOfMonth);
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data: activeBookingsData, count: activeBookingsCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('host_id', hostProfile.id)
+        .eq('booking_status', 'confirmed')
+        .gte('booking_date', today);
+
+      const { data: clientsData } = await supabase
+        .from('bookings')
+        .select('user_id')
+        .eq('host_id', hostProfile.id);
+
+      const uniqueClients = new Set(clientsData?.map(booking => booking.user_id) || []);
+
+      const { data: experiencesData, count: experiencesCount } = await supabase
+        .from('experiences')
+        .select('*', { count: 'exact', head: true })
+        .eq('host_id', hostProfile.id)
+        .eq('is_active', true);
+
+      const totalRevenue = earningsData?.reduce((sum, earning) => sum + (earning.net_amount || 0), 0) || 0;
+
+      setStats({
+        revenue: totalRevenue,
+        active_bookings: activeBookingsCount || 0,
+        total_clients: uniqueClients.size,
+        total_experiences: experiencesCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchRecentBookings = async () => {
+    if (!hostProfile) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          experiences (
+            title,
+            duration_hours,
+            max_guests
+          ),
+          users (
+            first_name,
+            last_name
+          )
+        `)
+        .eq('host_id', hostProfile.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      setRecentBookings(data || []);
+    } catch (error) {
+      console.error('Error fetching recent bookings:', error);
+    }
+  };
+
+  const fetchWeeklyBookings = async () => {
+    if (!hostProfile) return;
+
+    try {
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      const startStr = startOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      const endStr = endOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      setCurrentWeek(`${startStr} - ${endStr}`);
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          experiences (
+            title,
+            duration_hours,
+            max_guests
+          ),
+          users (
+            first_name,
+            last_name
+          )
+        `)
+        .eq('host_id', hostProfile.id)
+        .gte('booking_date', startOfWeek.toISOString().split('T')[0])
+        .lte('booking_date', endOfWeek.toISOString().split('T')[0])
+        .order('booking_date', { ascending: true });
+
+      if (error) throw error;
+
+      const groupedBookings: WeeklyBookings = {
+        Monday: [],
+        Tuesday: [],
+        Wednesday: [],
+        Thursday: [],
+        Friday: [],
+        Saturday: [],
+        Sunday: []
+      };
+
+      data?.forEach(booking => {
+        const bookingDate = new Date(booking.booking_date);
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = dayNames[bookingDate.getDay()];
+        if (groupedBookings[dayName]) {
+          groupedBookings[dayName].push(booking);
+        }
+      });
+
+      setWeeklyBookings(groupedBookings);
+    } catch (error) {
+      console.error('Error fetching weekly bookings:', error);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getClientName = (booking: Booking) => {
+    if (booking.users) {
+      return `${booking.users.first_name} ${booking.users.last_name}`;
+    }
+    return 'Unknown Client';
+  };
+
+  const getExperienceTitle = (booking: Booking) => {
+    return booking.experiences?.title || 'Unknown Experience';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled_user':
+      case 'cancelled_host':
+        return 'bg-red-100 text-red-800';
+      case 'rescheduled':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const EmptyState = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <Icon className="w-12 h-12 text-gray-400 mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500 max-w-sm">{description}</p>
+    </div>
+  );
+
+  const Skeleton = ({ className }: { className?: string }) => (
+    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+  );
+
+  const renderWeeklyBookings = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    return (
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {days.map(day => (
+          <div key={day} className="flex-shrink-0 w-80 bg-white border border-gray-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">{day}</h4>
+            <div className="space-y-3">
+              {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : weeklyBookings[day]?.length > 0 ? (
+                weeklyBookings[day].map(booking => (
+                  <div key={booking.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="space-y-1">
+                      <h5 className="font-medium text-gray-900 text-sm">{getExperienceTitle(booking)}</h5>
+                      <p className="text-xs text-gray-500">
+                        Client: {getClientName(booking)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatDate(booking.booking_date)} - {booking.departure_time || 'TBD'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Duration: {booking.experiences?.duration_hours || 'N/A'} hours
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Guests: {booking.number_of_guests}/{booking.experiences?.max_guests || 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Total: {formatCurrency(booking.total_price)}
+                      </p>
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
+                        {booking.booking_status.replace('_', ' ').charAt(0).toUpperCase() + booking.booking_status.replace('_', ' ').slice(1)}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
+                          <MessageCircle className="w-3 h-3" />
+                          Message
+                        </button>
+                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
+                          <Edit2 className="w-3 h-3" />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 text-sm">
+                  No bookings for {day}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <div className="container max-w-none flex h-full items-start border border-solid border-neutral-border">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="flex flex-col items-start gap-8 self-stretch border-r border-solid border-neutral-border bg-default-background px-6 py-8">
-        {/* Logo and Title */}
-        <div className="flex items-center gap-2">
-          <IconWithBackground
-            variant="warning"
-            size="large"
-            icon={<FeatherAnchor />}
-            square={true}
-          />
-          <span className="text-heading-2 font-heading-2 text-default-font">
-            Business Dashboard
-          </span>
-        </div>
-
-        {/* Home Navigation */}
-        <div className="flex w-full flex-col items-start gap-1">
-          <SettingsMenu.Item
-            selected={true}
-            icon={<FeatherHome />}
-            label="Home"
-          />
-        </div>
-
-        {/* Client Management Section */}
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font">
-            Client Management
-          </span>
-          <SettingsMenu.Item icon={<FeatherUsers />} label="Bookings" />
-          <SettingsMenu.Item icon={<FeatherAnchor />} label="Experiences" />
-          <SettingsMenu.Item icon={<FeatherMessageCircle />} label="Messages" />
-          <SettingsMenu.Item icon={<FeatherCalendar />} label="Calendar" />
-          <SettingsMenu.Item icon={<FeatherHandshake />} label="Clients" />
-        </div>
-
-        {/* Finance Section */}
-        <div className="flex w-full flex-col items-start gap-2">
-          <span className="w-full text-body-bold font-body-bold text-default-font">
-            Finance
-          </span>
-          <div className="flex w-full flex-col items-start gap-1">
-            <Button
-              className="h-8 w-full flex-none justify-start"
-              variant="neutral-tertiary"
-              icon={<FeatherDollarSign />}
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            >
-              Sales &amp; Payments
-            </Button>
-            <SettingsMenu.Item icon={<FeatherShapes />} label="Integrations" />
+      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Anchor className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">SeaFable</h1>
+              <p className="text-sm text-gray-600">Business Dashboard</p>
+            </div>
           </div>
         </div>
 
-        {/* Workspace Section */}
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-body-bold font-body-bold text-default-font">
-            Workspace
-          </span>
-          <SettingsMenu.Item label="Account" />
-          <SettingsMenu.Item icon={<FeatherSettings />} label="Settings" />
-        </div>
+        <nav className="flex-1 px-6 space-y-8">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg">
+              <Home className="w-5 h-5" />
+              <span className="font-medium">Dashboard</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+              Management
+            </h3>
+            <div className="space-y-1">
+              {[
+                { icon: Users, label: 'Bookings' },
+                { icon: Anchor, label: 'Experiences' },
+                { icon: MessageCircle, label: 'Messages' },
+                { icon: Calendar, label: 'Calendar' },
+                { icon: Handshake, label: 'Customers' }
+              ].map(({ icon: Icon, label }) => (
+                <button key={label} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                  <Icon className="w-5 h-5" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+              Business
+            </h3>
+            <div className="space-y-1">
+              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <DollarSign className="w-5 h-5" />
+                <span>Earnings</span>
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <Shapes className="w-5 h-5" />
+                <span>Analytics</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+              Account
+            </h3>
+            <div className="space-y-1">
+              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <User className="w-5 h-5" />
+                <span>Profile</span>
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <Settings className="w-5 h-5" />
+                <span>Settings</span>
+              </button>
+            </div>
+          </div>
+        </nav>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-start px-2 py-2 grow">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4">
-          <TextField label="" helpText="">
-            <TextField.Input
-              placeholder="Search..."
-              value=""
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
-            />
-          </TextField>
-          <div className="flex items-center gap-4">
-            <IconButton
-              icon={<FeatherBell />}
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            />
-            <SubframeCore.DropdownMenu.Root>
-              <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                <Button
-                  variant="neutral-tertiary"
-                  iconRight={<FeatherChevronDown />}
-                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+        <header className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search bookings, experiences..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <button className="p-2 text-gray-400 hover:text-gray-600">
+                <Bell className="w-5 h-5" />
+              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Ocean Travel
-                </Button>
-              </SubframeCore.DropdownMenu.Trigger>
-              <SubframeCore.DropdownMenu.Portal>
-                <SubframeCore.DropdownMenu.Content
-                  side="bottom"
-                  align="end"
-                  sideOffset={4}
-                  asChild={true}
-                >
-                  <DropdownMenu>
-                    <DropdownMenu.DropdownItem icon={<FeatherUser />}>
+                  <span>{hostProfile?.name || 'Host'}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left">
+                      <User className="w-4 h-4" />
                       Profile
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left">
+                      <Settings className="w-4 h-4" />
                       Settings
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownDivider />
-                    <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
-                      Logout
-                    </DropdownMenu.DropdownItem>
-                  </DropdownMenu>
-                </SubframeCore.DropdownMenu.Content>
-              </SubframeCore.DropdownMenu.Portal>
-            </SubframeCore.DropdownMenu.Root>
-          </div>
-        </div>
-
-        {/* Welcome Banner */}
-        <div className="flex w-full flex-col items-start gap-2 px-2 py-2">
-          <div className="flex w-full flex-col items-start gap-2 px-2 py-2">
-            <div className="flex w-full flex-col items-start gap-2 px-2 py-2">
-              <div className="flex w-full items-start rounded-md bg-[#275fe0ff] px-6 py-4">
-                <div className="flex flex-col items-start gap-4">
-                  <span className="text-white font-heading-2 font-bold">
-                    Good Morning! 🌊
-                  </span>
-                  <span className="text-heading-3 font-heading-3 text-white">
-                    You have 10 bookings today. Weather conditions are perfect
-                    for water adventures!
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <FeatherCheckCircle className="text-body font-body text-white mr-1" />
-                      <span className="text-body font-body text-white">
-                        Profile Complete
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FeatherShield className="text-body font-body text-white mr-1" />
-                      <span className="text-body font-body text-white">
-                        Verified Business
-                      </span>
-                    </div>
+                    </button>
+                    <hr className="my-1" />
+                    <button 
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Welcome Banner */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 m-4 rounded-lg">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-2xl font-bold">Good Morning, {hostProfile?.name?.split(' ')[0]}! 🌊</h2>
+              <p className="text-lg">
+                You have {stats.active_bookings} active booking{stats.active_bookings !== 1 ? 's' : ''} scheduled. Weather conditions are perfect for water adventures!
+              </p>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Profile Active</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  <span>{hostProfile?.rating ? `${hostProfile.rating}★ Rated` : 'New Host'}</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Dashboard Content */}
-        <div className="flex h-320 w-320 flex-none flex-col items-start gap-8 px-8 py-8 overflow-auto">
-          {/* Monthly Stats Section */}
-          <div className="flex w-full items-center justify-between">
-            <span className="text-heading-2 font-heading-2 text-default-font">
-              Monthly Stats
-            </span>
-          </div>
-          <div className="flex w-full items-start gap-4">
-            {/* Revenue Card */}
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
-              <div className="flex w-full items-center justify-between">
-                <IconWithBackground icon={<FeatherCreditCard />} />
+          <div className="p-8 space-y-8">
+            {/* Monthly Stats */}
+            <section>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Monthly Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-white p-6 rounded-lg border border-gray-200">
+                      <Skeleton className="w-12 h-12 rounded-lg mb-4" />
+                      <Skeleton className="h-8 w-20 mb-2" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <DollarSign className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.revenue)}</div>
+                      <div className="text-gray-500">Net Earnings</div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <Calendar className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div className="text-3xl font-bold text-gray-900">{stats.active_bookings}</div>
+                      <div className="text-gray-500">Active Bookings</div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <Users className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div className="text-3xl font-bold text-gray-900">{stats.total_clients}</div>
+                      <div className="text-gray-500">Customers</div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <Anchor className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div className="text-3xl font-bold text-gray-900">{stats.total_experiences}</div>
+                      <div className="text-gray-500">Live Experiences</div>
+                    </div>
+                  </>
+                )}
               </div>
-              <span className="text-heading-1 font-heading-1 text-default-font">
-                $10,254
-              </span>
-              <span className="text-body font-body text-subtext-color">
-                Revenue
-              </span>
-            </div>
-            
-            {/* Active Bookings Card */}
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
-              <div className="flex w-full items-center justify-between">
-                <IconWithBackground
-                  variant="success"
-                  icon={<FeatherCalendar />}
-                />
-              </div>
-              <span className="text-heading-1 font-heading-1 text-default-font">
-                52
-              </span>
-              <span className="text-body font-body text-subtext-color">
-                Active Bookings
-              </span>
-            </div>
-            
-            {/* Total Clients Card */}
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
-              <div className="flex w-full items-center justify-between">
-                <IconWithBackground icon={<FeatherUsers />} />
-              </div>
-              <span className="text-heading-1 font-heading-1 text-default-font">
-                36
-              </span>
-              <span className="text-body font-body text-subtext-color">
-                Total Clients
-              </span>
-            </div>
-            
-            {/* Total Experiences Card */}
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
-              <div className="flex w-full items-center justify-between">
-                <IconWithBackground
-                  variant="success"
-                  icon={<FeatherAnchor />}
-                />
-              </div>
-              <span className="text-heading-1 font-heading-1 text-default-font">
-                12
-              </span>
-              <span className="text-body font-body text-subtext-color">
-                Total Experiences
-              </span>
-            </div>
-          </div>
+            </section>
 
-          {/* Quick Actions Section */}
-          <div className="flex w-full items-center justify-between">
-            <span className="text-heading-2 font-heading-2 text-default-font">
-              Quick Actions
-            </span>
-          </div>
-          <div className="flex w-full flex-col items-start gap-4">
-            <div className="flex w-full flex-col items-start gap-2 px-2 py-2">
-              <div className="flex w-full items-start gap-4">
-                <div className="flex grow shrink-0 basis-0 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-solid border-neutral-border bg-default-background px-6 py-4 shadow-sm">
-                  <IconWithBackground
-                    variant="neutral"
-                    size="large"
-                    icon={<FeatherPlus />}
+            {/* Quick Actions */}
+            <section>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { icon: Plus, label: 'New Experience', color: 'bg-green-50 hover:bg-green-100', textColor: 'text-green-700' },
+                  { icon: MessageCircle, label: 'Messages', color: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700' },
+                  { icon: Calendar, label: 'Calendar', color: 'bg-purple-50 hover:bg-purple-100', textColor: 'text-purple-700' },
+                  { icon: Cloud, label: 'Weather', color: 'bg-gray-50 hover:bg-gray-100', textColor: 'text-gray-700' }
+                ].map(({ icon: Icon, label, color, textColor }) => (
+                  <button key={label} className={`${color} p-6 rounded-lg text-center transition-colors`}>
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-3 shadow-sm">
+                      <Icon className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <div className={`font-medium ${textColor}`}>{label}</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* This Week's Bookings */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900">This Week's Bookings</h3>
+                <div className="flex items-center gap-2">
+                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className="font-medium text-gray-900">{currentWeek}</span>
+                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              {renderWeeklyBookings()}
+            </section>
+
+            {/* Recent Bookings */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900">Recent Bookings</h3>
+                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  <Eye className="w-4 h-4" />
+                  View All
+                </button>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                {loading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 p-4">
+                        <Skeleton className="w-12 h-12 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-40" />
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Skeleton className="h-4 w-16" />
+                          <Skeleton className="h-6 w-20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentBookings.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentBookings.map((booking, index) => (
+                      <div key={booking.id} className={`flex items-center gap-4 p-4 ${index !== recentBookings.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <User className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900">{getClientName(booking)}</div>
+                          <div className="text-gray-700">{getExperienceTitle(booking)}</div>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>{formatDate(booking.booking_date)}</span>
+                            <span>{booking.number_of_guests} guest{booking.number_of_guests !== 1 ? 's' : ''}</span>
+                            <span>{booking.departure_time || 'Time TBD'}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900">{formatCurrency(booking.total_price)}</div>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
+                            {booking.booking_status.replace('_', ' ').charAt(0).toUpperCase() + booking.booking_status.replace('_', ' ').slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState 
+                    icon={Calendar}
+                    title="No Recent Bookings"
+                    description="When you receive new bookings, they'll appear here."
                   />
-                  <span className="text-body-bold font-body-bold text-default-font">
-                    Add Experiences
-                  </span>
-                </div>
-                <div className="flex grow shrink-0 basis-0 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-solid border-neutral-border bg-default-background px-6 py-4 shadow-sm">
-                  <IconWithBackground
-                    variant="neutral"
-                    size="large"
-                    icon={<FeatherMessageCircle />}
-                  />
-                  <span className="text-body-bold font-body-bold text-default-font">
-                    Messages
-                  </span>
-                </div>
-                <div className="flex grow shrink-0 basis-0 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-solid border-neutral-border bg-default-background px-6 py-4 shadow-sm">
-                  <IconWithBackground
-                    variant="neutral"
-                    size="large"
-                    icon={<FeatherCalendar />}
-                  />
-                  <span className="text-body-bold font-body-bold text-default-font">
-                    Calendar
-                  </span>
-                </div>
-                <div className="flex grow shrink-0 basis-0 flex-col items-center justify-center gap-2 self-stretch rounded-md border border-solid border-neutral-border bg-default-background px-6 py-4 shadow-sm">
-                  <IconWithBackground
-                    variant="neutral"
-                    size="large"
-                    icon={<FeatherCloud />}
-                  />
-                  <span className="text-body-bold font-body-bold text-default-font">
-                    Check Weather
-                  </span>
-                </div>
+                )}
               </div>
-            </div>
-
-            {/* This Week's Bookings Header */}
-            <div className="flex w-full items-center justify-between">
-              <span className="text-heading-2 font-heading-2 text-default-font">
-                This Week's Bookings
-              </span>
-              <div className="flex items-center gap-2">
-                <IconButton
-                  icon={<FeatherChevronLeft />}
-                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                />
-                <span className="text-body-bold font-body-bold text-default-font">
-                  March 18 - 24
-                </span>
-                <IconButton
-                  icon={<FeatherChevronRight />}
-                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                />
-              </div>
-            </div>
-
-            {/* Weekly Bookings Grid */}
-            <div className="flex w-full items-start gap-4 overflow-x-auto">
-              {/* Monday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Monday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Scuba-diving with turtles 🐢
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 18, 2025 - 10:00 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 6 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 6/8
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1200
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Second booking for Monday */}
-                  <div className="flex w-full items-center rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Scuba-diving with turtles 🐢
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 18, 2025 - 10:00 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 6 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 6/8
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1200
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tuesday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Tuesday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Sailing Adventure
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 19, 2025 - 2:00 PM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 4 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 8/8
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1600
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Wednesday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Wednesday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Kayaking Expedition
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 20, 2025 - 9:30 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 5 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 4/4
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $800
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Thursday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Thursday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Snorkeling Trip
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 21, 2025 - 11:00 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 3 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 6/10
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $900
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Friday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Friday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Deep Sea Fishing
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 22, 2025 - 7:00 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 8 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 5/7
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1250
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Saturday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Saturday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Sunset Cruise
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 23, 2025 - 5:00 PM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 2 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 10/10
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1000
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sunday */}
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 grow-0 shrink-0 basis-auto w-[calc(25%-16px)]">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  Sunday
-                </span>
-                <div className="flex w-full flex-col items-start gap-2">
-                  <div className="flex w-full items-center gap-2 rounded-md border border-solid border-neutral-border px-3 py-3">
-                    <div className="flex flex-col items-start gap-1 grow">
-                      <span className="text-body-bold font-body-bold text-default-font">
-                        Island Hopping Tour
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        March 24, 2025 - 8:00 AM
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Duration: 6 hours
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Group size: 7/8
-                      </span>
-                      <span className="text-caption font-caption text-subtext-color">
-                        Total sales: $1400
-                      </span>
-                      <div className="flex w-full flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherMessageCircle />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Message Group
-                          </Button>
-                          <Button
-                            className="grow"
-                            variant="neutral-secondary"
-                            icon={<FeatherEdit2 />}
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Bookings Section */}
-            <div className="flex w-full flex-col items-start gap-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-heading-2 font-heading-2 text-default-font">
-                  Recent Bookings
-                </span>
-                <Button
-                  icon={<FeatherEye />}
-                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                >
-                  View all
-                </Button>
-              </div>
-              <div className="flex w-full flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6">
-                {/* Booking Item 1 */}
-                <div className="flex w-full items-center gap-4 border-b border-solid border-neutral-border pb-4">
-                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
-                    <FeatherImage className="text-heading-2 font-heading-2 text-brand-600" />
-                  </div>
-                  <div className="flex flex-col items-start grow">
-                    <span className="text-body-bold font-body-bold text-default-font">
-                      Sarah Johnson
-                    </span>
-                    <span className="text-body font-body text-subtext-color">
-                      Sunset Sailing
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-body font-body text-subtext-color">
-                        21-05-2025
-                      </span>
-                      <span className="text-body font-body text-subtext-color">
-                        2 guests
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-body font-body text-subtext-color">
-                      $1,200
-                    </span>
-                    <Badge variant="success">Confirmed</Badge>
-                  </div>
-                </div>
-                
-                {/* Booking Item 2 */}
-                <div className="flex w-full items-center gap-4 border-b border-solid border-neutral-border pb-4">
-                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
-                    <FeatherImage className="text-heading-2 font-heading-2 text-brand-600" />
-                  </div>
-                  <div className="flex flex-col items-start grow">
-                    <span className="text-body-bold font-body-bold text-default-font">
-                      Sarah Johnson
-                    </span>
-                    <span className="text-body font-body text-subtext-color">
-                      Sunset Sailing
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-body font-body text-subtext-color">
-                        21-05-2025
-                      </span>
-                      <span className="text-body font-body text-subtext-color">
-                        2 guests
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-body font-body text-subtext-color">
-                      $1,200
-                    </span>
-                    <Badge variant="success">Confirmed</Badge>
-                  </div>
-                </div>
-                
-                {/* Booking Item 3 */}
-                <div className="flex w-full items-center gap-4 border-b border-solid border-neutral-border pb-4">
-                  <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-brand-50">
-                    <FeatherImage className="text-heading-2 font-heading-2 text-brand-600" />
-                  </div>
-                  <div className="flex flex-col items-start grow">
-                    <span className="text-body-bold font-body-bold text-default-font">
-                      Sarah Johnson
-                    </span>
-                    <span className="text-body font-body text-subtext-color">
-                      Sunset Sailing
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-body font-body text-subtext-color">
-                        21-05-2025
-                      </span>
-                      <span className="text-body font-body text-subtext-color">
-                        2 guests
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-body font-body text-subtext-color">
-                      $1,200
-                    </span>
-                    <Badge variant="warning">Pending</Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </section>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
-}
+};
 
-export default BusinessDashboard_Home;
+export default BusinessHomePage;
