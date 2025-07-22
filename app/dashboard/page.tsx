@@ -33,21 +33,7 @@ import { Progress } from "@/components/ui/progress"
 import { CustomerLayout } from "@/components/layouts/CustomerLayout"
 import { useAuth } from "@/lib/auth-context"
 import { getUserDashboardData, type Booking, type Review } from "@/lib/database"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-  SidebarTrigger,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
+// Removed problematic Sidebar imports
 import { signOutAndRedirect } from "@/lib/auth-utils"
 import type { UserProfile } from "@/types/auth"
 import { useActionState } from "react"
@@ -971,50 +957,73 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
   return (
     <CustomerLayout>
       <div className="container mx-auto py-10">
-        <SidebarProvider>
-          <div className="flex">
-            <Sidebar className="md:block hidden">
-              <SidebarContent>
-                <SidebarHeader>
-                  <Link href="/">
-                    <h1 className="font-semibold text-lg">Dashboard</h1>
-                  </Link>
-                </SidebarHeader>
-                <SidebarMenu>
-                  {tabs.map((tab) => (
-                    <SidebarMenuItem key={tab.id}>
-                      <SidebarMenuButton 
-                        isActive={activeTab === tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                      >
-                        {tab.label}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarContent>
-              <SidebarFooter>
-                <Button variant="destructive" onClick={() => signOutAndRedirect()}>
+        <div className="flex min-h-screen">
+          {/* Desktop Sidebar */}
+          <div className="hidden md:block w-64 bg-white border-r border-gray-200">
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b">
+                <Link href="/">
+                  <h1 className="font-semibold text-lg text-gray-900">Dashboard</h1>
+                </Link>
+              </div>
+              <nav className="flex-1 p-4 space-y-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+              <div className="p-4 border-t">
+                <Button variant="destructive" onClick={() => signOutAndRedirect()} className="w-full">
                   <LogOut className="h-4 w-4 mr-2" />
                   Log Out
                 </Button>
-              </SidebarFooter>
-            </Sidebar>
-            <div className="flex-1 p-6">
-            {activeTab === "overview" && (
-                <OverviewTab
-                  userProfile={userProfile}
-                  bookings={bookings}
-                  reviews={reviews}
-                  userEmail={user.email || ""}
-                />
-              )}
-              {activeTab === "bookings" && <BookingsTab bookings={bookings} reviews={reviews} />}
-              {activeTab === "wishlist" && <WishlistTab />}
-              {activeTab === "profile" && <ProfileTab userProfile={userProfile} userEmail={user.email || ""} />}
+              </div>
             </div>
           </div>
-        </SidebarProvider>
+          
+          {/* Mobile Navigation */}
+          <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b z-10">
+            <div className="flex overflow-x-auto p-2 space-x-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`whitespace-nowrap px-3 py-2 rounded-lg transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 md:p-6 p-4 md:mt-0 mt-16">
+            {activeTab === "overview" && (
+              <OverviewTab
+                userProfile={userProfile}
+                bookings={bookings}
+                reviews={reviews}
+                userEmail={user.email || ""}
+              />
+            )}
+            {activeTab === "bookings" && <BookingsTab bookings={bookings} reviews={reviews} />}
+            {activeTab === "wishlist" && <WishlistTab />}
+            {activeTab === "profile" && <ProfileTab userProfile={userProfile} userEmail={user.email || ""} />}
+          </div>
+        </div>
       </div>
     </CustomerLayout>
   )
