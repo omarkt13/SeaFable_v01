@@ -1,0 +1,2465 @@
+{
+  "timestamp": "2025-07-22T19:28:28.514Z",
+  "summary": {
+    "total": 323,
+    "high": 184,
+    "medium": 56,
+    "low": 83
+  },
+  "issues": [
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/calendar/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/clients/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/earnings/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/online-bookings/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/register/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/sales/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/settings/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/business/team/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "app/dashboard/page.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/auth/BusinessProtectedRoute.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/auth/CustomerProtectedRoute.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/customer-register-form.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/login-form.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/ui/carousel.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/ui/chart.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/ui/form.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "components/ui/sidebar.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "react_conditional_hooks",
+      "file": "lib/auth-context.tsx",
+      "message": "Potential conditional hook usage detected",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/new/page.tsx",
+      "line": 670,
+      "column": 27,
+      "code": "TS2322",
+      "message": "Type 'string' is not assignable to type 'never'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/new/page.tsx",
+      "line": 786,
+      "column": 68,
+      "code": "TS2345",
+      "message": "Argument of type 'string' is not assignable to parameter of type 'never'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/new/page.tsx",
+      "line": 810,
+      "column": 67,
+      "code": "TS2345",
+      "message": "Argument of type 'string' is not assignable to parameter of type 'never'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/new/page.tsx",
+      "line": 834,
+      "column": 62,
+      "code": "TS2345",
+      "message": "Argument of type 'string' is not assignable to parameter of type 'never'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/page.tsx",
+      "line": 93,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/adventures/page.tsx",
+      "line": 98,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'experience' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/bookings/page.tsx",
+      "line": 40,
+      "column": 27,
+      "code": "TS2339",
+      "message": "Property 'loading' does not exist on type 'AuthContextType'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/calendar/page.tsx",
+      "line": 34,
+      "column": 23,
+      "code": "TS2345",
+      "message": "Argument of type 'Booking[]' is not assignable to parameter of type 'SetStateAction<Booking[]>'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/calendar/page.tsx",
+      "line": 78,
+      "column": 25,
+      "code": "TS2345",
+      "message": "Argument of type 'Dispatch<SetStateAction<Booking[]>>' is not assignable to parameter of type '(value: Booking[]) => void | PromiseLike<void>'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/clients/page.tsx",
+      "line": 39,
+      "column": 15,
+      "code": "TS2339",
+      "message": "Property 'data' does not exist on type 'Booking[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/clients/page.tsx",
+      "line": 39,
+      "column": 31,
+      "code": "TS2339",
+      "message": "Property 'error' does not exist on type 'Booking[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/clients/page.tsx",
+      "line": 45,
+      "column": 34,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/dashboard/page.tsx",
+      "line": 32,
+      "column": 27,
+      "code": "TS2339",
+      "message": "Property 'loading' does not exist on type 'AuthContextType'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/earnings/page.tsx",
+      "line": 57,
+      "column": 30,
+      "code": "TS7006",
+      "message": "Parameter 'earning' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/experiences/new/page.tsx",
+      "line": 269,
+      "column": 18,
+      "code": "TS18047",
+      "message": "'businessProfile' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/experiences/new/page.tsx",
+      "line": 293,
+      "column": 52,
+      "code": "TS2345",
+      "message": "Argument of type '{ host_id: string; title: string; description: string; short_description: string; location: string; specific_location: string; activity_type: string; category: string[]; duration_hours: number; ... 12 more ...; is_active: boolean; }' is not assignable to parameter of type '{ host_id: string; title: string; description: string; short_description?: string | undefined; location: string; specific_location?: string | undefined; country?: string | undefined; activity_type: string; ... 18 more ...; itinerary?: any; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/experiences/page.tsx",
+      "line": 44,
+      "column": 27,
+      "code": "TS2339",
+      "message": "Property 'loading' does not exist on type 'AuthContextType'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 105,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 112,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 120,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 126,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 128,
+      "column": 49,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 128,
+      "column": 54,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 155,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 161,
+      "column": 49,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 200,
+      "column": 24,
+      "code": "TS18047",
+      "message": "'user' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/home/page.tsx",
+      "line": 218,
+      "column": 21,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/online-bookings/page.tsx",
+      "line": 98,
+      "column": 9,
+      "code": "TS2353",
+      "message": "Object literal may only specify known properties, and 'min_booking_notice_hours' does not exist in type 'Partial<BusinessSettings>'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/sales/page.tsx",
+      "line": 48,
+      "column": 12,
+      "code": "TS7006",
+      "message": "Parameter 'earning' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/sales/page.tsx",
+      "line": 50,
+      "column": 15,
+      "code": "TS7006",
+      "message": "Parameter 'earning' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/business/settings/page.tsx",
+      "line": 79,
+      "column": 9,
+      "code": "TS2353",
+      "message": "Object literal may only specify known properties, and 'name' does not exist in type 'Partial<{ business_name: string; business_description: string; business_address: string; business_city: string; business_state: string; business_zip_code: string; business_phone: string; business_email: string; ... 15 more ...; notes: string; }>'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 661,
+      "column": 51,
+      "code": "TS2339",
+      "message": "Property 'phone' does not exist on type 'UserProfile'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 678,
+      "column": 26,
+      "code": "TS2554",
+      "message": "Expected 2 arguments, but got 1.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 700,
+      "column": 29,
+      "code": "TS2339",
+      "message": "Property 'error' does not exist on type '{ success: boolean; message: string; data?: undefined; } | { success: boolean; message: string; data: any; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 885,
+      "column": 60,
+      "code": "TS2554",
+      "message": "Expected 1 arguments, but got 0.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 904,
+      "column": 17,
+      "code": "TS2339",
+      "message": "Property 'loading' does not exist on type 'AuthContextType'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 916,
+      "column": 41,
+      "code": "TS2339",
+      "message": "Property 'userProfile' does not exist on type '{ success: boolean; data?: { user: any; bookings: any[]; reviews: any[]; } | undefined; error?: string | undefined; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 917,
+      "column": 38,
+      "code": "TS2339",
+      "message": "Property 'bookings' does not exist on type '{ success: boolean; data?: { user: any; bookings: any[]; reviews: any[]; } | undefined; error?: string | undefined; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 918,
+      "column": 37,
+      "code": "TS2339",
+      "message": "Property 'reviews' does not exist on type '{ success: boolean; data?: { user: any; bookings: any[]; reviews: any[]; } | undefined; error?: string | undefined; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/dashboard/page.tsx",
+      "line": 1006,
+      "column": 60,
+      "code": "TS2554",
+      "message": "Expected 1 arguments, but got 0.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 148,
+      "column": 65,
+      "code": "TS2339",
+      "message": "Property 'date' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 148,
+      "column": 99,
+      "code": "TS2339",
+      "message": "Property 'available_capacity' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 148,
+      "column": 160,
+      "code": "TS2339",
+      "message": "Property 'date' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 174,
+      "column": 63,
+      "code": "TS18047",
+      "message": "'experience' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 175,
+      "column": 75,
+      "code": "TS18047",
+      "message": "'experience' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 176,
+      "column": 63,
+      "code": "TS18047",
+      "message": "'experience' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 177,
+      "column": 75,
+      "code": "TS18047",
+      "message": "'experience' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 197,
+      "column": 45,
+      "code": "TS18047",
+      "message": "'experience' is possibly 'null'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/experience/[id]/page.tsx",
+      "line": 329,
+      "column": 18,
+      "code": "TS18048",
+      "message": "'hostProfile.rating' is possibly 'undefined'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/forgot-password/page.tsx",
+      "line": 13,
+      "column": 57,
+      "code": "TS2769",
+      "message": "No overload matches this call.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 43,
+      "column": 33,
+      "code": "TS7006",
+      "message": "Parameter 'event' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 89,
+      "column": 29,
+      "code": "TS7006",
+      "message": "Parameter 'selectedDate' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 96,
+      "column": 47,
+      "code": "TS2339",
+      "message": "Property 'service' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 97,
+      "column": 48,
+      "code": "TS2339",
+      "message": "Property 'location' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 224,
+      "column": 36,
+      "code": "TS2339",
+      "message": "Property 'service' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 227,
+      "column": 32,
+      "code": "TS2339",
+      "message": "Property 'service' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 230,
+      "column": 29,
+      "code": "TS2339",
+      "message": "Property 'service' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 230,
+      "column": 89,
+      "code": "TS2339",
+      "message": "Property 'service' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 241,
+      "column": 36,
+      "code": "TS2339",
+      "message": "Property 'location' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 244,
+      "column": 32,
+      "code": "TS2339",
+      "message": "Property 'location' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 247,
+      "column": 29,
+      "code": "TS2339",
+      "message": "Property 'location' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 247,
+      "column": 90,
+      "code": "TS2339",
+      "message": "Property 'location' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/page.tsx",
+      "line": 338,
+      "column": 48,
+      "code": "TS2365",
+      "message": "Operator '<' cannot be applied to types 'Date' and 'number'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 118,
+      "column": 35,
+      "code": "TS2339",
+      "message": "Property 'available_capacity' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 595,
+      "column": 40,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'string | number | boolean | string[] | [number, number]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 595,
+      "column": 58,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '1' can't be used to index type 'string | number | boolean | string[] | [number, number]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 596,
+      "column": 43,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'string | number | boolean | string[] | [number, number]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 596,
+      "column": 61,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '1' can't be used to index type 'string | number | boolean | string[] | [number, number]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 864,
+      "column": 72,
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types 'string' and '{ value: string; label: string; }' have no overlap.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/search/page.tsx",
+      "line": 1120,
+      "column": 23,
+      "code": "TS2322",
+      "message": "Type 'string' is not assignable to type '\"map\" | \"list\" | \"grid\"'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "app/test-db/page.tsx",
+      "line": 158,
+      "column": 28,
+      "code": "TS18046",
+      "message": "'error' is of type 'unknown'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/earnings-summary.tsx",
+      "line": 23,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'thisMonth' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/earnings-summary.tsx",
+      "line": 24,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'lastMonth' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/earnings-summary.tsx",
+      "line": 25,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'pending' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/earnings-summary.tsx",
+      "line": 26,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'nextPayout' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/earnings-summary.tsx",
+      "line": 27,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'monthlyTrend' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/quick-stats-footer.tsx",
+      "line": 19,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'totalRevenue' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/quick-stats-footer.tsx",
+      "line": 20,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'activeBookings' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/quick-stats-footer.tsx",
+      "line": 21,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'totalExperiences' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/quick-stats-footer.tsx",
+      "line": 22,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'revenueGrowth' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/quick-stats-footer.tsx",
+      "line": 23,
+      "column": 5,
+      "code": "TS2783",
+      "message": "'bookingGrowth' is specified more than once, so this usage will be overwritten.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/weather-widget.tsx",
+      "line": 7,
+      "column": 10,
+      "code": "TS2305",
+      "message": "Module '\"@/lib/mock-data\"' has no exported member 'mockBusinessData'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/weather-widget.tsx",
+      "line": 57,
+      "column": 36,
+      "code": "TS7006",
+      "message": "Parameter 'day' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/dashboard/business/weather-widget.tsx",
+      "line": 57,
+      "column": 41,
+      "code": "TS7006",
+      "message": "Parameter 'index' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/navigation/BusinessSidebar.tsx",
+      "line": 23,
+      "column": 10,
+      "code": "TS2305",
+      "message": "Module '\"@/lib/mock-data\"' has no exported member 'mockBusinessData'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/navigation/BusinessSidebar.tsx",
+      "line": 25,
+      "column": 35,
+      "code": "TS7031",
+      "message": "Binding element 'isOpen' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/navigation/BusinessSidebar.tsx",
+      "line": 25,
+      "column": 43,
+      "code": "TS7031",
+      "message": "Binding element 'onClose' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/navigation/CustomerNavigation.tsx",
+      "line": 19,
+      "column": 5,
+      "code": "TS2532",
+      "message": "Object is possibly 'undefined'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/navigation/CustomerNavigation.tsx",
+      "line": 19,
+      "column": 42,
+      "code": "TS2532",
+      "message": "Object is possibly 'undefined'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 119,
+      "column": 7,
+      "code": "TS2339",
+      "message": "Property 'payload' does not exist on type 'Omit<Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; includeHidden?: boolean | undefined; ... 17 more ...; axisId?: AxisId | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }, \"ref\">'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 124,
+      "column": 7,
+      "code": "TS2339",
+      "message": "Property 'label' does not exist on type 'Omit<Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; includeHidden?: boolean | undefined; ... 17 more ...; axisId?: AxisId | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }, \"ref\">'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 188,
+      "column": 25,
+      "code": "TS7006",
+      "message": "Parameter 'item' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 188,
+      "column": 31,
+      "code": "TS7006",
+      "message": "Parameter 'index' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 264,
+      "column": 41,
+      "code": "TS2344",
+      "message": "Type '\"payload\" | \"verticalAlign\"' does not satisfy the constraint '\"string\" | \"name\" | \"path\" | \"d\" | \"k\" | \"r\" | \"x\" | \"y\" | \"z\" | \"id\" | \"role\" | \"lang\" | \"filter\" | \"fill\" | \"values\" | \"type\" | \"children\" | \"min\" | \"max\" | \"in\" | \"origin\" | \"style\" | ... 421 more ... | \"onBBoxUpdate\"'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 275,
+      "column": 19,
+      "code": "TS2339",
+      "message": "Property 'length' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 288,
+      "column": 18,
+      "code": "TS2339",
+      "message": "Property 'map' does not exist on type '{}'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "components/ui/chart.tsx",
+      "line": 288,
+      "column": 23,
+      "code": "TS7006",
+      "message": "Parameter 'item' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "hooks/use-responsive.tsx",
+      "line": 176,
+      "column": 10,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '{ 1: string; } | { 1: string; 2: string; } | { 1: string; 2: string; 3: string; } | { 1: string; 2: string; 3: string; 4: string; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "hooks/use-responsive.tsx",
+      "line": 176,
+      "column": 42,
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '{ 1: string; } | { 1: string; 2: string; } | { 1: string; 2: string; 3: string; } | { 1: string; 2: string; 3: string; 4: string; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/auth-context.tsx",
+      "line": 157,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'event' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/auth-context.tsx",
+      "line": 157,
+      "column": 55,
+      "code": "TS7006",
+      "message": "Parameter 'session' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 100,
+      "column": 3,
+      "code": "TS2687",
+      "message": "All declarations of 'title' must have identical modifiers.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 101,
+      "column": 3,
+      "code": "TS2687",
+      "message": "All declarations of 'comment' must have identical modifiers.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 681,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 682,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 682,
+      "column": 21,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 686,
+      "column": 8,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 692,
+      "column": 35,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 692,
+      "column": 40,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 697,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 705,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 705,
+      "column": 21,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 708,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 716,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 716,
+      "column": 21,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 721,
+      "column": 52,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 726,
+      "column": 52,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 735,
+      "column": 58,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 749,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 750,
+      "column": 14,
+      "code": "TS7006",
+      "message": "Parameter 'a' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 750,
+      "column": 17,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 752,
+      "column": 13,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 765,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 766,
+      "column": 16,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 766,
+      "column": 21,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 773,
+      "column": 18,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 781,
+      "column": 18,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 781,
+      "column": 23,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 790,
+      "column": 56,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 791,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 793,
+      "column": 18,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 794,
+      "column": 18,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 794,
+      "column": 23,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 808,
+      "column": 40,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 813,
+      "column": 43,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 821,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 821,
+      "column": 53,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 824,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 827,
+      "column": 31,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 827,
+      "column": 36,
+      "code": "TS7006",
+      "message": "Parameter 'exp' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 830,
+      "column": 55,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1144,
+      "column": 47,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1145,
+      "column": 48,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1146,
+      "column": 52,
+      "code": "TS7006",
+      "message": "Parameter 'sum' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1146,
+      "column": 57,
+      "code": "TS7006",
+      "message": "Parameter 'booking' implicitly has an 'any' type.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1195,
+      "column": 3,
+      "code": "TS2687",
+      "message": "All declarations of 'title' must have identical modifiers.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1195,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'title' must be of type 'string | undefined', but here has type 'string'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1196,
+      "column": 3,
+      "code": "TS2687",
+      "message": "All declarations of 'comment' must have identical modifiers.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1196,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'comment' must be of type 'string | undefined', but here has type 'string'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1201,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'overview' must be of type '{ totalRevenue: number; activeBookings: number; totalExperiences: number; averageRating: number; revenueGrowth: number; bookingGrowth: number; }', but here has type '{ totalExperiences: number; totalBookings: number; upcomingBookings: number; totalRevenue: number; monthlyRevenue: number; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1208,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'experiences' must be of type '{ id: string; title: string; status: \"active\" | \"inactive\"; bookings: number; revenue: number; rating: number; }[]', but here has type 'any[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1209,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'recentBookings' must be of type '{ id: string; customerName: string; experienceTitle: string; date: string; amount: number; guests: number; avatar: string; status: string; }[]', but here has type 'any[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1210,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'upcomingBookings' must be of type '{ id: string; customerName: string; experienceTitle: string; date: string; time: string; guests: number; specialRequests: string; phone: string; }[]', but here has type 'any[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1211,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'analytics' must be of type '{ conversionRate: number; customerSatisfaction: number; repeatCustomerRate: number; marketplaceVsDirectRatio: number; metricsTrend: { name: string; value: number; }[]; }', but here has type '{ totalViews: number; conversionRate: number; averageRating: number; responseTime: string; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1217,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'businessProfile' must be of type 'HostProfile | null', but here has type 'any'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1218,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'earnings' must be of type '{ thisMonth: number; lastMonth: number; pending: number; nextPayout: { amount: number; date: string; }; monthlyTrend: { month: string; revenue: number; }[]; }', but here has type '{ thisMonth: number; lastMonth: number; growth: number; pendingPayouts: number; }'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/database.ts",
+      "line": 1224,
+      "column": 3,
+      "code": "TS2717",
+      "message": "Subsequent property declarations must have the same type.  Property 'recentActivity' must be of type '{ description: string; time: string; color: string; }[]', but here has type '{ type: string; message: string; time: string; }[]'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 93,
+      "column": 43,
+      "code": "TS2339",
+      "message": "Property 'date' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 102,
+      "column": 17,
+      "code": "TS2339",
+      "message": "Property 'date' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 103,
+      "column": 23,
+      "code": "TS2551",
+      "message": "Property 'startTime' does not exist on type 'HostAvailability'. Did you mean 'start_time'?",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 104,
+      "column": 21,
+      "code": "TS2551",
+      "message": "Property 'endTime' does not exist on type 'HostAvailability'. Did you mean 'end_time'?",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 105,
+      "column": 31,
+      "code": "TS2339",
+      "message": "Property 'availableCapacity' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 106,
+      "column": 27,
+      "code": "TS2339",
+      "message": "Property 'priceOverride' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 108,
+      "column": 30,
+      "code": "TS2339",
+      "message": "Property 'weatherDependent' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 109,
+      "column": 25,
+      "code": "TS2339",
+      "message": "Property 'isRecurring' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_compilation_error",
+      "file": "lib/supabase-business.ts",
+      "line": 110,
+      "column": 30,
+      "code": "TS2339",
+      "message": "Property 'recurringPattern' does not exist on type 'HostAvailability'.",
+      "severity": "high"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/actions/auth.ts",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/actions/booking.ts",
+      "message": "Found 3 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/api/activities/[type]/route.ts",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/api/business/availability/route.ts",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_non_null_assertion",
+      "file": "app/api/business/debug/route.ts",
+      "message": "Found 1 non-null assertion(s) - potential runtime errors",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/api/certifications/route.ts",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/api/equipment/route.ts",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/adventures/new/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "app/business/adventures/new/page.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/calendar/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/clients/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/earnings/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/experiences/new/page.tsx",
+      "message": "Found 3 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/home/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/login/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/onboarding/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/online-bookings/page.tsx",
+      "message": "Found 2 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/register/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/sales/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/settings/page.tsx",
+      "message": "Found 2 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/team/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/business/test/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/dashboard/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "app/experience/[id]/page.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "app/page.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "app/page.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/search/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "app/test-db/page.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "components/customer-register-form.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "components/customer-register-form.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 1,
+      "message": "Relative import may be missing file extension: import { WeatherWidget } from \"./weather-widget\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 2,
+      "message": "Relative import may be missing file extension: import { QuickActions } from \"./quick-actions\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 3,
+      "message": "Relative import may be missing file extension: import { StatsOverview } from \"./stats-overview\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 4,
+      "message": "Relative import may be missing file extension: import { EarningsSummary } from \"./earnings-summary\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 5,
+      "message": "Relative import may be missing file extension: import { PerformanceMetrics } from \"./performance-metrics\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 6,
+      "message": "Relative import may be missing file extension: import { RecentActivity } from \"./recent-activity\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 7,
+      "message": "Relative import may be missing file extension: import { RecentBookings } from \"./recent-bookings\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 8,
+      "message": "Relative import may be missing file extension: import { UpcomingBookings } from \"./upcoming-bookings\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 9,
+      "message": "Relative import may be missing file extension: import { ExperiencePerformance } from \"./experience-performance\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 10,
+      "message": "Relative import may be missing file extension: import { QuickStatsFooter } from \"./quick-stats-footer\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 11,
+      "message": "Relative import may be missing file extension: import { RecentSalesCard } from \"./recent-sales-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 12,
+      "message": "Relative import may be missing file extension: import { UpcomingAppointmentsCard } from \"./upcoming-appointments-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 13,
+      "message": "Relative import may be missing file extension: import { AppointmentsActivityCard } from \"./appointments-activity-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 14,
+      "message": "Relative import may be missing file extension: import { TodaysNextAppointmentsCard } from \"./todays-next-appointments-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 15,
+      "message": "Relative import may be missing file extension: import { TopServicesCard } from \"./top-services-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "components/dashboard/business/index.ts",
+      "line": 16,
+      "message": "Relative import may be missing file extension: import { TopTeamMemberCard } from \"./top-team-member-card\"",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "components/login-form.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "react_untyped_state",
+      "file": "components/login-form.tsx",
+      "message": "useState with object should be properly typed",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "components/ui/create-adventure-wizard.tsx",
+      "message": "Found 1 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "lib/auth-context.tsx",
+      "message": "Found 2 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "lib/auth-guards.ts",
+      "line": 1,
+      "message": "Relative import may be missing file extension: import { getCurrentUser, getBusinessProfile, determineUserType } from \"./auth-utils\"",
+      "severity": "medium"
+    },
+    {
+      "type": "import_missing_extension",
+      "file": "lib/database.ts",
+      "line": 2,
+      "message": "Relative import may be missing file extension: import type { BusinessProfile } from \"../types/auth\"",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "lib/database.ts",
+      "message": "Found 23 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "lib/security.ts",
+      "message": "Found 4 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "lib/supabase-business.ts",
+      "message": "Found 6 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_any_usage",
+      "file": "lib/supabase.ts",
+      "message": "Found 2 usage(s) of 'any' type",
+      "severity": "medium"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/actions/auth.ts",
+      "message": "Function missing return type: function signOut() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/actions/auth.ts",
+      "message": "Found 1 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "app/api/activities/[type]/route.ts",
+      "message": "Mixed quote styles in imports (2 single, 1 double)",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/api/business/dashboard/route.ts",
+      "message": "Found 7 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/api/business/debug/route.ts",
+      "message": "Found 2 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "app/api/business/experiences/route.ts",
+      "message": "Mixed quote styles in imports (2 single, 1 double)",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "app/api/equipment/route.ts",
+      "message": "Mixed quote styles in imports (2 single, 1 double)",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "app/business/adventures/new/page.tsx",
+      "message": "Mixed quote styles in imports (1 single, 7 double)",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "app/business/adventures/page.tsx",
+      "message": "Mixed quote styles in imports (7 single, 4 double)",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/adventures/page.tsx",
+      "message": "Function missing return type: function AdventuresPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/bookings/page.tsx",
+      "message": "Function missing return type: function BusinessBookings() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/calendar/page.tsx",
+      "message": "Function missing return type: function BusinessCalendarPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/clients/page.tsx",
+      "message": "Function missing return type: function BusinessClientsPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/dashboard/page.tsx",
+      "message": "Function missing return type: function BusinessDashboard() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/earnings/page.tsx",
+      "message": "Function missing return type: function BusinessEarningsPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/experiences/new/page.tsx",
+      "message": "Function missing return type: function NewExperiencePage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/experiences/page.tsx",
+      "message": "Function missing return type: function BusinessExperiences() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/home/page.tsx",
+      "message": "Function missing return type: function BusinessHomePage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/login/page.tsx",
+      "message": "Function missing return type: function BusinessLoginPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/business/login/page.tsx",
+      "message": "Found 1 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/onboarding/page.tsx",
+      "message": "Function missing return type: function BusinessOnboardingPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/business/onboarding/page.tsx",
+      "message": "Found 1 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/online-bookings/page.tsx",
+      "message": "Function missing return type: function BusinessOnlineBookingsPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/register/page.tsx",
+      "message": "Function missing return type: function BusinessRegisterPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/reports/page.tsx",
+      "message": "Function missing return type: function BusinessReportsPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/sales/page.tsx",
+      "message": "Function missing return type: function BusinessSalesPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/settings/page.tsx",
+      "message": "Function missing return type: function BusinessSettingsPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/team/page.tsx",
+      "message": "Function missing return type: function BusinessTeamPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/business/team/page.tsx",
+      "message": "Found 2 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/business/test/page.tsx",
+      "message": "Function missing return type: function BusinessTestPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/dashboard/calendar/page.tsx",
+      "message": "Function missing return type: function DashboardCalendarPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/dashboard/loading.tsx",
+      "message": "Function missing return type: function Loading() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "app/dashboard/page.tsx",
+      "message": "Found 3 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/demo/page.tsx",
+      "message": "Function missing return type: function DemoPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/experience/[id]/page.tsx",
+      "message": "Function missing return type: function ExperienceDetailPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/forgot-password/page.tsx",
+      "message": "Function missing return type: function ForgotPasswordPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/loading.tsx",
+      "message": "Function missing return type: function Loading() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/login/page.tsx",
+      "message": "Function missing return type: function CustomerLoginPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/page.tsx",
+      "message": "Function missing return type: function LandingPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/register/page.tsx",
+      "message": "Function missing return type: function RegisterPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/search/loading.tsx",
+      "message": "Function missing return type: function Loading() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/search/page.tsx",
+      "message": "Function missing return type: function EnhancedExperiencesSearchPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "app/test-db/page.tsx",
+      "message": "Function missing return type: function DatabaseTestPage() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "components/auth/BusinessProtectedRoute.tsx",
+      "message": "Found 2 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "components/customer-register-form.tsx",
+      "message": "Mixed quote styles in imports (1 single, 8 double)",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/customer-register-form.tsx",
+      "message": "Function missing return type: function CustomerRegisterForm() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/performance-metrics.tsx",
+      "message": "Function missing return type: function PerformanceMetrics() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/quick-actions.tsx",
+      "message": "Function missing return type: function QuickActions() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/recent-bookings.tsx",
+      "message": "Function missing return type: function RecentBookings() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/stats-overview.tsx",
+      "message": "Function missing return type: function StatsOverview() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/upcoming-bookings.tsx",
+      "message": "Function missing return type: function UpcomingBookings() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/dashboard/business/weather-widget.tsx",
+      "message": "Function missing return type: function WeatherWidget() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/database-status.tsx",
+      "message": "Function missing return type: function DatabaseStatus() {",
+      "severity": "low"
+    },
+    {
+      "type": "import_quote_inconsistency",
+      "file": "components/navigation/BusinessSidebar.tsx",
+      "message": "Mixed quote styles in imports (1 single, 4 double)",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/navigation/BusinessSidebar.tsx",
+      "message": "Function missing return type: function BusinessSidebar({ isOpen, onClose }) {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/navigation/CustomerNavigation.tsx",
+      "message": "Function missing return type: function CustomerNavigation() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/carousel.tsx",
+      "message": "Function missing return type: function useCarousel() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/chart.tsx",
+      "message": "Function missing return type: function useChart() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "components/ui/create-adventure-wizard.tsx",
+      "message": "Found 1 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/sidebar.tsx",
+      "message": "Function missing return type: function useSidebar() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/toaster.tsx",
+      "message": "Function missing return type: function Toaster() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/use-mobile.tsx",
+      "message": "Function missing return type: function useIsMobile() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/use-toast.ts",
+      "message": "Function missing return type: function genId() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "components/ui/use-toast.ts",
+      "message": "Function missing return type: function useToast() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-context.tsx",
+      "message": "Function missing return type: function useAuth() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "lib/auth-context.tsx",
+      "message": "Found 13 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-guards.ts",
+      "message": "Function missing return type: function requireAuth() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-guards.ts",
+      "message": "Function missing return type: function requireCustomerAuth() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-guards.ts",
+      "message": "Function missing return type: function requireBusinessAuth() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-guards.ts",
+      "message": "Function missing return type: function requireCompleteBusinessProfile() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-utils.ts",
+      "message": "Function missing return type: function getCurrentUser() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-utils.ts",
+      "message": "Function missing return type: function getSession() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/auth-utils.ts",
+      "message": "Function missing return type: function signOut() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/database.ts",
+      "message": "Function missing return type: function signOutUser() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/database.ts",
+      "message": "Function missing return type: function testDatabaseConnection() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/database.ts",
+      "message": "Function missing return type: function testTableAccess() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/database.ts",
+      "message": "Function missing return type: function getSampleData() {",
+      "severity": "low"
+    },
+    {
+      "type": "syntax_console_log",
+      "file": "lib/database.ts",
+      "message": "Found 1 console.log statement(s) - remove for production",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/supabase/client.ts",
+      "message": "Function missing return type: function createClient() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "lib/supabase/server.ts",
+      "message": "Function missing return type: function createClient() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "hooks/use-mobile.tsx",
+      "message": "Function missing return type: function useIsMobile() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "hooks/use-toast.ts",
+      "message": "Function missing return type: function genId() {",
+      "severity": "low"
+    },
+    {
+      "type": "typescript_missing_return_type",
+      "file": "hooks/use-toast.ts",
+      "message": "Function missing return type: function useToast() {",
+      "severity": "low"
+    }
+  ]
+}
