@@ -14,29 +14,25 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
   const router = useRouter()
 
   useEffect(() => {
-    console.log("BusinessProtectedRoute - Auth State:", { 
-      user: user?.id, 
-      userType, 
-      isLoading 
-    });
+    // Add a small delay to ensure auth context is fully initialized
+    const timeoutId = setTimeout(() => {
+      if (!isLoading) {
+        if (!user) {
+          router.push("/business/login")
+          return
+        }
 
-    if (!isLoading) {
-      if (!user) {
-        console.log("BusinessProtectedRoute - No user, redirecting to login");
-        router.push("/business/login")
-        return
+        if (userType !== "business") {
+          router.push("/business/register")
+          return
+        }
       }
+    }, 100)
 
-      if (userType !== "business") {
-        console.log("BusinessProtectedRoute - User type is not business:", userType);
-        router.push("/business/register")
-        return
-      }
-    }
+    return () => clearTimeout(timeoutId)
   }, [user, userType, isLoading, router])
 
   if (isLoading) {
-    console.log("BusinessProtectedRoute - Loading...");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
@@ -45,7 +41,6 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
   }
 
   if (!user || userType !== "business") {
-    console.log("BusinessProtectedRoute - Access denied:", { user: !!user, userType });
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -62,6 +57,5 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
     )
   }
 
-  console.log("BusinessProtectedRoute - Access granted");
   return <>{children}</>
 }
