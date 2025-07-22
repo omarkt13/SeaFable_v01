@@ -119,7 +119,7 @@ const ExperienceCreationForm = () => {
   ];
 
   // Validation functions
-  const validateStep = (step) => {
+  const validateStep = (step: number) => {
     switch(step) {
       case 1:
         return formData.title.length >= 5 && formData.location && formData.activityType;
