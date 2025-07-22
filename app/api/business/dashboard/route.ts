@@ -51,21 +51,54 @@ export async function GET(request: NextRequest) {
 
     console.log("Dashboard API - Business profile found:", businessProfile.contact_name)
 
-    // Get dashboard data
-    const dashboardData = {
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-      businessProfile,
-      stats: {
-        totalBookings: 0,
-        totalRevenue: 0,
-        avgRating: businessProfile.rating || 0,
-        totalReviews: businessProfile.total_reviews || 0,
-      },
-      recentBookings: [],
-      upcomingBookings: [],
+    // Get dashboard data - use the proper database function
+    try {
+      // Import the database function
+      const { getBusinessDashboardData } = await import("@/lib/database")
+      
+      // Get comprehensive dashboard data
+      const fullDashboardData = await getBusinessDashboardData(user.id)
+      
+      return NextResponse.json(fullDashboardData)
+    } catch (dbError) {
+      console.error("Dashboard API - Database error:", dbError)
+      
+      // Fallback to basic data structure
+      const dashboardData = {
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+        businessProfile,
+        overview: {
+          totalRevenue: 0,
+          activeBookings: 0,
+          totalExperiences: 0,
+          averageRating: businessProfile.rating || 0,
+          revenueGrowth: 0,
+          bookingGrowth: 0,
+        },
+        recentBookings: [],
+        upcomingBookings: [],
+        earnings: {
+          thisMonth: 0,
+          lastMonth: 0,
+          pending: 0,
+          nextPayout: { amount: 0, date: new Date().toLocaleDateString() },
+          monthlyTrend: [],
+        },
+        analytics: {
+          conversionRate: 0,
+          customerSatisfaction: 0,
+          repeatCustomerRate: 0,
+          marketplaceVsDirectRatio: 0,
+          metricsTrend: [],
+        },
+        experiences: [],
+        recentActivity: [],
+      }
+      
+      return NextResponse.json(dashboardData)
     }
 
     return NextResponse.json(dashboardData)

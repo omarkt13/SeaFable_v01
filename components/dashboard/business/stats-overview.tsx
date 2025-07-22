@@ -15,31 +15,42 @@ interface StatsOverviewProps {
 }
 
 export function StatsOverview({ overview }: StatsOverviewProps) {
+  // Defensive programming - provide defaults if overview is undefined or missing properties
+  const safeOverview = {
+    totalRevenue: 0,
+    activeBookings: 0,
+    totalExperiences: 0,
+    averageRating: 0,
+    revenueGrowth: 0,
+    bookingGrowth: 0,
+    ...overview
+  }
+
   const stats = [
     {
       name: "Total Revenue",
-      value: `$${overview.totalRevenue.toLocaleString()}`,
-      change: `${overview.revenueGrowth >= 0 ? "+" : ""}${overview.revenueGrowth}%`,
-      changeType: overview.revenueGrowth >= 0 ? "increase" : "decrease",
+      value: `$${safeOverview.totalRevenue.toLocaleString()}`,
+      change: `${safeOverview.revenueGrowth >= 0 ? "+" : ""}${safeOverview.revenueGrowth}%`,
+      changeType: safeOverview.revenueGrowth >= 0 ? "increase" : "decrease",
       icon: DollarSign,
     },
     {
       name: "Active Bookings",
-      value: overview.activeBookings,
-      change: `${overview.bookingGrowth >= 0 ? "+" : ""}${overview.bookingGrowth}%`,
-      changeType: overview.bookingGrowth >= 0 ? "increase" : "decrease",
+      value: safeOverview.activeBookings,
+      change: `${safeOverview.bookingGrowth >= 0 ? "+" : ""}${safeOverview.bookingGrowth}%`,
+      changeType: safeOverview.bookingGrowth >= 0 ? "increase" : "decrease",
       icon: Calendar,
     },
     {
       name: "Total Experiences",
-      value: overview.totalExperiences,
+      value: safeOverview.totalExperiences,
       change: "", // This was hardcoded, now empty as it's not directly from DB
       changeType: "increase", // Defaulting to increase
       icon: Ship,
     },
     {
       name: "Average Rating",
-      value: overview.averageRating.toFixed(1),
+      value: safeOverview.averageRating.toFixed(1),
       change: "", // This was hardcoded, now empty as it's not directly from DB
       changeType: "increase", // Defaulting to increase
       icon: Star,
