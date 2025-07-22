@@ -1,0 +1,683 @@
+1) Run the following command to sync Subframe components:
+
+```bash
+npx @subframe/cli@latest sync --all
+```
+
+2) Create a new page using the following TSX code. If the page already exists, use it as reference to update the existing code but preserve existing business logic or functionality.
+
+```tsx
+"use client";
+
+import React from "react";
+import { IconWithBackground } from "@/ui/components/IconWithBackground";
+import { FeatherAnchor } from "@subframe/core";
+import { SettingsMenu } from "@/ui/components/SettingsMenu";
+import { FeatherHome } from "@subframe/core";
+import { FeatherUsers } from "@subframe/core";
+import { FeatherMessageCircle } from "@subframe/core";
+import { FeatherCalendar } from "@subframe/core";
+import { FeatherHandshake } from "@subframe/core";
+import { Button } from "@/ui/components/Button";
+import { FeatherDollarSign } from "@subframe/core";
+import { FeatherShapes } from "@subframe/core";
+import { FeatherSettings } from "@subframe/core";
+import { IconButton } from "@/ui/components/IconButton";
+import { FeatherBell } from "@subframe/core";
+import { DropdownMenu } from "@/ui/components/DropdownMenu";
+import { FeatherUser } from "@subframe/core";
+import { FeatherLogOut } from "@subframe/core";
+import * as SubframeCore from "@subframe/core";
+import { FeatherChevronDown } from "@subframe/core";
+import { TextField } from "@/ui/components/TextField";
+import { Calendar } from "@/ui/components/Calendar";
+import { Table } from "@/ui/components/Table";
+import { FeatherPhone } from "@subframe/core";
+import { FeatherMail } from "@subframe/core";
+import { Badge } from "@/ui/components/Badge";
+import { FeatherEdit2 } from "@subframe/core";
+import { FeatherChevronLeft } from "@subframe/core";
+import { FeatherChevronRight } from "@subframe/core";
+
+function BusinessDashboard_Bookings() {
+  return (
+    <div className="container max-w-none flex items-start border border-solid border-neutral-border">
+      <div className="flex flex-col items-start gap-8 self-stretch border-r border-solid border-neutral-border bg-default-background px-6 py-8">
+        <div className="flex items-center gap-2">
+          <IconWithBackground
+            variant="warning"
+            size="large"
+            icon={<FeatherAnchor />}
+            square={true}
+          />
+          <span className="text-heading-2 font-heading-2 text-default-font">
+            Business Dashboard
+          </span>
+        </div>
+        <div className="flex w-full flex-col items-start gap-1">
+          <SettingsMenu.Item icon={<FeatherHome />} label="Home" />
+        </div>
+        <div className="flex w-full flex-col items-start gap-1">
+          <span className="w-full text-body-bold font-body-bold text-default-font">
+            Client Management
+          </span>
+          <SettingsMenu.Item
+            selected={true}
+            icon={<FeatherUsers />}
+            label="Bookings"
+          />
+          <SettingsMenu.Item icon={<FeatherAnchor />} label="Experiences" />
+          <SettingsMenu.Item icon={<FeatherMessageCircle />} label="Messages" />
+          <SettingsMenu.Item icon={<FeatherCalendar />} label="Calendar" />
+          <SettingsMenu.Item icon={<FeatherHandshake />} label="Clients" />
+        </div>
+        <div className="flex w-full flex-col items-start gap-2">
+          <span className="w-full text-body-bold font-body-bold text-default-font">
+            Finance
+          </span>
+          <div className="flex w-full flex-col items-start gap-1">
+            <Button
+              className="h-8 w-full flex-none justify-start"
+              variant="neutral-tertiary"
+              icon={<FeatherDollarSign />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
+              Sales &amp; Payments
+            </Button>
+            <SettingsMenu.Item icon={<FeatherShapes />} label="Integrations" />
+          </div>
+        </div>
+        <div className="flex w-full flex-col items-start gap-1">
+          <span className="w-full text-body-bold font-body-bold text-default-font">
+            Workspace
+          </span>
+          <SettingsMenu.Item label="Account" />
+          <SettingsMenu.Item icon={<FeatherSettings />} label="Settings" />
+        </div>
+      </div>
+      <div className="flex flex-col items-start px-2 py-2 grow">
+        <div className="flex w-full items-center justify-between border-b border-solid border-neutral-border px-8 py-4">
+          <div className="flex items-center gap-4">
+            <IconButton
+              icon={<FeatherBell />}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            />
+            <SubframeCore.DropdownMenu.Root>
+              <SubframeCore.DropdownMenu.Trigger asChild={true}>
+                <Button
+                  variant="neutral-tertiary"
+                  iconRight={<FeatherChevronDown />}
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                >
+                  Ocean Travel
+                </Button>
+              </SubframeCore.DropdownMenu.Trigger>
+              <SubframeCore.DropdownMenu.Portal>
+                <SubframeCore.DropdownMenu.Content
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                  asChild={true}
+                >
+                  <DropdownMenu>
+                    <DropdownMenu.DropdownItem icon={<FeatherUser />}>
+                      Profile
+                    </DropdownMenu.DropdownItem>
+                    <DropdownMenu.DropdownItem icon={<FeatherSettings />}>
+                      Settings
+                    </DropdownMenu.DropdownItem>
+                    <DropdownMenu.DropdownDivider />
+                    <DropdownMenu.DropdownItem icon={<FeatherLogOut />}>
+                      Logout
+                    </DropdownMenu.DropdownItem>
+                  </DropdownMenu>
+                </SubframeCore.DropdownMenu.Content>
+              </SubframeCore.DropdownMenu.Portal>
+            </SubframeCore.DropdownMenu.Root>
+          </div>
+        </div>
+        <div className="flex h-320 w-320 flex-none flex-col items-start gap-8 px-8 py-8 overflow-auto">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-8">
+              <div className="flex w-full items-center justify-between">
+                <span className="text-heading-2 font-heading-2 text-default-font">
+                  Bookings Overview
+                </span>
+                <div className="flex items-center gap-4">
+                  <TextField className="ml-auto" label="" helpText="">
+                    <TextField.Input
+                      className="text-left"
+                      placeholder="Search..."
+                      value=""
+                      onChange={(
+                        event: React.ChangeEvent<HTMLInputElement>
+                      ) => {}}
+                    />
+                  </TextField>
+                  <SubframeCore.Popover.Root>
+                    <SubframeCore.Popover.Trigger asChild={true}>
+                      <Button
+                        variant="neutral-secondary"
+                        iconRight={<FeatherCalendar />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      >
+                        Select Date Range
+                      </Button>
+                    </SubframeCore.Popover.Trigger>
+                    <SubframeCore.Popover.Portal>
+                      <SubframeCore.Popover.Content
+                        side="bottom"
+                        align="start"
+                        sideOffset={4}
+                        asChild={true}
+                      >
+                        <div className="flex flex-col items-start gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-3 py-3 shadow-lg">
+                          <Calendar
+                            mode={"single"}
+                            selected={new Date()}
+                            onSelect={(date: Date | undefined) => {}}
+                          />
+                        </div>
+                      </SubframeCore.Popover.Content>
+                    </SubframeCore.Popover.Portal>
+                  </SubframeCore.Popover.Root>
+                  <Button
+                    variant="neutral-secondary"
+                    iconRight={<FeatherChevronDown />}
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                  >
+                    Filter by Activity
+                  </Button>
+                </div>
+              </div>
+              <Table
+                header={
+                  <Table.HeaderRow>
+                    <Table.HeaderCell>Tour</Table.HeaderCell>
+                    <Table.HeaderCell>Client</Table.HeaderCell>
+                    <Table.HeaderCell>Booking Reference</Table.HeaderCell>
+                    <Table.HeaderCell>Date &amp; Time</Table.HeaderCell>
+                    <Table.HeaderCell>Booked On</Table.HeaderCell>
+                    <Table.HeaderCell>Guests</Table.HeaderCell>
+                    <Table.HeaderCell>Spots Left</Table.HeaderCell>
+                    <Table.HeaderCell>Contact Info</Table.HeaderCell>
+                    <Table.HeaderCell>Sales</Table.HeaderCell>
+                    <Table.HeaderCell>Status</Table.HeaderCell>
+                    <Table.HeaderCell />
+                  </Table.HeaderRow>
+                }
+              >
+                <Table.Row>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        className="h-10 w-10 flex-none rounded-md object-cover"
+                        src="https://images.unsplash.com/photo-1519681393784-d120267933ba"
+                      />
+                      <span className="text-caption font-caption text-subtext-color">
+                        Morning Kayak Tour
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Thompson
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      REF-005
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      2025-01-19 09:00
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-subtext-color">
+                      2025-01-10
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      2
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      6/8
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <FeatherPhone className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          +1 (555) 123-4567
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FeatherMail className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          emma@gmail.com
+                        </span>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      $400
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge variant="success">Confirmed</Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <IconButton
+                        size="small"
+                        icon={<FeatherMessageCircle />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                      <IconButton
+                        size="small"
+                        icon={<FeatherEdit2 />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        className="h-10 w-10 flex-none rounded-md object-cover"
+                        src="https://images.unsplash.com/photo-1519681393784-d120267933ba"
+                      />
+                      <span className="text-caption font-caption text-subtext-color">
+                        Morning Kayak Tour
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Thompson
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      REF-005
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      2025-01-19 09:00
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-subtext-color">
+                      2025-01-10
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      2
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      6/8
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <FeatherPhone className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          +1 (555) 123-4567
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FeatherMail className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          emma@gmail.com
+                        </span>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      $400
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge variant="success">Confirmed</Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <IconButton
+                        size="small"
+                        icon={<FeatherMessageCircle />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                      <IconButton
+                        size="small"
+                        icon={<FeatherEdit2 />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        className="h-10 w-10 flex-none rounded-md object-cover"
+                        src="https://images.unsplash.com/photo-1519681393784-d120267933ba"
+                      />
+                      <span className="text-caption font-caption text-subtext-color">
+                        Morning Kayak Tour
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Thompson
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      REF-005
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      2025-01-19 09:00
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-subtext-color">
+                      2025-01-10
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      2
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      6/8
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <FeatherPhone className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          +1 (555) 123-4567
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FeatherMail className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          emma@gmail.com
+                        </span>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      $400
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge variant="neutral">Pending</Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <IconButton
+                        size="small"
+                        icon={<FeatherMessageCircle />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                      <IconButton
+                        size="small"
+                        icon={<FeatherEdit2 />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        className="h-10 w-10 flex-none rounded-md object-cover"
+                        src="https://images.unsplash.com/photo-1519681393784-d120267933ba"
+                      />
+                      <span className="text-caption font-caption text-subtext-color">
+                        Morning Kayak Tour
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Thompson
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      REF-005
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      2025-01-19 09:00
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-subtext-color">
+                      2025-01-10
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      2
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      6/8
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <FeatherPhone className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          +1 (555) 123-4567
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FeatherMail className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          emma@gmail.com
+                        </span>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      $400
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge variant="neutral">Pending</Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <IconButton
+                        size="small"
+                        icon={<FeatherMessageCircle />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                      <IconButton
+                        size="small"
+                        icon={<FeatherEdit2 />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        className="h-10 w-10 flex-none rounded-md object-cover"
+                        src="https://images.unsplash.com/photo-1519681393784-d120267933ba"
+                      />
+                      <span className="text-caption font-caption text-subtext-color">
+                        Morning Kayak Tour
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-default-font">
+                      Emma Thompson
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      REF-005
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-neutral-500">
+                      2025-01-19 09:00
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body font-body text-subtext-color">
+                      2025-01-10
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      2
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="grow shrink-0 basis-0 text-body font-body text-neutral-500 text-center flex justify-center">
+                      6/8
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <FeatherPhone className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          +1 (555) 123-4567
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FeatherMail className="text-body font-body text-neutral-500" />
+                        <span className="text-body font-body text-neutral-500">
+                          emma@gmail.com
+                        </span>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      $400
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge variant="error">Calceled</Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex items-center gap-2">
+                      <IconButton
+                        size="small"
+                        icon={<FeatherMessageCircle />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                      <IconButton
+                        size="small"
+                        icon={<FeatherEdit2 />}
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>
+                        ) => {}}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              </Table>
+              <div className="flex w-full items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-body font-body text-subtext-color">
+                    Total Bookings:
+                  </span>
+                  <span className="text-body-bold font-body-bold text-default-font">
+                    6
+                  </span>
+                  <span className="text-body font-body text-subtext-color">
+                    |
+                  </span>
+                  <span className="text-body font-body text-subtext-color">
+                    Total Sales:
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <FeatherDollarSign className="text-body-bold font-body-bold text-success-600" />
+                    <span className="text-body-bold font-body-bold text-success-600">
+                      4,200
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <IconButton
+                    icon={<FeatherChevronLeft />}
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                  />
+                  <span className="text-body font-body text-subtext-color">
+                    1 of 2
+                  </span>
+                  <IconButton
+                    icon={<FeatherChevronRight />}
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default BusinessDashboard_Bookings;
+
+```
