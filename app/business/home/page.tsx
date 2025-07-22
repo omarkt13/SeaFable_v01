@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -8,6 +9,7 @@ import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useResponsive, getResponsiveClasses, getResponsiveGridCols } from "@/hooks/use-responsive"
 import { 
   Plus, 
   Calendar, 
@@ -56,6 +58,8 @@ interface WeeklyBookings {
 export default function BusinessHomePage() {
   const { user, businessProfile } = useAuth()
   const router = useRouter()
+  const { isMobile, isTablet, screenSize } = useResponsive()
+  const classes = getResponsiveClasses(screenSize)
 
   const [stats, setStats] = useState<Stats>({
     revenue: 0,
@@ -257,10 +261,10 @@ export default function BusinessHomePage() {
   }
 
   const EmptyState = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <Icon className="w-12 h-12 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500 max-w-sm">{description}</p>
+    <div className="flex flex-col items-center justify-center py-8 md:py-12 px-4 text-center">
+      <Icon className={`${classes.iconSize} text-gray-400 mb-4`} />
+      <h3 className={`${classes.text} font-medium text-gray-900 mb-2`}>{title}</h3>
+      <p className="text-xs md:text-sm text-gray-500 max-w-sm">{description}</p>
     </div>
   )
 
@@ -268,21 +272,21 @@ export default function BusinessHomePage() {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className={`flex gap-3 md:gap-4 overflow-x-auto pb-4 ${isMobile ? 'snap-x snap-mandatory' : ''}`}>
         {days.map(day => (
-          <div key={day} className="flex-shrink-0 w-80 bg-white border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3">{day}</h4>
-            <div className="space-y-3">
+          <div key={day} className={`flex-shrink-0 ${isMobile ? 'w-72 snap-start' : 'w-80'} bg-white border border-gray-200 rounded-lg ${classes.card}`}>
+            <h4 className={`font-semibold text-gray-900 mb-3 ${classes.text}`}>{day}</h4>
+            <div className="space-y-2 md:space-y-3">
               {loading ? (
                 <div className="space-y-2">
-                  <div className="animate-pulse bg-gray-200 rounded h-20 w-full" />
-                  <div className="animate-pulse bg-gray-200 rounded h-20 w-full" />
+                  <div className="animate-pulse bg-gray-200 rounded h-16 md:h-20 w-full" />
+                  <div className="animate-pulse bg-gray-200 rounded h-16 md:h-20 w-full" />
                 </div>
               ) : weeklyBookings[day]?.length > 0 ? (
                 weeklyBookings[day].map(booking => (
-                  <div key={booking.id} className="border border-gray-200 rounded-lg p-3">
+                  <div key={booking.id} className="border border-gray-200 rounded-lg p-2 md:p-3">
                     <div className="space-y-1">
-                      <h5 className="font-medium text-gray-900 text-sm">{booking.title}</h5>
+                      <h5 className="font-medium text-gray-900 text-xs md:text-sm">{booking.title}</h5>
                       <p className="text-xs text-gray-500">
                         {formatDate(booking.date)} - {booking.time}
                       </p>
@@ -295,21 +299,21 @@ export default function BusinessHomePage() {
                       <p className="text-xs text-gray-500">
                         Total sales: {formatCurrency(booking.total_sales)}
                       </p>
-                      <div className="flex gap-2 mt-2">
-                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
+                      <div className={`flex gap-1 md:gap-2 mt-2 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors">
                           <MessageCircle className="w-3 h-3" />
-                          Message Group
+                          {!isMobile && 'Message Group'}
                         </button>
-                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
+                        <button className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors">
                           <Edit2 className="w-3 h-3" />
-                          Edit
+                          {!isMobile && 'Edit'}
                         </button>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500 text-sm">
+                <div className="text-center py-6 md:py-8 text-gray-500 text-xs md:text-sm">
                   No bookings for {day}
                 </div>
               )}
@@ -335,24 +339,24 @@ export default function BusinessHomePage() {
   return (
     <BusinessProtectedRoute>
       <BusinessLayout>
-        <div className="space-y-8">
+        <div className={classes.spacing}>
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 lg:p-8 rounded-xl shadow-lg">
+          <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white ${classes.card} shadow-lg`}>
             <div className="flex flex-col gap-3">
-              <h1 className="text-xl lg:text-2xl font-bold">
+              <h1 className={`${classes.heading} font-bold`}>
                 Welcome back, {businessProfile?.contact_name || businessProfile?.name || 'Business Owner'}! 🌊
               </h1>
-              <p className="text-base lg:text-lg opacity-90">
+              <p className={`${classes.text} opacity-90`}>
                 You have {stats.active_bookings} bookings today. Weather conditions are perfect for water adventures!
               </p>
-              <div className="flex items-center gap-4 lg:gap-6 mt-2">
+              <div className={`flex items-center ${isMobile ? 'flex-col gap-2' : 'gap-4 md:gap-6'} mt-2`}>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span className="text-sm lg:text-base">Profile Complete</span>
+                  <CheckCircle className={classes.iconSize} />
+                  <span className={classes.text}>Profile Complete</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span className="text-sm lg:text-base">Verified Business</span>
+                  <Shield className={classes.iconSize} />
+                  <span className={classes.text}>Verified Business</span>
                 </div>
               </div>
             </div>
@@ -360,42 +364,42 @@ export default function BusinessHomePage() {
 
           {/* Monthly Stats */}
           <div>
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Monthly Stats</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <h2 className={`${classes.subheading} font-semibold text-gray-900 mb-4 md:mb-6`}>Monthly Stats</h2>
+            <div className={`grid ${getResponsiveGridCols(4, screenSize)} gap-3 md:gap-6`}>
               <Card className="shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4 lg:p-6">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 lg:mb-4">
-                    <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                <CardContent className={classes.card}>
+                  <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10 md:w-12 md:h-12'} bg-blue-100 rounded-lg flex items-center justify-center mb-3 md:mb-4`}>
+                    <CreditCard className={`${isMobile ? 'w-4 h-4' : classes.iconSize} text-blue-600`} />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-gray-900">{formatCurrency(stats.revenue)}</div>
-                  <div className="text-sm lg:text-base text-gray-500 mt-1">Revenue</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900`}>{formatCurrency(stats.revenue)}</div>
+                  <div className={`${classes.text} text-gray-500 mt-1`}>Revenue</div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                    <Calendar className="w-6 h-6 text-green-600" />
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className={classes.card}>
+                  <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10 md:w-12 md:h-12'} bg-green-100 rounded-lg flex items-center justify-center mb-3 md:mb-4`}>
+                    <Calendar className={`${isMobile ? 'w-4 h-4' : classes.iconSize} text-green-600`} />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.active_bookings}</div>
-                  <div className="text-gray-500">Active Bookings</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900`}>{stats.active_bookings}</div>
+                  <div className={`${classes.text} text-gray-500`}>Active Bookings</div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                    <Users className="w-6 h-6 text-purple-600" />
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className={classes.card}>
+                  <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10 md:w-12 md:h-12'} bg-purple-100 rounded-lg flex items-center justify-center mb-3 md:mb-4`}>
+                    <Users className={`${isMobile ? 'w-4 h-4' : classes.iconSize} text-purple-600`} />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.total_clients}</div>
-                  <div className="text-gray-500">Total Clients</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900`}>{stats.total_clients}</div>
+                  <div className={`${classes.text} text-gray-500`}>Total Clients</div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                    <Anchor className="w-6 h-6 text-green-600" />
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className={classes.card}>
+                  <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10 md:w-12 md:h-12'} bg-green-100 rounded-lg flex items-center justify-center mb-3 md:mb-4`}>
+                    <Anchor className={`${isMobile ? 'w-4 h-4' : classes.iconSize} text-green-600`} />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.total_experiences}</div>
-                  <div className="text-gray-500">Total Adventures</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900`}>{stats.total_experiences}</div>
+                  <div className={`${classes.text} text-gray-500`}>Total Adventures</div>
                 </CardContent>
               </Card>
             </div>
@@ -403,37 +407,37 @@ export default function BusinessHomePage() {
 
           {/* Quick Action Cards */}
           <div>
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <h2 className={`${classes.subheading} font-semibold text-gray-900 mb-4 md:mb-6`}>Quick Actions</h2>
+            <div className={`grid ${getResponsiveGridCols(4, screenSize)} gap-3 md:gap-6`}>
               <Card className="hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.02]" onClick={() => router.push('/business/adventures/new')}>
-                <CardContent className="p-4 lg:p-6 text-center">
-                  <Plus className="h-6 w-6 lg:h-8 lg:w-8 mx-auto mb-3 text-green-600" />
-                  <h3 className="font-semibold text-gray-900 mb-2 text-sm lg:text-base">Create Adventure</h3>
-                  <p className="text-xs lg:text-sm text-gray-600">Add new adventure offerings</p>
+                <CardContent className={`${classes.card} text-center`}>
+                  <Plus className={`${classes.iconSize} mx-auto mb-3 text-green-600`} />
+                  <h3 className={`font-semibold text-gray-900 mb-2 ${classes.text}`}>Create Adventure</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Add new adventure offerings</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/business/adventures')}>
-                <CardContent className="p-6 text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900 mb-2">Manage Adventures</h3>
-                  <p className="text-sm text-gray-600">Edit your adventure offerings</p>
+                <CardContent className={`${classes.card} text-center`}>
+                  <TrendingUp className={`${classes.iconSize} mx-auto mb-3 text-blue-600`} />
+                  <h3 className={`font-semibold text-gray-900 mb-2 ${classes.text}`}>Manage Adventures</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Edit your adventure offerings</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/business/bookings')}>
-                <CardContent className="p-6 text-center">
-                  <Users className="h-8 w-8 mx-auto mb-3 text-purple-600" />
-                  <h3 className="font-semibold text-gray-900 mb-2">View Bookings</h3>
-                  <p className="text-sm text-gray-600">Manage customer bookings</p>
+                <CardContent className={`${classes.card} text-center`}>
+                  <Users className={`${classes.iconSize} mx-auto mb-3 text-purple-600`} />
+                  <h3 className={`font-semibold text-gray-900 mb-2 ${classes.text}`}>View Bookings</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Manage customer bookings</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/business/calendar')}>
-                <CardContent className="p-6 text-center">
-                  <Calendar className="h-8 w-8 mx-auto mb-3 text-orange-600" />
-                  <h3 className="font-semibold text-gray-900 mb-2">Calendar</h3>
-                  <p className="text-sm text-gray-600">Manage availability</p>
+                <CardContent className={`${classes.card} text-center`}>
+                  <Calendar className={`${classes.iconSize} mx-auto mb-3 text-orange-600`} />
+                  <h3 className={`font-semibold text-gray-900 mb-2 ${classes.text}`}>Calendar</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Manage availability</p>
                 </CardContent>
               </Card>
             </div>
@@ -441,15 +445,15 @@ export default function BusinessHomePage() {
 
           {/* This Week's Bookings */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">This Week's Bookings</h2>
+            <div className={`flex items-center justify-between mb-4 md:mb-6 ${isMobile ? 'flex-col gap-3' : ''}`}>
+              <h2 className={`${classes.subheading} font-semibold text-gray-900`}>This Week's Bookings</h2>
               <div className="flex items-center gap-2">
-                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <ChevronLeft className="w-5 h-5" />
+                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
-                <span className="font-medium text-gray-900">{currentWeek}</span>
-                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <ChevronRight className="w-5 h-5" />
+                <span className={`font-medium text-gray-900 ${classes.text}`}>{currentWeek}</span>
+                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </div>
             </div>
@@ -458,34 +462,34 @@ export default function BusinessHomePage() {
 
           {/* Recent Bookings */}
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Recent Bookings</h2>
+            <CardContent className={classes.card}>
+              <div className={`flex items-center justify-between mb-4 md:mb-6 ${isMobile ? 'flex-col gap-3' : ''}`}>
+                <h2 className={`${classes.subheading} font-semibold text-gray-900`}>Recent Bookings</h2>
                 <Button 
                   onClick={() => router.push('/business/bookings')}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  className={`bg-blue-600 text-white hover:bg-blue-700 ${classes.button}`}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   View all
                 </Button>
               </div>
               {recentBookings.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {recentBookings.map((booking, index) => (
-                    <div key={booking.id} className={`flex items-center gap-4 p-4 ${index !== recentBookings.length - 1 ? 'border-b border-gray-200' : ''}`}>
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <User className="w-6 h-6 text-blue-600" />
+                    <div key={booking.id} className={`flex items-center gap-3 md:gap-4 ${classes.card} ${index !== recentBookings.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                      <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} bg-blue-100 rounded-lg flex items-center justify-center`}>
+                        <User className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-blue-600`} />
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">{booking.client_name}</div>
-                        <div className="text-gray-500">{booking.title}</div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-semibold text-gray-900 ${classes.text} truncate`}>{booking.client_name}</div>
+                        <div className={`text-gray-500 ${classes.text} truncate`}>{booking.title}</div>
+                        <div className={`flex items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-500 ${isMobile ? 'flex-col items-start gap-1' : ''}`}>
                           <span>{formatDate(booking.date)}</span>
                           <span>{booking.group_size} guests</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900">{formatCurrency(booking.total_sales)}</div>
+                        <div className={`font-semibold text-gray-900 ${classes.text}`}>{formatCurrency(booking.total_sales)}</div>
                         <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                           booking.status === 'confirmed' 
                             ? 'bg-green-100 text-green-800' 
@@ -511,27 +515,27 @@ export default function BusinessHomePage() {
 
           {/* Getting Started Section */}
           <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Getting Started</h2>
+            <CardContent className={classes.card}>
+              <h2 className={`${classes.subheading} font-semibold text-gray-900 mb-4`}>Getting Started</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-700">Complete your business profile</span>
+                  <span className={`text-gray-700 ${classes.text}`}>Complete your business profile</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-gray-700">Add your first adventure offering</span>
+                  <span className={`text-gray-700 ${classes.text}`}>Add your first adventure offering</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-gray-700">Set up your availability calendar</span>
+                  <span className={`text-gray-700 ${classes.text}`}>Set up your availability calendar</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-gray-700">Configure payment settings</span>
+                  <span className={`text-gray-700 ${classes.text}`}>Configure payment settings</span>
                 </div>
               </div>
-              <Button className="mt-4" onClick={() => router.push('/business/adventures/new')}>
+              <Button className={`mt-4 ${classes.button}`} onClick={() => router.push('/business/adventures/new')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Adventure
               </Button>

@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useResponsive, getResponsiveClasses } from '@/hooks/use-responsive'
 
 const navigation = [
   { name: 'Home', href: '/business/home', icon: Home },
@@ -35,34 +36,40 @@ interface BusinessLayoutProps {
 
 export default function BusinessLayout({ children }: BusinessLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isTablet, setIsTablet] = useState(false)
   const pathname = usePathname()
-  const isMobile = useIsMobile()
-
-  useEffect(() => {
-    const checkTablet = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024)
-    }
-
-    checkTablet()
-    window.addEventListener('resize', checkTablet)
-    return () => window.removeEventListener('resize', checkTablet)
-  }, [])
+  const { isMobile, isTablet, screenSize } = useResponsive()
+  const classes = getResponsiveClasses(screenSize)
 
   const getSidebarWidth = () => {
     if (isMobile) return 'w-80'
-    if (isTablet) return 'w-56'
+    if (isTablet) return 'w-64'
     return 'w-64'
   }
 
-  const getMainPadding = () => {
-    if (isMobile) return 'px-3 py-4'
-    if (isTablet) return 'px-4 py-6'
-    return 'px-6 py-8'
+  const getTopBarHeight = () => {
+    if (isMobile) return 'h-14'
+    if (isTablet) return 'h-16'
+    return 'h-16'
+  }
+
+  const getIconSize = () => {
+    if (isMobile) return 'h-5 w-5'
+    if (isTablet) return 'h-5 w-5'
+    return 'h-6 w-6'
+  }
+
+  const getNavTextSize = () => {
+    if (isMobile) return 'text-base'
+    return 'text-sm'
+  }
+
+  const getNavPadding = () => {
+    if (isMobile) return 'px-3 py-3'
+    return 'px-2 py-2'
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Mobile/Tablet sidebar overlay */}
       {sidebarOpen && (isMobile || isTablet) && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -91,16 +98,14 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`group flex items-center rounded-md px-3 py-3 ${
-                        isMobile ? 'text-base' : 'text-sm'
-                      } font-medium ${
+                      className={`group flex items-center rounded-md ${getNavPadding()} ${getNavTextSize()} font-medium transition-colors duration-200 ${
                         isActive
                           ? 'bg-blue-100 text-blue-900'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                       onClick={() => setSidebarOpen(false)}
                     >
-                      <Icon className={`mr-3 shrink-0 ${isMobile ? 'h-6 w-6' : 'h-5 w-5'}`} />
+                      <Icon className={`mr-3 shrink-0 ${getIconSize()}`} />
                       {item.name}
                     </Link>
                   )
@@ -126,7 +131,7 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
                       isActive
                         ? 'bg-blue-100 text-blue-900'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -143,19 +148,20 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col lg:pl-64">
+      <div className="flex flex-1 flex-col lg:pl-64 min-w-0">
         {/* Top navigation */}
-        <div className="sticky top-0 z-10 flex shrink-0 bg-white shadow border-b border-gray-200">
-          <div className={`flex w-full ${isMobile ? 'h-14' : isTablet ? 'h-15' : 'h-16'}`}>
+        <div className={`sticky top-0 z-10 flex shrink-0 bg-white shadow border-b border-gray-200 ${getTopBarHeight()}`}>
+          <div className="flex w-full">
             <button
               type="button"
               className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu className={isMobile ? 'h-5 w-5' : 'h-6 w-6'} />
+              <Menu className={getIconSize()} />
             </button>
 
             <div className="flex flex-1 justify-between px-3 sm:px-4 lg:px-6">
+              {/* Search - Hidden on mobile, shown on tablet and desktop */}
               {!isMobile && (
                 <div className="flex flex-1 max-w-md">
                   <div className="relative w-full text-gray-400 focus-within:text-gray-600">
@@ -171,9 +177,9 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
                 </div>
               )}
 
-              <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
                 {isMobile && (
-                  <button className="rounded-full bg-white p-1.5 text-gray-400 hover:text-gray-500">
+                  <button className="rounded-full bg-white p-1.5 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <Search className="h-5 w-5" />
                   </button>
                 )}
@@ -194,7 +200,7 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className={getMainPadding()}>
+          <div className={classes.container}>
             {children}
           </div>
         </main>
