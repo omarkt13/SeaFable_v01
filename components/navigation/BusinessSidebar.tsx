@@ -27,11 +27,12 @@ export function BusinessSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
 
   const navigation = [
-    { name: "Home", icon: Home, href: "/business/home" }, // Confirmed: Updated href to /business/home
+    { name: "Home", icon: Home, href: "/business/home" },
+    { name: "Adventures", icon: BookOpen, href: "/business/experiences" },
+    { name: "Bookings", icon: Calendar, href: "/business/bookings" },
+    { name: "Earnings", icon: DollarSign, href: "/business/earnings" },
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
-    { name: "Sales", icon: DollarSign, href: "/business/sales" },
-    { name: "Adventures", icon: BookOpen, href: "/business/adventures" }, // Re-using existing experiences page
     { name: "Team", icon: Users2, href: "/business/team" },
     { name: "Online bookings", icon: Globe, href: "/business/online-bookings" },
     { name: "Reports", icon: BarChart, href: "/business/reports" },
@@ -83,7 +84,7 @@ export function BusinessSidebar({ isOpen, onClose }) {
           </div>
           <div className="mt-6 pt-6 border-t border-gray-200 space-y-1">
             <Link
-              href="/business/adventures/new"
+              href="/business/experiences/new"
               className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               onClick={onClose}
             >
