@@ -773,9 +773,122 @@ const ExperienceCreationForm = () => {
 
       case 5:
         return (
-          <div className=
-<replit_final_file>
-"use client"
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                What's Included *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                {amenityOptions.map((amenity) => (
+                  <label key={amenity} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.includedAmenities.includes(amenity)}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...formData.includedAmenities, amenity]
+                          : formData.includedAmenities.filter(a => a !== amenity);
+                        updateFormData('includedAmenities', updated);
+                      }}
+                      className="rounded text-teal-600"
+                    />
+                    <span className="text-sm">{amenity}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Not Included
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                {notIncludedOptions.map((item) => (
+                  <label key={item} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.notIncludedItems.includes(item)}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...formData.notIncludedItems, item]
+                          : formData.notIncludedItems.filter(i => i !== item);
+                        updateFormData('notIncludedItems', updated);
+                      }}
+                      className="rounded text-teal-600"
+                    />
+                    <span className="text-sm">{item}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                What to Bring *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {bringOptions.map((item) => (
+                  <label key={item} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={formData.whatToBring.includes(item)}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...formData.whatToBring, item]
+                          : formData.whatToBring.filter(i => i !== item);
+                        updateFormData('whatToBring', updated);
+                      }}
+                      className="rounded text-teal-600"
+                    />
+                    <span className="text-sm">{item}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Minimum Age
+                </label>
+                <input
+                  type="number"
+                  value={formData.minAge}
+                  onChange={(e) => updateFormData('minAge', e.target.value)}
+                  placeholder="0"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Maximum Age
+                </label>
+                <input
+                  type="number"
+                  value={formData.maxAge}
+                  onChange={(e) => updateFormData('maxAge', e.target.value)}
+                  placeholder="No limit"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Age Restriction Details
+              </label>
+              <textarea
+                value={formData.ageRestrictionDetails}
+                onChange={(e) => updateFormData('ageRestrictionDetails', e.target.value)}
+                placeholder="Any specific age-related requirements or restrictions..."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                rows="3"
+              />
+            </div>
+          </div>
 
 import React, { useState, useEffect } from 'react';
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
