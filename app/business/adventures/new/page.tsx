@@ -206,7 +206,7 @@ const ExperienceCreationForm = () => {
   };
 
   // Image upload simulation
-  const handleImageUpload = (type, file = null) => {
+  const handleImageUpload = (type: string, file: File | null = null) => {
     // Simulate image upload
     const mockImageUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=400&h=300&fit=crop`;
 
