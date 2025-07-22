@@ -1,20 +1,19 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     const tests = []
-    
+
     // Test 1: Basic connection
     try {
       const { data, error } = await supabase
         .from('users')
         .select('count')
         .limit(1)
-      
+
       tests.push({
         name: 'Database Connection',
         status: error ? 'FAILED' : 'PASSED',
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest) {
         detail: 'Failed to connect to database'
       })
     }
-    
+
     // Test 2: Schema validation - check if key tables exist
     const tablesToCheck = [
       'users',
@@ -40,14 +39,14 @@ export async function GET(request: NextRequest) {
       'host_business_settings',
       'host_availability'
     ]
-    
+
     for (const table of tablesToCheck) {
       try {
         const { data, error } = await supabase
           .from(table)
           .select('count')
           .limit(1)
-        
+
         tests.push({
           name: `Table: ${table}`,
           status: error ? 'FAILED' : 'PASSED',
@@ -63,11 +62,11 @@ export async function GET(request: NextRequest) {
         })
       }
     }
-    
+
     // Test 3: Authentication
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
+
       tests.push({
         name: 'Authentication',
         status: authError ? 'WARNING' : 'PASSED',
@@ -83,14 +82,14 @@ export async function GET(request: NextRequest) {
         detail: 'Failed to check authentication status'
       })
     }
-    
+
     const summary = {
       total: tests.length,
       passed: tests.filter(t => t.status === 'PASSED').length,
       failed: tests.filter(t => t.status === 'FAILED').length,
       warnings: tests.filter(t => t.status === 'WARNING').length
     }
-    
+
     return NextResponse.json({
       success: summary.failed === 0,
       timestamp: new Date().toISOString(),
@@ -102,7 +101,7 @@ export async function GET(request: NextRequest) {
         hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
       }
     })
-    
+
   } catch (error) {
     console.error('Database test error:', error)
     return NextResponse.json({
@@ -112,14 +111,13 @@ export async function GET(request: NextRequest) {
     }, { status: 500 })
   }
 }
-import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    
+
     // Test basic database connection
     const { data, error } = await supabase
       .from('users')

@@ -47,16 +47,16 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Failed to update experience", details: error.message }, { status: 500 })
   }
 }
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    
+
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
+
     if (authError || !session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -80,15 +80,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    
+
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
+
     if (authError || !session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     const { data: experience, error } = await supabase
       .from('experiences')
       .insert([{

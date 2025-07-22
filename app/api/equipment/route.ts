@@ -213,26 +213,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
-import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
-    const { data: equipment, error } = await supabase
-      .from('equipment')
-      .select('*')
-      .order('name');
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ equipment });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
 }
