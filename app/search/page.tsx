@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   Search,
@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   FilterX,
   CalendarDays,
+  Compass
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,10 +36,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { EmptyState } from '@/components/ui/empty-state'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
 import { ErrorBoundary } from "@/components/error-boundary" // ✅ FIXED: Added ErrorBoundary import
+import { supabase } from '@/lib/supabase'
 
 // Enhanced search filters
 const initialFilters = {
@@ -59,7 +63,7 @@ const initialFilters = {
 }
 
 // Activity type options
-const activityTypes = [
+const activityTypesOptions = [
   { value: "sailing", label: "Sailing", icon: "⛵" },
   { value: "surfing", label: "Surfing", icon: "🏄" },
   { value: "diving", label: "Diving", icon: "🤿" },
@@ -81,7 +85,7 @@ const categories = [
   { value: "wildlife", label: "Wildlife" },
 ]
 
-const difficultyLevels = [
+const difficultyLevelsOptions = [
   { value: "beginner", label: "Beginner" },
   { value: "intermediate", label: "Intermediate" },
   { value: "advanced", label: "Advanced" },
@@ -97,11 +101,35 @@ const quickFilters = [
 
 // ✅ FIXED: Defined ExperienceCardProps interface for type safety
 interface ExperienceCardProps {
-  experience: Experience
+  experience: ExperienceWithHost
   viewMode: "grid" | "list" | "map"
   isWishlisted: boolean
   onToggleWishlist: () => void
 }
+
+interface ExperienceWithHost extends Experience {
+  host_profiles?: {
+    name: string
+    business_name: string
+    avatar_url: string
+  }
+}
+
+const activityTypes = [
+  'all',
+  'sailing',
+  'surfing',
+  'kayaking',
+  'diving',
+  'jet-skiing',
+  'fishing',
+  'whale-watching',
+  'paddleboarding',
+  'windsurfing',
+  'snorkeling'
+]
+
+const difficultyLevels = ['all', 'beginner', 'intermediate', 'advanced', 'expert']
 
 // Enhanced Experience Card Component
 function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }: ExperienceCardProps) {
@@ -442,15 +470,21 @@ function ExperienceCard({ experience, viewMode, isWishlisted, onToggleWishlist }
 
 // Main Search Page Component
 export default function EnhancedExperiencesSearchPage() {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [experiences, setExperiences] = useState<ExperienceWithHost[]>([])
+  const [filteredExperiences, setFilteredExperiences] = useState<ExperienceWithHost[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedActivityType, setSelectedActivityType] = useState<string>('all')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
+  const [wishlist, setWishlist] = useState<string[]>([])
   const [filters, setFilters] = useState(initialFilters)
-  const [experiences, setExperiences] = useState<Experience[]>([])
   const [viewMode, setViewMode] = useState("grid")
   const [sortBy, setSortBy] = useState("recommended")
   const [showFilters, setShowFilters] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [wishlistItems, setWishlistItems] = useState(new Set())
   const [hasInitialized, setHasInitialized] = useState(false)
-  const { user } = useAuth()
   const searchParams = useSearchParams()
 
   // Initialize filters from URL params only once
@@ -540,7 +574,7 @@ export default function EnhancedExperiencesSearchPage() {
   }, [hasInitialized])
 
   // Apply client-side filters that aren't handled by the database
-  const filteredExperiences = useMemo(() => {
+  const filteredExperiencesMemo = useMemo(() => {
     if (!Array.isArray(experiences)) {
       return []
     }
@@ -574,7 +608,7 @@ export default function EnhancedExperiencesSearchPage() {
     setFilters(initialFilters)
   }, [])
 
-  const toggleWishlist = useCallback((experienceId: string) => {
+  const toggleWishlistLocal = useCallback((experienceId: string) => {
     setWishlistItems((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(experienceId)) {
@@ -600,10 +634,246 @@ export default function EnhancedExperiencesSearchPage() {
     }).length
   }, [filters])
 
+  async function fetchExperiences() {
+    try {
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('experiences')
+        .select(`
+          *,
+          host_profiles (
+            name,
+            business_name,
+            avatar_url
+          )
+        `)
+        .eq('marketplace_enabled', true)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setExperiences(data || [])
+    } catch (error) {
+      console.error('Error fetching experiences:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function fetchWishlist() {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('user_wishlist')
+        .select('experience_id')
+        .eq('user_id', user.id)
+
+      if (error) throw error
+      setWishlist(data?.map(item => item.experience_id) || [])
+    } catch (error) {
+      console.error('Error fetching wishlist:', error)
+    }
+  }
+
+  async function toggleWishlist(experienceId: string) {
+    if (!user) return
+
+    try {
+      if (wishlist.includes(experienceId)) {
+        const { error } = await supabase
+          .from('user_wishlist')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('experience_id', experienceId)
+
+        if (error) throw error
+        setWishlist(wishlist.filter(id => id !== experienceId))
+      } else {
+        const { error } = await supabase
+          .from('user_wishlist')
+          .insert({
+            user_id: user.id,
+            experience_id: experienceId
+          })
+
+        if (error) throw error
+        setWishlist([...wishlist, experienceId])
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error)
+    }
+  }
+
+  function filterExperiences() {
+    let filtered = experiences
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(exp =>
+        exp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exp.location.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Filter by activity type
+    if (selectedActivityType !== 'all') {
+      filtered = filtered.filter(exp => exp.activity_type === selectedActivityType)
+    }
+
+    // Filter by difficulty
+    if (selectedDifficulty !== 'all') {
+      filtered = filtered.filter(exp => exp.difficulty_level === selectedDifficulty)
+    }
+
+    setFilteredExperiences(filtered)
+  }
+
+  function formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`
+    } else if (hours > 0) {
+      return `${hours}h`
+    } else {
+      return `${mins}m`
+    }
+  }
+
+  const activityTypesOptionsList = [
+    'all',
+    'sailing',
+    'surfing',
+    'kayaking',
+    'diving',
+    'jet-skiing',
+    'fishing',
+    'whale-watching',
+    'paddleboarding',
+    'windsurfing',
+    'snorkeling'
+  ]
+
+  const difficultyLevelsOptionsList = ['all', 'beginner', 'intermediate', 'advanced', 'expert']
+
+  const renderExperienceCard = (experience: ExperienceWithHost) => (
+    <Card className="group hover:shadow-lg transition-shadow">
+      <CardContent className="p-0">
+        <div className="relative">
+          <div className="aspect-video bg-gray-200 rounded-t-lg flex items-center justify-center">
+            <Compass className="h-12 w-12 text-gray-400" />
+          </div>
+          {user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-8 w-8 p-0"
+              onClick={() => toggleWishlist(experience.id)}
+            >
+              <Heart
+                className={`h-4 w-4 ${
+                  wishlist.includes(experience.id)
+                    ? 'fill-red-500 text-red-500'
+                    : 'text-white'
+                }`}
+              />
+            </Button>
+          )}
+          <div className="absolute bottom-2 left-2 space-x-2">
+            <Badge variant="secondary" className="capitalize">
+              {experience.activity_type?.replace('-', ' ')}
+            </Badge>
+            {experience.instant_booking && (
+              <Badge>Instant Booking</Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg line-clamp-2">{experience.title}</h3>
+            <p className="text-sm text-gray-600 flex items-center mt-1">
+              <MapPin className="h-3 w-3 mr-1" />
+              {experience.location}
+            </p>
+          </div>
+
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {experience.short_description}
+          </p>
+
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={experience.host_profiles?.avatar_url || "/placeholder.svg"} />
+              <AvatarFallback>
+                {experience.host_profiles?.business_name?.charAt(0) || 'H'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-gray-600">
+              {experience.host_profiles?.business_name || experience.host_profiles?.name}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-1">
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <span className="font-medium">
+                  {experience.rating ? experience.rating.toFixed(1) : 'New'}
+                </span>
+              </div>
+              <div className="flex items-center text-gray-500">
+                <Clock className="h-3 w-3 mr-1" />
+                {formatDuration(experience.duration_hours || 0)}
+              </div>
+              <div className="flex items-center text-gray-500">
+                <Users className="h-3 w-3 mr-1" />
+                Max {experience.max_guests}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold text-lg">€{experience.price_per_person}</div>
+              <Badge variant="outline" className="capitalize text-xs">
+                {experience.difficulty_level}
+              </Badge>
+            </div>
+          </div>
+
+          <Button asChild className="w-full">
+            <Link href={`/experience/${experience.id}`}>
+              View Details
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="space-y-4">
+          <div className="h-12 bg-gray-200 rounded animate-pulse" />
+          <div className="flex space-x-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-80 bg-gray-200 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <ErrorBoundary>
-      {" "}
-      {/* ✅ FIXED: Wrapped with ErrorBoundary */}
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -756,7 +1026,7 @@ export default function EnhancedExperiencesSearchPage() {
                       <div>
                         <h4 className="font-medium mb-3">Activity Type</h4>
                         <div className="grid grid-cols-2 gap-2">
-                          {activityTypes.map((type) => (
+                          {activityTypesOptions.map((type) => (
                             <div key={type.value} className="flex items-center space-x-2">
                               <Checkbox
                                 id={type.value}
@@ -822,7 +1092,7 @@ export default function EnhancedExperiencesSearchPage() {
                       <div>
                         <h4 className="font-medium mb-3">Difficulty Level</h4>
                         <div className="space-y-2">
-                          {difficultyLevels.map((level) => (
+                          {difficultyLevelsOptions.map((level) => (
                             <div key={level.value} className="flex items-center space-x-2">
                               <Checkbox
                                 id={level.value}
@@ -861,7 +1131,7 @@ export default function EnhancedExperiencesSearchPage() {
                                   } else {
                                     handleFilterChange(
                                       "categories",
-                                      filters.categories.filter((c) => c !== category),
+                                      filters.categories.filter((c) => c !== category.value),
                                     )
                                   }
                                 }}
@@ -904,7 +1174,7 @@ export default function EnhancedExperiencesSearchPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {isLoading ? "Searching..." : `${filteredExperiences.length} experiences found`}
+                    {isLoading ? "Searching..." : `${filteredExperiencesMemo.length} experiences found`}
                   </h2>
                   {filters.location && <p className="text-gray-600">in {filters.location}</p>}
                 </div>
@@ -986,7 +1256,7 @@ export default function EnhancedExperiencesSearchPage() {
 
                   {filters.activityTypes.map((type) => (
                     <Badge key={type} variant="secondary" className="px-3 py-1">
-                      {activityTypes.find((t) => t.value === type)?.label}
+                      {activityTypesOptions.find((t) => t.value === type)?.label}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1043,7 +1313,7 @@ export default function EnhancedExperiencesSearchPage() {
                     </Card>
                   ))}
                 </div>
-              ) : filteredExperiences.length === 0 ? (
+              ) : filteredExperiencesMemo.length === 0 ? (
                 <div className="text-center py-16">
                   <Card className="max-w-md mx-auto">
                     <CardContent className="p-8">
@@ -1113,20 +1383,20 @@ export default function EnhancedExperiencesSearchPage() {
                         : "grid-cols-1" // map view placeholder
                   }`}
                 >
-                  {filteredExperiences.map((experience) => (
+                  {filteredExperiencesMemo.map((experience) => (
                     <ExperienceCard
                       key={experience.id}
                       experience={experience}
                       viewMode={viewMode}
                       isWishlisted={wishlistItems.has(experience.id)}
-                      onToggleWishlist={() => toggleWishlist(experience.id)}
+                      onToggleWishlist={() => toggleWishlistLocal(experience.id)}
                     />
                   ))}
                 </div>
               )}
 
               {/* Load More */}
-              {filteredExperiences.length > 0 && !isLoading && (
+              {filteredExperiencesMemo.length > 0 && !isLoading && (
                 <div className="text-center mt-12">
                   <Button variant="outline" size="lg">
                     <RefreshCw className="h-4 w-4 mr-2" />
