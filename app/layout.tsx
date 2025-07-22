@@ -1,7 +1,7 @@
 import type React from "react"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
-import ErrorBoundary from "@/components/error-boundary"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { ErrorFallback } from "@/components/ui/ErrorFallback"
 import "./globals.css"
 
