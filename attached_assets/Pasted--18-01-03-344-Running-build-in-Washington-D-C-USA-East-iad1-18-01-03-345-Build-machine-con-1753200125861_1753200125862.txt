@@ -1,0 +1,53 @@
+[18:01:03.344] Running build in Washington, D.C., USA (East) – iad1
+[18:01:03.345] Build machine configuration: 2 cores, 8 GB
+[18:01:03.363] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 08f5bf6)
+[18:01:03.518] Previous build caches not available
+[18:01:03.769] Cloning completed: 406.000ms
+[18:01:05.619] Running "vercel build"
+[18:01:06.094] Vercel CLI 44.5.0
+[18:01:06.424] Installing dependencies...
+[18:01:10.769] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:01:11.388] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[18:01:22.436] 
+[18:01:22.437] added 489 packages in 16s
+[18:01:22.437] 
+[18:01:22.437] 57 packages are looking for funding
+[18:01:22.438]   run `npm fund` for details
+[18:01:22.708] Detected Next.js version: 15.2.4
+[18:01:22.713] Running "npm run build"
+[18:01:22.843] 
+[18:01:22.844] > my-v0-project@0.1.0 build
+[18:01:22.844] > next build
+[18:01:22.844] 
+[18:01:23.985] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[18:01:23.986] This information is used to shape Next.js' roadmap and prioritize features.
+[18:01:23.986] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[18:01:23.986] https://nextjs.org/telemetry
+[18:01:23.987] 
+[18:01:24.116]    ▲ Next.js 15.2.4
+[18:01:24.117]    - Experiments (use with caution):
+[18:01:24.117]      · allowedDevOrigins
+[18:01:24.117] 
+[18:01:24.281]    Creating an optimized production build ...
+[18:01:40.779] Failed to compile.
+[18:01:40.779] 
+[18:01:40.780] ./app/api/business/experiences/route.ts
+[18:01:40.780] Module parse failed: Identifier 'PUT' has already been declared (113:22)
+[18:01:40.780] File was processed with these loaders:
+[18:01:40.780]  * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+[18:01:40.780]  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+[18:01:40.780] You may need an additional loader to handle the result of these loaders.
+[18:01:40.780] |     }
+[18:01:40.780] | }
+[18:01:40.780] > export async function PUT(request) {
+[18:01:40.781] |     try {
+[18:01:40.781] |         const supabase = createRouteHandlerClient({
+[18:01:40.781] 
+[18:01:40.781] Import trace for requested module:
+[18:01:40.781] ./app/api/business/experiences/route.ts
+[18:01:40.781] 
+[18:01:40.795] 
+[18:01:40.796] > Build failed because of webpack errors
+[18:01:40.825] Error: Command "npm run build" exited with 1
+[18:01:41.075] 
+[18:01:44.010] Exiting build container
