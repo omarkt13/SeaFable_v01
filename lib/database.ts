@@ -991,8 +991,7 @@ export async function testTableAccess() {
       const { data, error } = await supabase.from(table).select("*").limit(1)
 
       if (error) {
-        results[table] = { success: false, error: error.message }
-      } else {
+        results[table] = { success: false, error: error.message } else {
         results[table] = { success: true, count: data?.length || 0 }
       }
     } catch (error: any) {
@@ -1090,4 +1089,204 @@ async function getUserProfile(userId: string) {
   }
 
   return data
+}
+
+export async function getUserDashboardData(userEmail: string) {
+  try {
+    console.log("Fetching dashboard data for user:", userEmail)
+
+    // Get user profile
+    const { data: userProfile, error: userError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", userEmail)
+      .single()
+
+    if (userError && userError.code !== "PGRST116") {
+      console.error("Error fetching user profile:", userError)
+      throw userError
+    }
+
+    // Get user bookings with experience and host details
+    const { data: bookings, error: bookingsError } = await supabase
+      .from("bookings")
+      .select(`
+        *,
+        experiences:experience_id (
+          title,
+          location,
+          duration_display,
+          primary_image_url
+        ),
+        host_profiles:host_id (
+          name,
+          avatar_url
+        )
+      `)
+      .eq("guest_email", userEmail)
+      .order("booking_date", { ascending: false })
+
+    if (bookingsError) {
+      console.error("Error fetching bookings:", bookingsError)
+      throw bookingsError
+    }
+
+    // Get user reviews
+    const { data: reviews, error: reviewsError } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("guest_email", userEmail)
+      .order("created_at", { ascending: false })
+
+    if (reviewsError) {
+      console.error("Error fetching reviews:", reviewsError)
+      throw reviewsError
+    }
+
+    return {
+      userProfile: userProfile || null,
+      bookings: bookings || [],
+      reviews: reviews || [],
+    }
+  } catch (error) {
+    console.error("Error in getUserDashboardData:", error)
+    throw error
+  }
+}
+
+export async function getBusinessDashboardData(businessId: string) {
+  try {
+    console.log("Fetching business dashboard data for:", businessId)
+
+    // Get business profile
+    const { data: businessProfile, error: profileError } = await supabase
+      .from("host_profiles")
+      .select("*")
+      .eq("id", businessId)
+      .single()
+
+    if (profileError) {
+      console.error("Error fetching business profile:", profileError)
+      throw profileError
+    }
+
+    // Get business experiences
+    const { data: experiences, error: experiencesError } = await supabase
+      .from("experiences")
+      .select("*")
+      .eq("host_id", businessId)
+      .order("created_at", { ascending: false })
+
+    if (experiencesError) {
+      console.error("Error fetching experiences:", experiencesError)
+      throw experiencesError
+    }
+
+    // Get bookings for this business
+    const { data: bookings, error: bookingsError } = await supabase
+      .from("bookings")
+      .select(`
+        *,
+        experiences:experience_id (
+          title,
+          location,
+          primary_image_url
+        )
+      `)
+      .eq("host_id", businessId)
+      .order("booking_date", { ascending: false })
+
+    if (bookingsError) {
+      console.error("Error fetching bookings:", bookingsError)
+      throw bookingsError
+    }
+
+    // Calculate overview stats
+    const totalExperiences = experiences?.length || 0
+    const totalBookings = bookings?.length || 0
+    const upcomingBookings = bookings?.filter(b => new Date(b.booking_date) >= new Date()) || []
+    const completedBookings = bookings?.filter(b => new Date(b.booking_date) < new Date()) || []
+    const totalRevenue = completedBookings.reduce((sum, booking) => sum + (booking.total_price || 0), 0)
+
+    // Get recent bookings (last 5)
+    const recentBookings = bookings?.slice(0, 5) || []
+
+    // Mock analytics data for now
+    const analytics = {
+      totalViews: Math.floor(Math.random() * 1000) + 500,
+      conversionRate: Math.round((totalBookings / Math.max(1, totalExperiences * 10)) * 100 * 100) / 100,
+      averageRating: 4.8,
+      responseTime: "2 hours"
+    }
+
+    return {
+      overview: {
+        totalExperiences,
+        totalBookings,
+        upcomingBookings: upcomingBookings.length,
+        totalRevenue,
+        monthlyRevenue: Math.round(totalRevenue * 0.3), // Mock 30% of total as monthly
+      },
+      experiences: experiences || [],
+      recentBookings: recentBookings,
+      upcomingBookings: upcomingBookings.slice(0, 5),
+      analytics,
+      businessProfile,
+      earnings: {
+        thisMonth: Math.round(totalRevenue * 0.3),
+        lastMonth: Math.round(totalRevenue * 0.25),
+        growth: 20, // Mock growth percentage
+        pendingPayouts: Math.round(totalRevenue * 0.1)
+      },
+      recentActivity: [
+        { type: "booking", message: "New booking received", time: "2 hours ago" },
+        { type: "review", message: "5-star review received", time: "1 day ago" },
+        { type: "experience", message: "Experience updated", time: "3 days ago" }
+      ]
+    }
+  } catch (error) {
+    console.error("Error in getBusinessDashboardData:", error)
+    throw error
+  }
+}
+
+export interface Review {
+  id: string
+  booking_id: string
+  guest_email: string
+  rating: number
+  title: string
+  comment: string
+  created_at: string
+}
+
+export interface BusinessDashboardData {
+  overview: {
+    totalExperiences: number
+    totalBookings: number
+    upcomingBookings: number
+    totalRevenue: number
+    monthlyRevenue: number
+  }
+  experiences: any[]
+  recentBookings: any[]
+  upcomingBookings: any[]
+  analytics: {
+    totalViews: number
+    conversionRate: number
+    averageRating: number
+    responseTime: string
+  }
+  businessProfile: any
+  earnings: {
+    thisMonth: number
+    lastMonth: number
+    growth: number
+    pendingPayouts: number
+  }
+  recentActivity: Array<{
+    type: string
+    message: string
+    time: string
+  }>
 }

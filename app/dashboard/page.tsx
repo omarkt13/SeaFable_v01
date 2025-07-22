@@ -899,8 +899,8 @@ interface DashboardPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
-  const resolvedSearchParams = await searchParams
+const DashboardPage = ({ searchParams }: DashboardPageProps) => {
+  const [resolvedSearchParams, setResolvedSearchParams] = useState<{ [key: string]: string | string[] | undefined }>({})
   const { user, loading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
@@ -926,6 +926,20 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       fetchDashboardData()
     }
   }, [user?.email])
+
+  useEffect(() => {
+    const resolveSearchParams = async () => {
+      const params = await searchParams
+      setResolvedSearchParams(params)
+      
+      const tab = params?.tab
+      if (tab && typeof tab === "string") {
+        setActiveTab(tab)
+      }
+    }
+    
+    resolveSearchParams()
+  }, [searchParams])
 
   useEffect(() => {
     const tab = resolvedSearchParams?.tab
