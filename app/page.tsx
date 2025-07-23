@@ -3,10 +3,11 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Search, MapPin, Star, Clock, Waves, Ship, Compass, Zap, Shield, Globe, ChevronRight, Play, Award, Anchor, Users, CalendarIcon } from "lucide-react"
+import { Search, MapPin, Star, Clock, Waves, Ship, Compass, Zap, Shield, Globe, ChevronRight, Play, Award, Anchor, Users } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar as CalendarIcon } from "lucide-react"
 
 export default function LandingPage() {
   const router = useRouter()
@@ -146,7 +147,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <AuthProvider>
+    
       <main className="min-h-screen bg-white">
         {/* Navigation */}
         <nav className="absolute top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 py-6">
@@ -685,6 +686,6 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-    </AuthProvider>
+    
   )
 }
