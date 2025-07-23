@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
-import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client" // Use the client-side Supabase instance with alias
-import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils" // Import profile fetching and signOut from auth-utils
-import type { UserProfile, BusinessProfile } from "@/types/auth"
 import { createClient } from "@/lib/supabase/client"
+import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils"
+import type { UserProfile, BusinessProfile } from "@/types/auth"
 
 interface AuthContextType {
   user: User | null
