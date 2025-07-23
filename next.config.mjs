@@ -14,10 +14,28 @@ const nextConfig = {
     gzipSize: true,
     workerThreads: false,
     cpus: 1,
-    allowedDevOrigins: [
-      '*.replit.dev',
-      '*.spock.replit.dev'
-    ],
+  },
+  // Configure allowed development origins for Replit
+  async headers() {
+    return [
+      {
+        source: '/_next/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+        ],
+      },
+    ];
   },
   poweredByHeader: false,
   generateEtags: false,
