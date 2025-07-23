@@ -1,35 +1,32 @@
-import type React from "react"
-import { AuthProvider } from "@/lib/auth-context"
-import { ThemeProvider } from "@/components/theme-provider"
-import { ErrorBoundary } from "@/components/error-boundary"
-import { ErrorFallback } from "@/components/ui/ErrorFallback"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
+import { AuthProvider } from "@/lib/auth-context"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { ToastProvider } from "@/components/ui/toast-provider"
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "SeaFable - Discover Amazing Water Adventures",
+  description: "Book unique water experiences and adventures with verified hosts worldwide.",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com"/>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
-        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-        <link href="https://fonts.googleapis.com/css2?family=monospace:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-      </head>
-      <body suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+    <html lang="en">
+      <body className={inter.className}>
+        <ErrorBoundary>
           <AuthProvider>
-            <ErrorBoundary fallback={ErrorFallback}>
-              {children}
-              <ToastProvider />
-            </ErrorBoundary>
+            <ToastProvider />
+            {children}
           </AuthProvider>
-        </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
 }
-
-export const metadata = {
-      generator: 'v0.dev'
-    };
