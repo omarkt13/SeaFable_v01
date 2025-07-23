@@ -1,0 +1,86 @@
+[11:51:21.743] Running build in Washington, D.C., USA (East) – iad1
+[11:51:21.744] Build machine configuration: 2 cores, 8 GB
+[11:51:21.757] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: a4b4014)
+[11:51:21.912] Previous build caches not available
+[11:51:22.147] Cloning completed: 389.000ms
+[11:51:22.514] Running "vercel build"
+[11:51:23.946] Vercel CLI 44.5.0
+[11:51:24.504] Installing dependencies...
+[11:51:28.679] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[11:51:29.387] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[11:51:39.321] 
+[11:51:39.322] added 504 packages in 14s
+[11:51:39.322] 
+[11:51:39.323] 59 packages are looking for funding
+[11:51:39.323]   run `npm fund` for details
+[11:51:39.384] Detected Next.js version: 15.2.4
+[11:51:39.389] Running "npm run build"
+[11:51:39.504] 
+[11:51:39.504] > my-v0-project@0.1.0 build
+[11:51:39.504] > next build
+[11:51:39.504] 
+[11:51:40.112] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[11:51:40.112] This information is used to shape Next.js' roadmap and prioritize features.
+[11:51:40.112] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[11:51:40.112] https://nextjs.org/telemetry
+[11:51:40.112] 
+[11:51:40.173]    ▲ Next.js 15.2.4
+[11:51:40.174]    - Experiments (use with caution):
+[11:51:40.175]      · allowedDevOrigins
+[11:51:40.176] 
+[11:51:40.247]    Creating an optimized production build ...
+[11:51:56.566] Failed to compile.
+[11:51:56.566] 
+[11:51:56.566] ./app/business/clients/page.tsx
+[11:51:56.566] Error:   [31mx[0m The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+[11:51:56.567]      ,-[[36;1;4m/vercel/path0/app/business/clients/page.tsx[0m:162:1]
+[11:51:56.567]  [2m159[0m |     </BusinessLayout>
+[11:51:56.567]  [2m160[0m |   )
+[11:51:56.567]  [2m161[0m | }
+[11:51:56.567]  [2m162[0m | "use client"
+[11:51:56.567]      : [35;1m^^^^^^^^^^^^[0m
+[11:51:56.567]  [2m163[0m | 
+[11:51:56.567]  [2m164[0m | import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+[11:51:56.567]  [2m165[0m | import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+[11:51:56.567]      `----
+[11:51:56.567] 
+[11:51:56.567] Import trace for requested module:
+[11:51:56.568] ./app/business/clients/page.tsx
+[11:51:56.568] 
+[11:51:56.568] ./app/business/sales/page.tsx
+[11:51:56.569] Error:   [31mx[0m The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+[11:51:56.569]      ,-[[36;1;4m/vercel/path0/app/business/sales/page.tsx[0m:156:1]
+[11:51:56.569]  [2m153[0m |     </BusinessLayout>
+[11:51:56.569]  [2m154[0m |   )
+[11:51:56.569]  [2m155[0m | }
+[11:51:56.570]  [2m156[0m | "use client"
+[11:51:56.570]      : [35;1m^^^^^^^^^^^^[0m
+[11:51:56.570]  [2m157[0m | 
+[11:51:56.570]  [2m158[0m | import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+[11:51:56.570]  [2m159[0m | import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+[11:51:56.570]      `----
+[11:51:56.579] 
+[11:51:56.579] Import trace for requested module:
+[11:51:56.579] ./app/business/sales/page.tsx
+[11:51:56.579] 
+[11:51:56.579] ./app/business/settings/page.tsx
+[11:51:56.579] Error:   [31mx[0m The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+[11:51:56.579]      ,-[[36;1;4m/vercel/path0/app/business/settings/page.tsx[0m:249:1]
+[11:51:56.579]  [2m246[0m |     </BusinessLayout>
+[11:51:56.579]  [2m247[0m |   )
+[11:51:56.579]  [2m248[0m | }
+[11:51:56.579]  [2m249[0m | "use client"
+[11:51:56.579]      : [35;1m^^^^^^^^^^^^[0m
+[11:51:56.580]  [2m250[0m | 
+[11:51:56.580]  [2m251[0m | import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+[11:51:56.580]  [2m252[0m | import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+[11:51:56.580]      `----
+[11:51:56.580] 
+[11:51:56.580] Import trace for requested module:
+[11:51:56.580] ./app/business/settings/page.tsx
+[11:51:56.580] 
+[11:51:56.586] 
+[11:51:56.591] > Build failed because of webpack errors
+[11:51:56.620] Error: Command "npm run build" exited with 1
+[11:51:56.919] 
+[11:51:59.643] Exiting build container
