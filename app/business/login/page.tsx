@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Building, Mail, Lock, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function BusinessLoginPage() {
   const { login } = useAuth()
@@ -37,7 +38,7 @@ export default function BusinessLoginPage() {
     }
   }
 
-        
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -97,7 +98,7 @@ export default function BusinessLoginPage() {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
               className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
               disabled={loading}
@@ -111,7 +112,7 @@ export default function BusinessLoginPage() {
                   Sign In <ArrowRight className="ml-2 h-4 w-4 inline-block" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Footer Links */}

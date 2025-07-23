@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { User, Phone, MapPin, Building, ArrowRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/lib/auth-utils" // Import supabase client
+import { Button } from "@/components/ui/button"
 
 export default function BusinessOnboardingPage() {
   const { user, businessProfile, isLoading } = useAuth()
@@ -179,7 +180,7 @@ export default function BusinessOnboardingPage() {
               </Select>
             </div>
 
-            <button
+            <Button
               type="submit"
               className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
               disabled={loading}
@@ -193,7 +194,7 @@ export default function BusinessOnboardingPage() {
                   Complete Onboarding <ArrowRight className="ml-2 h-4 w-4 inline-block" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
         </div>
       </div>
