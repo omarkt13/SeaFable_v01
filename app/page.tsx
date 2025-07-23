@@ -3,26 +3,8 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import {
-  Search,
-  MapPin,
-  Calendar as CalendarIcon,
-  Star,
-  Clock,
-  Waves,
-  Ship,
-  Compass,
-  Zap,
-  Shield,
-  Globe,
-  ChevronRight,
-  Play,
-  Award,
-  Anchor,
-  Users,
-} from "lucide-react"
+import { Search, MapPin, Star, Clock, Waves, Ship, Compass, Zap, Shield, Globe, ChevronRight, Play, Award, Anchor, Users, CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -222,7 +204,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div className="relative md:col-span-2">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    
+
                     <Select 
                       value={searchData.service} 
                       onValueChange={(value) => setSearchData(prev => ({ ...prev, service: value }))}

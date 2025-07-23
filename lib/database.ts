@@ -1278,3 +1278,29 @@ export async function getRecentBookings(limit: number = 5) {
 
   return data || []
 }
+export async function getUpcomingBookings(startDate: string) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      users (
+        first_name,
+        last_name,
+        email
+      ),
+      experiences (
+        title,
+        location,
+        duration
+      )
+    `)
+    .gte('booking_date', new Date().toISOString().split('T')[0])
+    .order('booking_date', { ascending: true })
+  
+  if (error) {
+    console.error('Error fetching upcoming bookings:', error)
+    return []
+  }
+
+  return data || []
+}

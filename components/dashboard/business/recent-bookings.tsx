@@ -1,92 +1,139 @@
 
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Eye, MessageSquare } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-export function RecentBookings() {
-  // Mock data - replace with real data from your API
-  const recentBookings = [
-    {
-      id: "1",
-      customerName: "John Smith",
-      customerAvatar: null,
-      adventureName: "Sunset Sailing",
-      date: "2024-01-25",
-      status: "confirmed",
-      amount: "€150",
-    },
-    {
-      id: "2",
-      customerName: "Sarah Johnson",
-      customerAvatar: null,
-      adventureName: "Kayak Adventure",
-      date: "2024-01-24",
-      status: "pending",
-      amount: "€85",
-    },
-    {
-      id: "3",
-      customerName: "Mike Wilson",
-      customerAvatar: null,
-      adventureName: "Deep Sea Fishing",
-      date: "2024-01-23",
-      status: "completed",
-      amount: "€220",
-    },
-  ]
+interface Booking {
+  id: string
+  booking_date: string
+  start_time: string
+  end_time: string
+  num_guests: number
+  total_price: number
+  status: "pending" | "confirmed" | "cancelled" | "completed"
+  experiences?: {
+    title: string
+  }
+}
 
-  const getStatusColor = (status: string) => {
+interface RecentBookingsProps {
+  bookings: Booking[]
+}
+
+export function RecentBookings({ bookings }: RecentBookingsProps) {
+  const getStatusVariant = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "bg-green-100 text-green-800"
+        return "default"
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "secondary"
+      case "cancelled":
+        return "destructive"
       case "completed":
-        return "bg-blue-100 text-blue-800"
+        return "outline"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "secondary"
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Recent Bookings</CardTitle>
+        <CardDescription>
+          Latest booking activity for your adventures
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {recentBookings.map((booking) => (
-          <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarImage src={booking.customerAvatar || undefined} />
-                <AvatarFallback>{booking.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{booking.customerName}</p>
-                <p className="text-sm text-gray-600">{booking.adventureName}</p>
-                <p className="text-xs text-gray-500">{booking.date}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge className={getStatusColor(booking.status)}>
-                {booking.status}
-              </Badge>
-              <span className="font-semibold">{booking.amount}</span>
-              <div className="flex space-x-1">
-                <Button size="sm" variant="outline">
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline">
-                  <MessageSquare className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+      <CardContent>
+        {bookings && bookings.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Adventure</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Guests</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bookings.map((booking) => (
+                <TableRow key={booking.id}>
+                  <TableCell className="font-medium">
+                    {booking.experiences?.title || 'Unknown Adventure'}
+                  </TableCell>
+                  <TableCell>
+                    {formatDate(booking.booking_date)}
+                  </TableCell>
+                  <TableCell>
+                    {formatTime(booking.start_time)}
+                  </TableCell>
+                  <TableCell>
+                    {booking.num_guests} {booking.num_guests === 1 ? 'guest' : 'guests'}
+                  </TableCell>
+                  <TableCell>
+                    ${booking.total_price}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(booking.status)}>
+                      {booking.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit booking
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Cancel booking
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No recent bookings found
           </div>
-        ))}
+        )}
       </CardContent>
     </Card>
   )
