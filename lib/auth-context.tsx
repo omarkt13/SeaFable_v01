@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [userType, setUserType] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   // Use useMemo to prevent multiple client instances
   const supabase = useMemo(() => createClient(), [])
@@ -256,9 +257,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserType(null)
   }
 
-  // Prevent hydration issues by not rendering until mounted
-  if (!mounted) {
-    return null
+  // Ensure client-side only initialization
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Prevent hydration mismatch by not rendering auth-dependent content on server
+  if (!isClient) {
+    return (
+      <AuthContext.Provider value={{ user: null, userProfile: null, businessProfile: null, userType: null, isLoading: true, login, signUp, signOut }}>
+        {children}
+      </AuthContext.Provider>
+    )
   }
 
   return (
