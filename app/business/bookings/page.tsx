@@ -1,320 +1,337 @@
+
 "use client"
 
-import { useState, useEffect } from "react"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Eye, MessageSquare, Calendar } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+import { useAuth } from "@/lib/auth-context"
+import { createClient } from "@/lib/supabase/client"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { DataTable } from "@/components/ui/data-table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase"
+import { 
+  Calendar,
+  Clock,
+  Users,
+  MapPin,
+  Euro,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Eye,
+  Mail,
+  Phone,
+  CheckCircle,
+  XCircle
+} from 'lucide-react'
 
 interface Booking {
   id: string
-  guest_name: string
+  customer_name: string
+  customer_email: string
   experience_title: string
-  date: string
-  time: string
+  booking_date: string
   guests: number
   total_amount: number
-  status: "pending" | "confirmed" | "completed" | "cancelled"
-  payment_status: "pending" | "paid" | "refunded"
+  status: string
+  created_at: string
+  experience_location?: string
 }
 
-const statusVariants = {
-  pending: "secondary",
-  confirmed: "default",
-  completed: "outline",
-  cancelled: "destructive",
-} as const
-
-const paymentStatusVariants = {
-  pending: "secondary",
-  paid: "default",
-  refunded: "destructive",
-} as const
-
-const columns: ColumnDef<Booking>[] = [
-  {
-    accessorKey: "guest_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Guest Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("guest_name")}</div>,
-  },
-  {
-    accessorKey: "experience_title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Experience
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("experience_title")}</div>,
-  },
-  {
-    accessorKey: "date",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span>{row.getValue("date")}</span>
-        <span className="text-sm text-muted-foreground">{row.original.time}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "guests",
-    header: "Guests",
-    cell: ({ row }) => (
-      <div className="text-center font-medium">{row.getValue("guests")}</div>
-    ),
-  },
-  {
-    accessorKey: "total_amount",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Amount
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("total_amount"))
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-      return <div className="text-right font-medium">{formatted}</div>
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as keyof typeof statusVariants
-      return (
-        <Badge variant={statusVariants[status]}>
-          {status}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "payment_status",
-    header: "Payment",
-    cell: ({ row }) => {
-      const status = row.getValue("payment_status") as keyof typeof paymentStatusVariants
-      return (
-        <Badge variant={paymentStatusVariants[status]}>
-          {status}
-        </Badge>
-      )
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const booking = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(booking.id)}
-            >
-              Copy booking ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Contact guest
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Calendar className="mr-2 h-4 w-4" />
-              Reschedule
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
-export default function BookingsPage() {
+export default function BusinessBookingsPage() {
+  const { user, userType, loading: authLoading } = useAuth()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    fetchBookings()
-  }, [])
+    const fetchBookings = async () => {
+      if (!user || userType !== "business") return
 
-  const fetchBookings = async () => {
-    try {
-      setLoading(true)
-      // Mock data for now - replace with actual Supabase query
-      const mockBookings: Booking[] = [
-        {
-          id: "1",
-          guest_name: "John Doe",
-          experience_title: "Sunset Sailing Adventure",
-          date: "2024-01-15",
-          time: "10:00 AM",
-          guests: 2,
-          total_amount: 150.00,
-          status: "confirmed",
-          payment_status: "paid",
-        },
-        {
-          id: "2",
-          guest_name: "Jane Smith",
-          experience_title: "Deep Sea Fishing",
-          date: "2024-01-16",
-          time: "6:00 AM",
-          guests: 4,
-          total_amount: 300.00,
-          status: "pending",
-          payment_status: "pending",
-        },
-        {
-          id: "3",
-          guest_name: "Mike Johnson",
-          experience_title: "Whale Watching Tour",
-          date: "2024-01-14",
-          time: "2:00 PM",
-          guests: 3,
-          total_amount: 225.00,
-          status: "completed",
-          payment_status: "paid",
-        },
-      ]
-      setBookings(mockBookings)
-    } catch (error) {
-      console.error("Error fetching bookings:", error)
-    } finally {
-      setLoading(false)
+      try {
+        setLoading(true)
+        const supabase = createClient()
+        
+        const { data, error: fetchError } = await supabase
+          .from("bookings")
+          .select(`
+            *,
+            experiences!bookings_experience_id_fkey(title, location),
+            customer_profiles!bookings_customer_id_fkey(first_name, last_name, email)
+          `)
+          .eq("host_id", user.id)
+          .order("created_at", { ascending: false })
+
+        if (fetchError) {
+          console.error("Error fetching bookings:", fetchError)
+          // For now, let's show empty state instead of throwing
+          setBookings([])
+        } else {
+          // Transform the data to match our interface
+          const transformedBookings = data?.map((booking: any) => ({
+            id: booking.id,
+            customer_name: booking.customer_profiles 
+              ? `${booking.customer_profiles.first_name} ${booking.customer_profiles.last_name}`.trim()
+              : 'Unknown Customer',
+            customer_email: booking.customer_profiles?.email || 'No email',
+            experience_title: booking.experiences?.title || 'Unknown Experience',
+            experience_location: booking.experiences?.location || '',
+            booking_date: booking.booking_date,
+            guests: booking.guests || 1,
+            total_amount: booking.total_amount || 0,
+            status: booking.status || 'pending',
+            created_at: booking.created_at
+          })) || []
+          
+          setBookings(transformedBookings)
+        }
+      } catch (err) {
+        console.error("Error fetching bookings:", err)
+        setError("Failed to load bookings")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (!authLoading) {
+      fetchBookings()
+    }
+  }, [user, userType, authLoading])
+
+  const filteredBookings = bookings.filter(booking =>
+    booking.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.experience_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.customer_email.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'confirmed': return 'default'
+      case 'pending': return 'secondary'
+      case 'cancelled': return 'destructive'
+      case 'completed': return 'outline'
+      default: return 'secondary'
     }
   }
 
-  if (loading) {
+  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: newStatus })
+        .eq("id", bookingId)
+
+      if (error) throw error
+
+      setBookings(prev =>
+        prev.map(booking =>
+          booking.id === bookingId ? { ...booking, status: newStatus } : booking
+        )
+      )
+    } catch (err) {
+      console.error("Error updating booking status:", err)
+    }
+  }
+
+  if (authLoading || loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-96 mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+      <BusinessProtectedRoute>
+        <BusinessLayoutWrapper title="Bookings">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-[200px]" />
+                        <Skeleton className="h-4 w-[150px]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </BusinessLayoutWrapper>
+      </BusinessProtectedRoute>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Bookings</h1>
-        <p className="text-muted-foreground">
-          Manage and track all your adventure bookings in one place.
-        </p>
-      </div>
+    <BusinessProtectedRoute>
+      <BusinessLayoutWrapper title="Bookings">
+        <div className="px-4 sm:px-6 lg:px-8 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bookings</h1>
+              <p className="text-muted-foreground">
+                Manage all your customer bookings and reservations.
+              </p>
+            </div>
+          </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{bookings.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {bookings.filter(b => b.status === 'confirmed').length}
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search bookings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {bookings.filter(b => b.status === 'pending').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${bookings.filter(b => b.payment_status === 'paid')
-                .reduce((sum, b) => sum + b.total_amount, 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Button variant="outline">
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+            </Button>
+          </div>
 
-      {/* Bookings Table */}
-      <DataTable
-        columns={columns}
-        data={bookings}
-        title="All Bookings"
-        description="A comprehensive list of all adventure bookings."
-        searchKey="guest_name"
-        searchPlaceholder="Search by guest name..."
-      />
-    </div>
+          {/* Bookings Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Bookings</CardTitle>
+              <CardDescription>
+                A list of all bookings for your experiences.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredBookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Bookings Yet</h3>
+                  <p className="text-muted-foreground">
+                    {bookings.length === 0 
+                      ? "When customers book your experiences, they'll appear here."
+                      : "No bookings match your search criteria."
+                    }
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Guests</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-[70px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{booking.customer_name}</div>
+                            <div className="text-sm text-muted-foreground">{booking.customer_email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{booking.experience_title}</div>
+                            {booking.experience_location && (
+                              <div className="text-sm text-muted-foreground flex items-center">
+                                <MapPin className="mr-1 h-3 w-3" />
+                                {booking.experience_location}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {new Date(booking.booking_date).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {booking.guests}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center font-medium">
+                            <Euro className="mr-1 h-4 w-4 text-muted-foreground" />
+                            {booking.total_amount}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(booking.status)}>
+                            {booking.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Mail className="mr-2 h-4 w-4" />
+                                Email Customer
+                              </DropdownMenuItem>
+                              {booking.status === 'pending' && (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Confirm Booking
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel Booking
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </BusinessLayoutWrapper>
+    </BusinessProtectedRoute>
   )
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { Calendar } from "@/components/ui/calendar"
 
 export default function LandingPage() {
   const router = useRouter()
@@ -647,7 +648,8 @@ export default function LandingPage() {
                 className="bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition-colors font-semibold"
                 asChild
               >
-                <Link href="/business/register">
+                ```text
+<Link href="/business/register">
                   Become a Host
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
