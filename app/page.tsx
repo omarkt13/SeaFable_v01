@@ -21,7 +21,11 @@ import {
   Anchor,
   Users,
 } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CalendarIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AuthProvider } from "@/lib/auth-context"
@@ -219,18 +223,27 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div className="relative md:col-span-2">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="What water adventure?"
-                      value={searchData.service}
-                      onChange={(e) => {
-                        setSearchData({ ...searchData, service: e.target.value })
-                        if (errors.service) setErrors({ ...errors, service: "" })
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 h-auto border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 placeholder-gray-400 ${
-                        errors.service ? "border-red-500" : "border-gray-200"
-                      }`}
-                    />
+                    
+                    <Select 
+                      value={searchData.service} 
+                      onValueChange={(value) => setSearchData(prev => ({ ...prev, service: value }))}
+                    >
+                      <SelectTrigger className="w-full pl-12 pr-4 py-4 h-auto border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 placeholder-gray-400">
+                        <SelectValue placeholder="What water adventure?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Sailing">Sailing</SelectItem>
+                        <SelectItem value="Boat Rental">Boat Rental</SelectItem>
+                        <SelectItem value="Fishing Charter">Fishing Charter</SelectItem>
+                        <SelectItem value="Kayaking">Kayaking</SelectItem>
+                        <SelectItem value="Yacht Charter">Yacht Charter</SelectItem>
+                        <SelectItem value="Jet Ski Rental">Jet Ski Rental</SelectItem>
+                        <SelectItem value="Scuba Diving">Scuba Diving</SelectItem>
+                        <SelectItem value="Snorkeling">Snorkeling</SelectItem>
+                        <SelectItem value="Paddleboard">Paddleboard</SelectItem>
+                        <SelectItem value="Water Sports">Water Sports</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {errors.service && <p className="text-red-500 text-xs mt-1">{errors.service}</p>}
                   </div>
 
@@ -645,7 +658,7 @@ export default function LandingPage() {
                 <Award className="h-12 w-12 text-teal-600 mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Build Your Brand</h3>
                 <p className="text-gray-600">
-                  Showcase your expertise and build a trusted reputation within the SeaFable community.
+                  Showcase your expertise and build a trusted reputationwithin the SeaFable community.
                 </p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  
+
   images: {
     unoptimized: true,
     domains: [
@@ -11,31 +11,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    gzipSize: true,
-    workerThreads: false,
-    cpus: 1,
-  },
-  // Configure allowed development origins for Replit
-  async headers() {
-    return [
-      {
-        source: '/_next/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
-          },
-        ],
-      },
-    ];
+    serverComponentsExternalPackages: [],
   },
   poweredByHeader: false,
   generateEtags: false,

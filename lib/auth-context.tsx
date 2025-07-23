@@ -25,12 +25,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
-  const [userType, setUserType] = useState<"customer" | "business" | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [userType, setUserType] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const supabase = typeof window !== 'undefined' ? createClient() : null
 
@@ -104,6 +105,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    setMounted(true)
+
+    // Get initial session
+    const getInitialSession = async () => {
+      console.log("Getting initial session...")
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        console.log("Initial getSession result:", session?.user?.id || null, "(attempt 1)")
+
+        if (error) {
+          console.error("Error getting session:", error)
+        } else if (session?.user) {
+          await fetchUserAndProfiles(session.user)
+        }
+      } catch (error) {
+        console.error("Error in getInitialSession:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    getInitialSession()
+
     if (!supabase) {
       setIsLoading(false);
       return;
@@ -113,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let hasInitialized = false;
 
     // Initial session check with retry and persistence logic
-    const getInitialSession = async () => {
+    const getInitialSession2 = async () => {
       try {
         // Check if we have a cached session first
         let session = null;
@@ -149,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Add a small delay to ensure Supabase client is fully initialized after hot reload
-    const initTimeout = setTimeout(getInitialSession, 50);
+    const initTimeout = setTimeout(getInitialSession2, 50);
 
     // Listen for auth state changes
     const {
@@ -287,6 +311,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserProfile(null)
     setBusinessProfile(null)
     setUserType(null)
+  }
+
+  // Prevent hydration issues by not rendering until mounted
+  if (!mounted) {
+    return null
   }
 
   return (
