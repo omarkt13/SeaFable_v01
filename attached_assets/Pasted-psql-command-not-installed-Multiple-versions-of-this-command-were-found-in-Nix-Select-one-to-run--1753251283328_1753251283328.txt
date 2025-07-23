@@ -1,0 +1,100 @@
+psql: command not installed. Multiple versions of this command were found in Nix.
+Select one to run (or press Ctrl-C to cancel):
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+postgresql_13      13.15  A powerful, open source object-relational database system
+postgresql_13_jit  13.15  A powerful, open source object-relational database system
+postgresql_12_jit  12.19  A powerful, open source object-relational database system
+postgresql_15_jit  15.7   A powerful, open source object-relational database system
+postgresql_16_jit  16.3   A powerful, open source object-relational database system
+postgresql_14_jit  14.12  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+> 
+postgresql_12      12.19  A powerful, open source object-relational database system
+
+
+postgresql_16      16.3   A powerful, open source object-relational database system
+Adding postgresql_16 to .replit
+psql: error: connection to server on socket "/run/postgresql/.s.PGSQL.5432" failed: No such file or directory
+    Is the server running locally and accepting connections on that socket?
+
+

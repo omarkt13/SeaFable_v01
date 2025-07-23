@@ -3,7 +3,7 @@ run = "npm run dev"
 
 [nix]
 channel = "stable-24_05"
-packages = ["gildas"]
+packages = ["gildas", "postgresql_16"]
 
 [deployment]
 deploymentTarget = "cloudrun"
