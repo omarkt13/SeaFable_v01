@@ -6,7 +6,7 @@ import Link from "next/link"
 import {
   Search,
   MapPin,
-  Calendar,
+  Calendar as CalendarIcon,
   Star,
   Clock,
   Waves,
@@ -265,7 +265,7 @@ export default function LandingPage() {
                   </div>
 
                   <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                    <CalendarIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                     <div className="relative date-picker-container">
                       <Input
                         type="text"

@@ -10,9 +10,7 @@ const nextConfig = {
       'your-supabase-storage-url.com' // Placeholder for your Supabase storage URL if you use it
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
   poweredByHeader: false,
   generateEtags: false,
   compress: true,
