@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { ErrorFallback } from "@/components/ui/ErrorFallback"
 import "./globals.css"
+import { ToastProvider } from "@/components/ui/toast-provider"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,6 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <ErrorBoundary fallback={ErrorFallback}>
               {children}
+              <ToastProvider />
             </ErrorBoundary>
           </AuthProvider>
         </ThemeProvider>

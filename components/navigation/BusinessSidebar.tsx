@@ -1,6 +1,7 @@
+
 "use client"
 import Link from "next/link"
-import { usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation'
 import {
   Home,
   Calendar,
@@ -9,213 +10,199 @@ import {
   BookOpen,
   Users2,
   Globe,
-  BarChart,
   Settings,
   Plus,
   Eye,
   LogOut,
   Anchor,
-  X,
   Building2,
+  Menu,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
-// import { mockBusinessData } from "@/lib/mock-data" // Not available
 
 interface BusinessSidebarProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export function BusinessSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function BusinessSidebar({ isOpen, onClose }: BusinessSidebarProps) {
   const { businessProfile, signOut } = useAuth()
-  const pathname = usePathname();
+  const pathname = usePathname()
 
-  // Group navigation items according to the design
-  const clientManagementItems = [
-    { name: "Bookings", icon: Users, href: "/business/bookings" },
-    { name: "Experiences", icon: Anchor, href: "/business/adventures" },
-    { name: "Messages", icon: Users2, href: "/business/messages" },
-    { name: "Calendar", icon: Calendar, href: "/business/calendar" },
-    { name: "Clients", icon: Users, href: "/business/clients" },
+  // Navigation items configuration
+  const navigationSections = [
+    {
+      title: "Client Management",
+      items: [
+        { name: "Bookings", icon: Users, href: "/business/bookings", badge: null },
+        { name: "Adventures", icon: Anchor, href: "/business/adventures", badge: null },
+        { name: "Messages", icon: Users2, href: "/business/messages", badge: "3" },
+        { name: "Calendar", icon: Calendar, href: "/business/calendar", badge: null },
+        { name: "Clients", icon: Users, href: "/business/clients", badge: null },
+      ]
+    },
+    {
+      title: "Finance",
+      items: [
+        { name: "Sales & Payments", icon: DollarSign, href: "/business/sales", badge: null },
+        { name: "Integrations", icon: Globe, href: "/business/integrations", badge: null },
+      ]
+    },
+    {
+      title: "Workspace",
+      items: [
+        { name: "Account", icon: Users, href: "/business/account", badge: null },
+        { name: "Settings", icon: Settings, href: "/business/settings", badge: null },
+      ]
+    }
   ]
 
-  const financeItems = [
-    { name: "Sales & Payments", icon: DollarSign, href: "/business/sales" },
-    { name: "Integrations", icon: Globe, href: "/business/integrations" },
-  ]
+  const isActiveLink = (href: string) => {
+    return pathname === href || (href === '/business/home' && pathname === '/business/dashboard')
+  }
 
-  const workspaceItems = [
-    { name: "Account", icon: Users, href: "/business/account" },
-    { name: "Settings", icon: Settings, href: "/business/settings" },
-  ]
-
-  return (
-    <>
-      {/* Mobile backdrop - only visible on mobile when sidebar is open */}
-      {isOpen && <div className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden" onClick={onClose} />}
-
-      {/* Unified Sidebar Element */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transition-transform duration-200 ease-in-out flex flex-col
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:static lg:translate-x-0 lg:flex lg:flex-col lg:flex-shrink-0
-        `}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-16 px-6 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Anchor className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Business</h2>
-              <h3 className="text-lg font-bold text-gray-900">Dashboard</h3>
-            </div>
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between h-16 px-6 border-b bg-gradient-to-r from-blue-50 to-blue-100">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Anchor className="h-5 w-5 text-white" />
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden">
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-8 px-4 flex-1 overflow-y-auto">
-          {/* Home Button - Special styling to match screenshot */}
-          <div className="mb-8">
-            <Link
-              href="/business/home"
-              className={`
-                flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full
-                ${(pathname === '/business/home' || pathname === '/business/dashboard') 
-                  ? "bg-blue-600 text-white" 
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-              `}
-              onClick={onClose}
-            >
-              <Home className="mr-3 h-5 w-5" />
-              Home
-            </Link>
-          </div>
-
-          {/* Client Management Section */}
-          <div className="mb-8">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Client Management
-            </h3>
-            <div className="space-y-1">
-              {clientManagementItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`
-                    group flex items-center px-3 py-2 text-sm font-medium rounded-md
-                    ${item.href === pathname ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-                  `}
-                  onClick={onClose}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Finance Section */}
-          <div className="mb-8">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Finance
-            </h3>
-            <div className="space-y-1">
-              {financeItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`
-                    group flex items-center px-3 py-2 text-sm font-medium rounded-md
-                    ${item.href === pathname ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-                  `}
-                  onClick={onClose}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Workspace Section */}
-          <div className="mb-8">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Workspace
-            </h3>
-            <div className="space-y-1">
-              {workspaceItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`
-                    group flex items-center px-3 py-2 text-sm font-medium rounded-md
-                    ${item.href === pathname ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-                  `}
-                  onClick={onClose}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-auto pt-6 border-t border-gray-200 space-y-1">
-            <Link
-              href="/business/adventures/new"
-              className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              onClick={onClose}
-            >
-              <Plus className="mr-3 h-5 w-5" />
-              Add New Adventure
-            </Link>
-            <Link
-              href="/"
-              className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              onClick={onClose}
-            >
-              <Eye className="mr-3 h-5 w-5" />
-              View Customer Site
-            </Link>
-            <Button
-              variant="ghost"
-              className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              onClick={() => {
-                signOut()
-                onClose()
-              }}
-            >
-              <LogOut className="mr-3 h-5 w-5" />
-              Sign Out
-            </Button>
-          </div>
-        </nav>
-
-        {/* Business Profile Footer */}
-        <div className="p-4 border-t">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {businessProfile?.business_name || businessProfile?.contact_name || businessProfile?.name || "Business"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {businessProfile?.business_type || "Adventure Business"}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">Business</h2>
+            <h3 className="text-sm font-bold text-gray-900">Dashboard</h3>
           </div>
         </div>
       </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 overflow-y-auto">
+        {/* Home Button */}
+        <div className="mb-8">
+          <Link
+            href="/business/home"
+            className={`
+              flex items-center px-4 py-3 text-sm font-medium rounded-xl w-full transition-all duration-200
+              ${isActiveLink('/business/home')
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
+                : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"}
+            `}
+            onClick={onClose}
+          >
+            <Home className="mr-3 h-5 w-5" />
+            Home
+          </Link>
+        </div>
+
+        {/* Navigation Sections */}
+        {navigationSections.map((section, sectionIndex) => (
+          <div key={section.title} className="mb-8">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+              {section.title}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`
+                    group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200
+                    ${isActiveLink(item.href) 
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600" 
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+                  `}
+                  onClick={onClose}
+                >
+                  <div className="flex items-center">
+                    <item.icon className="mr-3 h-4 w-4" />
+                    {item.name}
+                  </div>
+                  {item.badge && (
+                    <Badge variant="secondary" className="text-xs">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </Link>
+              ))}
+            </div>
+            {sectionIndex < navigationSections.length - 1 && (
+              <Separator className="mt-6" />
+            )}
+          </div>
+        ))}
+      </nav>
+
+      {/* Quick Actions */}
+      <div className="px-4 py-4 border-t bg-gray-50">
+        <div className="space-y-2">
+          <Link
+            href="/business/adventures/new"
+            className="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-white hover:text-blue-600 hover:shadow-sm transition-all duration-200"
+            onClick={onClose}
+          >
+            <Plus className="mr-3 h-4 w-4" />
+            Add New Adventure
+          </Link>
+          <Link
+            href="/"
+            className="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-white hover:text-green-600 hover:shadow-sm transition-all duration-200"
+            onClick={onClose}
+          >
+            <Eye className="mr-3 h-4 w-4" />
+            View Customer Site
+          </Link>
+          <Button
+            variant="ghost"
+            className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-600 hover:bg-white hover:text-red-600"
+            onClick={() => {
+              signOut()
+              onClose()
+            }}
+          >
+            <LogOut className="mr-3 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+
+      {/* Business Profile Footer */}
+      <div className="p-4 border-t bg-white">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+            <Building2 className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {businessProfile?.business_name || businessProfile?.contact_name || businessProfile?.name || "Business"}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {businessProfile?.business_type || "Adventure Business"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:bg-white lg:shadow-sm">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile Sheet Sidebar */}
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="left" className="w-64 p-0">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
     </>
   )
 }
