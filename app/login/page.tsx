@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Anchor } from "lucide-react"
+import { ArrowRight, Anchor, Mail, Lock } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 
