@@ -159,7 +159,6 @@ export default function BusinessClientsPage() {
     </BusinessLayout>
   )
 }
-"use client"
 
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
 import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
