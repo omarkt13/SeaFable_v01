@@ -5,7 +5,7 @@ import type React from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Building, Mail, Lock, ArrowRight } from "lucide-react"
+import { ArrowRight, Building, Mail, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function BusinessLoginPage() {
@@ -100,7 +100,7 @@ export default function BusinessLoginPage() {
 
             <Button
               type="submit"
-              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
+              className="w-full bg-teal-600 hover:bg-teal-700"
               disabled={loading}
             >
               {loading ? (

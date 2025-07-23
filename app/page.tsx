@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar } from "@/components/ui/calendar"
+import { Badge } from "@/components/ui/badge"
 
 export default function LandingPage() {
   const router = useRouter()

@@ -5,8 +5,9 @@ import type React from "react"
 import { supabase, createBusinessProfile } from "@/lib/auth-utils"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Building, Mail, Lock, ArrowRight, Briefcase } from "lucide-react"
+import { ArrowRight, Building } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 
 export default function BusinessRegisterPage() {
   const [email, setEmail] = useState("")
@@ -139,9 +140,9 @@ export default function BusinessRegisterPage() {
               </Select>
             </div>
 
-            <button
+            <Button
               type="submit"
-              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
+              className="w-full"
               disabled={loading}
             >
               {loading ? (
@@ -153,7 +154,7 @@ export default function BusinessRegisterPage() {
                   Register <ArrowRight className="ml-2 h-4 w-4 inline-block" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Footer Links */}

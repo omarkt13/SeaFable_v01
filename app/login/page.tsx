@@ -4,8 +4,9 @@ import type React from "react"
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Anchor, Mail, Lock, ArrowRight } from "lucide-react"
-import { useAuth } from "@/lib/auth-context" // Import useAuth
+import { ArrowRight, Anchor } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
+import { Button } from "@/components/ui/button"
 
 export default function CustomerLoginPage() {
   const { login, isLoading: authLoading } = useAuth() // Use login from useAuth
@@ -88,9 +89,9 @@ export default function CustomerLoginPage() {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
-              className="bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors w-full"
+              className="w-full"
               disabled={loading || authLoading}
             >
               {loading || authLoading ? (
@@ -102,7 +103,7 @@ export default function CustomerLoginPage() {
                   Sign In <ArrowRight className="ml-2 h-4 w-4 inline-block" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Footer Links */}

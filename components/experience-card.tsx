@@ -3,8 +3,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, MapPin, Users, Star, Shield, Zap, Cloud, Anchor } from "lucide-react"
+import { Clock, MapPin, Users, Star, Shield, Zap, Cloud } from "lucide-react"
 import { Experience } from "@/types/business"
 
 interface ExperienceCardProps {
