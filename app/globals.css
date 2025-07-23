@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,7 +65,7 @@ button:not(.bg-primary):not(.bg-secondary):not(.bg-destructive) {
     --input: 210 30% 92%;                /* Light input background */
     --ring: 180 50% 50%;                 /* Teal focus ring */
     --radius: 0.75rem;                   /* Rounded corners */
-    
+
     /* Chart colors - ocean themed */
     --chart-1: 200 80% 50%;              /* Ocean blue */
     --chart-2: 180 60% 45%;              /* Teal */
@@ -96,7 +95,7 @@ button:not(.bg-primary):not(.bg-secondary):not(.bg-destructive) {
     --border: 210 50% 12%;               /* Dark border */
     --input: 210 50% 8%;                 /* Dark input background */
     --ring: 180 50% 60%;                 /* Bright teal focus ring */
-    
+
     /* Chart colors - bright ocean themed for dark mode */
     --chart-1: 200 80% 60%;              /* Bright ocean blue */
     --chart-2: 180 70% 55%;              /* Bright teal */
@@ -248,5 +247,34 @@ button:not(.bg-primary):not(.bg-secondary):not(.bg-destructive) {
       hsl(200 80% 25%) 0%, 
       hsl(180 60% 20%) 35%, 
       hsl(160 50% 15%) 100%);
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    color: inherit;
+  }
+
+  body {
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variation-settings: normal;
+    line-height: 1.6;
+  }
+
+  /* Force proper color inheritance for all interactive elements */
+  button, input, textarea, select {
+    color: inherit;
+    background-color: inherit;
+  }
+
+  /* Fix specific component colors that might render black */
+  [data-radix-collection-item],
+  [data-radix-select-content],
+  [data-radix-dropdown-menu-content] {
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
   }
 }

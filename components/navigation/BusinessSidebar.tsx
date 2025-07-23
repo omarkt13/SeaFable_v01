@@ -31,7 +31,7 @@ interface BusinessSidebarProps {
 const navigationItems = {
   clientManagement: [
     { name: "Bookings", icon: Users, href: "/business/bookings" },
-    { name: "Experiences", icon: Anchor, href: "/business/adventures" },
+    { name: "Experiences", icon: Anchor, href: "/business/experiences" },
     { name: "Messages", icon: Users2, href: "/business/messages" },
     { name: "Calendar", icon: Calendar, href: "/business/calendar" },
     { name: "Clients", icon: Users, href: "/business/clients" },
@@ -47,7 +47,7 @@ const navigationItems = {
 }
 
 const quickActions = [
-  { name: "Add New Adventure", icon: Plus, href: "/business/adventures/new" },
+  { name: "Add New Experience", icon: Plus, href: "/business/experiences/new" },
   { name: "View Customer Site", icon: Eye, href: "/" },
 ]
 
