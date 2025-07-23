@@ -24,7 +24,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    allowedDevOrigins: ['*.replit.dev', '*.repl.co'],
+    allowedDevOrigins: ['*.replit.dev'],
   },
 }
 
