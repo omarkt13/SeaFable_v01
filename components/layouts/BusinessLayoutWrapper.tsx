@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { BusinessSidebar } from "@/components/navigation/BusinessSidebar"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Bell, User, Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/auth-context"
@@ -19,24 +20,37 @@ export function BusinessLayoutWrapper({ children, title }: BusinessLayoutWrapper
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <BusinessSidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-      />
+      {/* Desktop Sidebar - Always visible on desktop */}
+      <div className="hidden lg:flex lg:flex-col lg:flex-shrink-0 lg:w-64">
+        <div className="bg-white shadow-lg border-r border-gray-200 h-full">
+          <BusinessSidebar isOpen={false} onClose={() => {}} />
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-64 p-0">
+          <BusinessSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        </SheetContent>
+      </Sheet>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col lg:pl-0 min-w-0">
+      <div className="flex flex-1 flex-col lg:ml-0 min-w-0">
         {/* Top navigation */}
         <div className="sticky top-0 z-10 flex h-16 shrink-0 bg-white shadow border-b border-gray-200">
           <div className="flex w-full">
-            <button
-              type="button"
-              className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+            </Sheet>
 
             <div className="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
               {/* Title */}
@@ -48,19 +62,17 @@ export function BusinessLayoutWrapper({ children, title }: BusinessLayoutWrapper
 
               {/* Right side */}
               <div className="flex items-center space-x-4">
-                <button className="rounded-full bg-white p-1.5 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <Button variant="ghost" size="icon">
                   <Search className="h-5 w-5" />
-                </button>
-                <button className="rounded-full bg-white p-1.5 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                </Button>
+                <Button variant="ghost" size="icon">
                   <Bell className="h-5 w-5" />
-                </button>
-                <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+                </Button>
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
               </div>
             </div>
           </div>

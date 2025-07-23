@@ -246,3 +246,125 @@ export default function BusinessSettingsPage() {
     </BusinessLayout>
   )
 }
+"use client"
+
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+
+export default function BusinessSettingsPage() {
+  return (
+    <BusinessProtectedRoute>
+      <BusinessLayoutWrapper title="Settings">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+              <p className="text-gray-600 mt-1">Manage your account preferences and business settings</p>
+            </div>
+
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Marketplace Settings</CardTitle>
+                  <CardDescription>
+                    Control how your business appears on the marketplace
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="marketplace-enabled">Marketplace Visibility</Label>
+                      <p className="text-sm text-gray-500">
+                        Allow customers to find and book your adventures
+                      </p>
+                    </div>
+                    <Switch id="marketplace-enabled" defaultChecked />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="instant-booking">Instant Booking</Label>
+                      <p className="text-sm text-gray-500">
+                        Allow customers to book without approval
+                      </p>
+                    </div>
+                    <Switch id="instant-booking" />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="auto-confirm">Auto-confirm Bookings</Label>
+                      <p className="text-sm text-gray-500">
+                        Automatically confirm new bookings
+                      </p>
+                    </div>
+                    <Switch id="auto-confirm" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Settings</CardTitle>
+                  <CardDescription>
+                    Choose what notifications you want to receive
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive booking updates via email
+                      </p>
+                    </div>
+                    <Switch id="email-notifications" defaultChecked />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sms-notifications">SMS Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive urgent updates via SMS
+                      </p>
+                    </div>
+                    <Switch id="sms-notifications" />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="marketing-emails">Marketing Emails</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive tips and feature updates
+                      </p>
+                    </div>
+                    <Switch id="marketing-emails" defaultChecked />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Privacy & Security</CardTitle>
+                  <CardDescription>
+                    Manage your privacy and security preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button variant="outline">Change Password</Button>
+                  <Button variant="outline">Two-Factor Authentication</Button>
+                  <Button variant="destructive">Delete Account</Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </BusinessLayoutWrapper>
+    </BusinessProtectedRoute>
+  )
+}

@@ -173,7 +173,7 @@ export default function BusinessAdventuresPage() {
 
   return (
     <BusinessProtectedRoute>
-      <BusinessLayoutWrapper title="Adventures">
+      <BusinessLayoutWrapper title="Adventures Management">
         <div className="px-4 sm:px-6 lg:px-8 space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

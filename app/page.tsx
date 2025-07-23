@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Search, MapPin, Calendar as CalendarIcon, Star, Clock, Waves, Ship, Compass, Zap, Shield, Globe, ChevronRight, Play, Award, Anchor, Users } from "lucide-react"
+import { Search, MapPin, CalendarIcon, Star, Clock, Waves, Ship, Compass, Zap, Shield, Globe, ChevronRight, Play, Award, Anchor, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -648,8 +648,7 @@ export default function LandingPage() {
                 className="bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition-colors font-semibold"
                 asChild
               >
-                ```text
-<Link href="/business/register">
+                <Link href="/business/register">
                   Become a Host
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>

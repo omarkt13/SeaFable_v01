@@ -159,3 +159,58 @@ export default function BusinessClientsPage() {
     </BusinessLayout>
   )
 }
+"use client"
+
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Search, UserPlus } from "lucide-react"
+
+export default function BusinessClientsPage() {
+  return (
+    <BusinessProtectedRoute>
+      <BusinessLayoutWrapper title="Clients">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+                <p className="text-gray-600 mt-1">Manage your customer relationships</p>
+              </div>
+              <Button>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Client
+              </Button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search clients..."
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Client List</CardTitle>
+                <CardDescription>
+                  All your customers and their booking history
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 text-center py-8">
+                  No clients found. Start by adding your first client.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </BusinessLayoutWrapper>
+    </BusinessProtectedRoute>
+  )
+}

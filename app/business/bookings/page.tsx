@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -68,7 +67,7 @@ export default function BusinessBookingsPage() {
       try {
         setLoading(true)
         const supabase = createClient()
-        
+
         const { data, error: fetchError } = await supabase
           .from("bookings")
           .select(`
@@ -99,7 +98,7 @@ export default function BusinessBookingsPage() {
             status: booking.status || 'pending',
             created_at: booking.created_at
           })) || []
-          
+
           setBookings(transformedBookings)
         }
       } catch (err) {
@@ -183,7 +182,7 @@ export default function BusinessBookingsPage() {
 
   return (
     <BusinessProtectedRoute>
-      <BusinessLayoutWrapper title="Bookings">
+      <BusinessLayoutWrapper title="Bookings Management">
         <div className="px-4 sm:px-6 lg:px-8 space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

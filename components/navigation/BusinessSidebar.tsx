@@ -19,7 +19,7 @@ import {
   Building2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
@@ -58,9 +58,9 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
 
   const isActive = (href: string) => {
     if (href === '/business/home') {
-      return pathname === '/business/home' || pathname === '/business/dashboard'
+      return pathname === '/business/home' || pathname === '/business/dashboard' || pathname === '/business'
     }
-    return pathname === href
+    return pathname.startsWith(href)
   }
 
   return (
