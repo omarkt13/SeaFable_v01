@@ -10,7 +10,7 @@ const nextConfig = {
       'your-supabase-storage-url.com' // Placeholder for your Supabase storage URL if you use it
     ],
   },
-  serverExternalPackages: [],
+  serverExternalPackages: ['@supabase/supabase-js'],
   poweredByHeader: false,
   generateEtags: false,
   compress: true,
@@ -23,7 +23,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  serverExternalPackages: ['@supabase/supabase-js'],
   experimental: {
     allowedDevOrigins: [
       'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev'

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils"
@@ -24,7 +24,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
@@ -32,7 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userType, setUserType] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  const supabase = typeof window !== 'undefined' ? createClient() : null
+  // Use useMemo to prevent multiple client instances
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
@@ -115,8 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error("Error getting session:", error)
-        } else if (session?.user) {
-          await fetchUserAndProfiles(session.user)
+        } else {
+          await fetchUserAndProfiles(session?.user || null)
         }
       } catch (error) {
         console.error("Error in getInitialSession:", error)
@@ -127,76 +128,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession()
 
-    if (!supabase) {
-      setIsLoading(false);
-      return;
-    }
-
-    let mounted = true;
-    let hasInitialized = false;
-
-    // Initial session check with retry and persistence logic
-    const getInitialSession2 = async () => {
-      try {
-        // Check if we have a cached session first
-        let session = null;
-        let retryCount = 0;
-        const maxRetries = 3;
-
-        // Retry logic for session retrieval
-        while (retryCount < maxRetries && !session) {
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-
-          if (error) {
-            console.error(`Session retrieval error (attempt ${retryCount + 1}):`, error);
-            retryCount++;
-            await new Promise(resolve => setTimeout(resolve, 200 * retryCount));
-          } else {
-            session = currentSession;
-            break;
-          }
-        }
-
-        console.log("Initial getSession result:", session?.user?.id, `(attempt ${retryCount + 1})`);
-
-        if (mounted && !hasInitialized) {
-          hasInitialized = true;
-          await fetchUserAndProfiles(session?.user || null);
-        }
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Add a small delay to ensure Supabase client is fully initialized after hot reload
-    const initTimeout = setTimeout(getInitialSession2, 50);
-
     // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id)
 
-      if (mounted) {
-        // Don't process INITIAL_SESSION if we've already initialized
-        if (event === 'INITIAL_SESSION' && hasInitialized) {
-          console.log("Skipping duplicate INITIAL_SESSION event");
-          return;
-        }
-
-        await fetchUserAndProfiles(session?.user || null);
+      if (event !== 'INITIAL_SESSION') {
+        await fetchUserAndProfiles(session?.user || null)
       }
     })
 
     return () => {
-      mounted = false;
-      clearTimeout(initTimeout);
       subscription.unsubscribe()
     }
-  }, []) // Remove supabase dependency to prevent re-initialization
+  }, [])
 
   const login = async (
     email: string,
