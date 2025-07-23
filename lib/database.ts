@@ -1081,11 +1081,37 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
 }
 
 // Helper function to get user profile
-async function getUserProfile(userId: string) {
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+export async function getUserProfile(userId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
 
   if (error) {
-    console.error("Error fetching user profile:", error)
+    console.error('Error fetching user profile:', error)
+    // If table doesn't exist, return a default profile structure
+    if (error.code === '42P01') {
+      return {
+        id: userId,
+        first_name: '',
+        last_name: '',
+        email: '',
+        avatar_url: null,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        bio: null,
+        phone_number: null,
+        location: null,
+        date_of_birth: null,
+        notifications_enabled: true,
+        newsletter_enabled: false,
+        marketing_enabled: false
+      }
+    }
     return null
   }
 
@@ -1296,7 +1322,7 @@ export async function getUpcomingBookings(startDate: string) {
     `)
     .gte('booking_date', new Date().toISOString().split('T')[0])
     .order('booking_date', { ascending: true })
-  
+
   if (error) {
     console.error('Error fetching upcoming bookings:', error)
     return []
