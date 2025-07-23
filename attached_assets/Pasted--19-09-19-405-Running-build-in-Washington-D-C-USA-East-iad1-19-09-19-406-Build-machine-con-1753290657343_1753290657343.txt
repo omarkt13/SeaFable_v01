@@ -1,0 +1,70 @@
+[19:09:19.405] Running build in Washington, D.C., USA (East) – iad1
+[19:09:19.406] Build machine configuration: 2 cores, 8 GB
+[19:09:19.422] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 9149568)
+[19:09:19.556] Previous build caches not available
+[19:09:20.681] Cloning completed: 1.258s
+[19:09:22.585] Running "vercel build"
+[19:09:23.103] Vercel CLI 44.5.0
+[19:09:23.433] Installing dependencies...
+[19:09:27.450] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:09:28.106] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:09:38.983] 
+[19:09:38.985] added 504 packages in 15s
+[19:09:38.985] 
+[19:09:38.985] 59 packages are looking for funding
+[19:09:38.986]   run `npm fund` for details
+[19:09:39.269] Detected Next.js version: 15.2.4
+[19:09:39.274] Running "npm run build"
+[19:09:39.537] 
+[19:09:39.537] > my-v0-project@0.1.0 build
+[19:09:39.537] > next build
+[19:09:39.537] 
+[19:09:40.582] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[19:09:40.582] This information is used to shape Next.js' roadmap and prioritize features.
+[19:09:40.582] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[19:09:40.582] https://nextjs.org/telemetry
+[19:09:40.582] 
+[19:09:40.751]    ▲ Next.js 15.2.4
+[19:09:40.752]    - Experiments (use with caution):
+[19:09:40.752]      · allowedDevOrigins
+[19:09:40.752] 
+[19:09:40.844]    Creating an optimized production build ...
+[19:09:56.294] Failed to compile.
+[19:09:56.295] 
+[19:09:56.295] ./app/business/clients/page.tsx
+[19:09:56.296] Error:   [31mx[0m The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+[19:09:56.296]      ,-[[36;1;4m/vercel/path0/app/business/clients/page.tsx[0m:162:1]
+[19:09:56.296]  [2m159[0m |     </BusinessLayout>
+[19:09:56.296]  [2m160[0m |   )
+[19:09:56.296]  [2m161[0m | }
+[19:09:56.296]  [2m162[0m | "use client"
+[19:09:56.296]      : [35;1m^^^^^^^^^^^^[0m
+[19:09:56.296]  [2m163[0m | 
+[19:09:56.298]  [2m164[0m | import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+[19:09:56.298]  [2m165[0m | import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+[19:09:56.298]      `----
+[19:09:56.298] 
+[19:09:56.298] Import trace for requested module:
+[19:09:56.298] ./app/business/clients/page.tsx
+[19:09:56.299] 
+[19:09:56.299] ./app/business/sales/page.tsx
+[19:09:56.299] Error:   [31mx[0m The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+[19:09:56.299]      ,-[[36;1;4m/vercel/path0/app/business/sales/page.tsx[0m:156:1]
+[19:09:56.299]  [2m153[0m |     </BusinessLayout>
+[19:09:56.300]  [2m154[0m |   )
+[19:09:56.300]  [2m155[0m | }
+[19:09:56.300]  [2m156[0m | "use client"
+[19:09:56.301]      : [35;1m^^^^^^^^^^^^[0m
+[19:09:56.301]  [2m157[0m | 
+[19:09:56.301]  [2m158[0m | import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+[19:09:56.301]  [2m159[0m | import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+[19:09:56.301]      `----
+[19:09:56.301] 
+[19:09:56.301] Import trace for requested module:
+[19:09:56.301] ./app/business/sales/page.tsx
+[19:09:56.301] 
+[19:09:56.312] 
+[19:09:56.315] > Build failed because of webpack errors
+[19:09:56.344] Error: Command "npm run build" exited with 1
+[19:09:56.611] 
+[19:09:59.979] Exiting build container
