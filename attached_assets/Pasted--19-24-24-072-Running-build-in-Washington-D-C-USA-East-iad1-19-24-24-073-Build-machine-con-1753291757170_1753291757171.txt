@@ -1,0 +1,55 @@
+[19:24:24.072] Running build in Washington, D.C., USA (East) – iad1
+[19:24:24.073] Build machine configuration: 2 cores, 8 GB
+[19:24:24.128] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 2813ae4)
+[19:24:24.579] Previous build caches not available
+[19:24:24.933] Cloning completed: 804.000ms
+[19:24:26.743] Running "vercel build"
+[19:24:28.026] Vercel CLI 44.5.0
+[19:24:28.436] Installing dependencies...
+[19:24:32.500] npm warn deprecated @supabase/auth-helpers-shared@0.7.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:24:33.158] npm warn deprecated @supabase/auth-helpers-nextjs@0.10.0: This package is now deprecated - please use the @supabase/ssr package instead.
+[19:24:44.428] 
+[19:24:44.428] added 504 packages in 16s
+[19:24:44.429] 
+[19:24:44.429] 59 packages are looking for funding
+[19:24:44.429]   run `npm fund` for details
+[19:24:44.676] Detected Next.js version: 15.2.4
+[19:24:44.682] Running "npm run build"
+[19:24:44.822] 
+[19:24:44.823] > my-v0-project@0.1.0 build
+[19:24:44.823] > next build
+[19:24:44.823] 
+[19:24:45.437] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[19:24:45.438] This information is used to shape Next.js' roadmap and prioritize features.
+[19:24:45.439] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[19:24:45.439] https://nextjs.org/telemetry
+[19:24:45.439] 
+[19:24:45.500]    ▲ Next.js 15.2.4
+[19:24:45.501]    - Experiments (use with caution):
+[19:24:45.501]      · allowedDevOrigins
+[19:24:45.501] 
+[19:24:45.572]    Creating an optimized production build ...
+[19:25:16.667]  ✓ Compiled successfully
+[19:25:16.671]    Skipping validation of types
+[19:25:16.672]    Skipping linting
+[19:25:16.931]    Collecting page data ...
+[19:25:19.961]    Generating static pages (0/42) ...
+[19:25:21.569]    Generating static pages (10/42) 
+[19:25:21.916]    Generating static pages (20/42) 
+[19:25:21.998] Error occurred prerendering page "/business/register". Read more: https://nextjs.org/docs/messages/prerender-error
+[19:25:21.998] ReferenceError: Mail is not defined
+[19:25:21.998]     at m (/vercel/path0/.next/server/app/business/register/page.js:1:3280)
+[19:25:21.998]     at nL (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:46773)
+[19:25:21.999]     at nF (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:48548)
+[19:25:21.999]     at nq (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:67434)
+[19:25:21.999]     at nH (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:65009)
+[19:25:21.999]     at nU (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:47125)
+[19:25:21.999]     at nF (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:48594)
+[19:25:21.999]     at nF (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:64360)
+[19:25:21.999]     at nq (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:67434)
+[19:25:21.999]     at nH (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:76:65009)
+[19:25:21.999] Export encountered an error on /business/register/page: /business/register, exiting the build.
+[19:25:22.012]  ⨯ Next.js build worker exited with code: 1 and signal: null
+[19:25:22.044] Error: Command "npm run build" exited with 1
+[19:25:22.323] 
+[19:25:26.095] Exiting build container
