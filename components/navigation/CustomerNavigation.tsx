@@ -1,14 +1,13 @@
-
 "use client"
 
-import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { signOutAndRedirect } from "@/lib/auth-utils"
 import Link from "next/link"
-import { Search, Calendar, Heart, Settings, LogOut, X } from "lucide-react"
+import { Search, Calendar, Heart, Settings, LogOut, Menu, X } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 export function CustomerNavigation() {
   const { user, userProfile } = useAuth()
@@ -19,8 +18,7 @@ export function CustomerNavigation() {
   }
 
   const userInitials =
-    ((userProfile?.first_name?.charAt(0) || "") + (userProfile?.last_name?.charAt(0) || "")) || 
-    user?.email?.charAt(0) || "U"
+    (userProfile?.first_name?.charAt(0) || "") + (userProfile?.last_name?.charAt(0) || "") || user?.email?.charAt(0) || "U"
 
   const navigationItems = [
     { name: 'Find Adventures', href: '/search', icon: Search },
@@ -31,7 +29,7 @@ export function CustomerNavigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="bg-white shadow-lg border-b border-gray-200 hidden md:block">
+      <nav className="bg-white shadow-lg border-b border-gray-200 hidden sm:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -44,8 +42,8 @@ export function CustomerNavigation() {
               </Link>
             </div>
 
-            {/* Customer Navigation Links - Hide on smaller screens */}
-            <div className="hidden xl:flex items-center space-x-8">
+            {/* Customer Navigation Links - Hide on smaller tablets */}
+            <div className="hidden lg:flex items-center space-x-8">
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -75,7 +73,7 @@ export function CustomerNavigation() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48" align="end">
                   {/* Show navigation items in dropdown for tablets */}
-                  <div className="xl:hidden">
+                  <div className="lg:hidden">
                     {navigationItems.map((item) => {
                       const Icon = item.icon
                       return (
@@ -126,7 +124,7 @@ export function CustomerNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-lg border-b border-gray-200 md:hidden">
+      <nav className="bg-white shadow-lg border-b border-gray-200 sm:hidden">
         <div className="px-3">
           <div className="flex justify-between items-center h-14">
             {/* Logo */}
@@ -137,23 +135,15 @@ export function CustomerNavigation() {
               <span className="text-base font-bold text-gray-900">SeaFable</span>
             </Link>
 
-            {/* Mobile menu button with custom hamburger */}
+            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 min-w-[36px] h-9 flex flex-col justify-center items-center"
+              className="p-1.5 min-w-[36px] h-9"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <div className="w-5 h-4 flex flex-col justify-between">
-                  <div className="w-full h-0.5 bg-current"></div>
-                  <div className="w-full h-0.5 bg-current"></div>
-                  <div className="w-full h-0.5 bg-current"></div>
-                </div>
-              )}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
 
