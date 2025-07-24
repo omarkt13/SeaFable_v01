@@ -182,7 +182,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: "Business accounts should use the business login page." }
         }
 
-        // If validation passes, fetch profiles
+        // Proceed with login if all checks pass
+        await fetchUserAndProfiles(data.user)
+
+        return { 
+          success: true, 
+          user: data.user,
+          error: undefined 
+        }
+
+      } catch (error: any) {
+        console.error("Login error:", error)
+        return { 
+          success: false, 
+          error: error.message || "An unexpected error occurred" 
+        }
+      }
+    }
+
+    const logout = async (): Promise<void> => {
+      try {
+        await supabase.auth.signOut()
+        setUser(null)
+        setUserType(null)
+        setHostProfile(null)
+        setBusinessProfile(null)
+      } catch (error) {
+        console.error("Logout error:", error)
+      }
+    }
+
+    const value = {
+      user,
+      userType,
+      hostProfile,
+      businessProfile,
+      isLoading,
+      login,
+      logout,
+      refreshProfiles: () => fetchUserAndProfiles(user),
+    }
+
+    return (
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
+    )
+  }
+
+  export const useAuth = () => {
+    const context = useContext(AuthContext)
+    if (context === undefined) {
+      throw new Error("useAuth must be used within an AuthProvider")
+    }
+    return context
+  } If validation passes, fetch profiles
         await fetchUserAndProfiles(data.user)
         return { success: true, user: data.user }
       }
