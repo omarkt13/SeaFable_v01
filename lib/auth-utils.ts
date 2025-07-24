@@ -9,6 +9,11 @@ declare global {
 }
 
 export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Server-side: create a new instance each time
+    return createClientComponentClient()
+  }
+  
   if (!globalThis.supabaseClientInstance) {
     globalThis.supabaseClientInstance = createClientComponentClient()
   }
@@ -24,17 +29,7 @@ export async function getCurrentUser() {
   return user
 }
 
-export async function getSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
-  if (error) {
-    console.error('Error getting session:', error)
-    return null
-  }
-  return session
-}
+
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()

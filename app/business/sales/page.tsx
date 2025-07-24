@@ -56,9 +56,10 @@ export default function BusinessSalesPage() {
         }))
 
       setSalesData(formattedSales)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch sales data:", err)
-      setError(err.message || "Failed to load sales data.")
+      const errorMessage = err instanceof Error ? err.message : "Failed to load sales data."
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

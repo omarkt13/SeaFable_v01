@@ -38,8 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
     console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
-    setIsLoading(true);
-
+    
     if (!currentUser) {
       setUser(null);
       setUserType(null);
@@ -50,12 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If we already have this user loaded, don't refetch unnecessarily
-    if (user && user.id === currentUser.id && userType) {
-      console.log("User already loaded, skipping refetch");
+    // Enhanced caching - check if we already have complete data for this user
+    if (user && user.id === currentUser.id && userType && 
+        (userType === "business" ? businessProfile : userProfile)) {
+      console.log("User already loaded with complete profile, skipping refetch");
       setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     try {
       // Set user immediately

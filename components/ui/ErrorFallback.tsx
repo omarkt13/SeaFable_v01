@@ -1,26 +1,53 @@
-"use client"
 
-import { Button } from "@/components/ui/button"
-import { AlertTriangle } from "lucide-react"
+import React from 'react'
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from './button'
+import { Card, CardContent, CardHeader, CardTitle } from './card'
 
 interface ErrorFallbackProps {
-  error?: Error
-  resetError?: () => void
+  error: Error
+  resetErrorBoundary: () => void
+  title?: string
+  description?: string
 }
 
-export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
+export function ErrorFallback({ 
+  error, 
+  resetErrorBoundary, 
+  title = "Something went wrong",
+  description = "An unexpected error occurred. Please try again."
+}: ErrorFallbackProps) {
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center p-6 text-center">
-      <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-      <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
-      <p className="text-muted-foreground mb-4 max-w-md">
-        {error?.message || "An unexpected error occurred. Please try again."}
-      </p>
-      {resetError && (
-        <Button onClick={resetError} variant="outline">
-          Try again
-        </Button>
-      )}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <CardTitle className="text-xl font-semibold text-gray-900">
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-gray-600">{description}</p>
+          {process.env.NODE_ENV === 'development' && (
+            <details className="text-left">
+              <summary className="cursor-pointer text-sm text-gray-500 mb-2">
+                Error Details (Development)
+              </summary>
+              <pre className="text-xs bg-red-50 p-2 rounded overflow-auto">
+                {error.message}
+              </pre>
+            </details>
+          )}
+          <Button 
+            onClick={resetErrorBoundary}
+            className="w-full"
+            variant="default"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
