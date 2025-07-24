@@ -174,17 +174,24 @@ export type FishingDetails = {
   catchAndRelease: boolean
 }
 
-// HostAvailability type for managing host schedules
+// FIXED HostAvailability type - matches what the code expects
 export type HostAvailability = {
   id: string
   host_id: string
-  business_id: string
-  available_date: string // YYYY-MM-DD
+  business_id?: string
+  // These are the properties the code actually expects:
+  date: string  // YYYY-MM-DD (code expects this, not available_date)
+  available_date?: string // Keep for backward compatibility
   start_time: string // HH:MM
   end_time: string // HH:MM
-  max_capacity: number
-  current_bookings: number
-  is_available: boolean
+  available_capacity: number // Code expects this, not max_capacity
+  max_capacity?: number // Keep for backward compatibility
+  current_bookings?: number
+  price_override?: number
+  is_available?: boolean
+  weather_dependent?: boolean
+  is_recurring?: boolean
+  recurring_pattern?: any
   notes?: string
   created_at: string
   updated_at: string
