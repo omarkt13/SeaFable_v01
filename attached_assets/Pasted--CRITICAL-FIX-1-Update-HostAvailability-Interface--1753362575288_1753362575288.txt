@@ -1,0 +1,208 @@
+// ========================================
+// CRITICAL FIX 1: Update HostAvailability Interface
+// File: types/business.ts
+// ========================================
+
+// REPLACE the existing HostAvailability type with this corrected version:
+export type HostAvailability = {
+  id: string
+  host_id: string
+  business_id?: string
+  // ADD these missing properties that code expects:
+  date: string  // YYYY-MM-DD (code expects this, not available_date)
+  available_date?: string // Keep for backward compatibility
+  start_time: string // HH:MM
+  end_time: string // HH:MM
+  available_capacity: number // Code expects this, not max_capacity
+  max_capacity?: number // Keep for backward compatibility
+  current_bookings?: number
+  price_override?: number
+  is_available?: boolean
+  weather_dependent?: boolean
+  is_recurring?: boolean
+  recurring_pattern?: any
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+// ========================================
+// CRITICAL FIX 2: Fix Experience Detail Page
+// File: app/experience/[id]/page.tsx
+// ========================================
+
+// FIND this line around line 148:
+// bookingData.date && slot.available_capacity >= bookingData.guests && new Date(`${slot.date}T${slot.start_time}`) > new Date()
+
+// REPLACE with:
+const availableSlots = hostAvailability?.filter((slot: HostAvailability) => 
+  slot.date && 
+  bookingData.date && 
+  (slot.available_capacity || slot.max_capacity || 1) >= bookingData.guests && 
+  new Date(`${slot.date}T${slot.start_time || '09:00'}`) > new Date()
+).sort((a, b) => (a.start_time || '').localeCompare(b.start_time || '')) || []
+
+// ========================================
+// CRITICAL FIX 3: Fix Homepage Type Errors
+// File: app/page.tsx
+// ========================================
+
+// FIND the useState declarations around lines 15-25 and REPLACE with:
+const [searchData, setSearchData] = useState<{
+  service: string;
+  location: string;
+  date: string;
+}>({
+  service: "",
+  location: "",
+  date: new Date().toISOString().split('T')[0],
+})
+
+const [errors, setErrors] = useState<{[key: string]: string}>({})
+
+// FIND the validateSearch function around line 96 and REPLACE with:
+const validateSearch = (): boolean => {
+  const newErrors: {[key: string]: string} = {}
+  if (!searchData.service?.trim()) newErrors.service = "Please select an activity"
+  if (!searchData.location?.trim()) newErrors.location = "Please enter a location"
+  setErrors(newErrors)
+  return Object.keys(newErrors).length === 0
+}
+
+// FIND event handler parameters and ADD types:
+// Change this:
+const handleClickOutside = (event) => {
+// To this:
+const handleClickOutside = (event: MouseEvent) => {
+
+// Change this:
+const handleDateSelect = (selectedDate) => {
+// To this:
+const handleDateSelect = (selectedDate: string) => {
+
+// ========================================
+// CRITICAL FIX 4: Fix Search Page Type Errors
+// File: app/search/page.tsx
+// ========================================
+
+// FIND the price range handling around line 595 and REPLACE with:
+// Change from:
+// const priceRange = filters.priceRange
+// const minPrice = priceRange[0]
+// const maxPrice = priceRange[1]
+
+// To:
+const priceRange = filters.priceRange as [number, number]
+const minPrice = typeof priceRange === 'object' && priceRange.length >= 2 ? priceRange[0] : 0
+const maxPrice = typeof priceRange === 'object' && priceRange.length >= 2 ? priceRange[1] : 1000
+
+// FIND the HostAvailability reference around line 118 and REPLACE with:
+// Change from:
+// slot.available_capacity >= numberOfGuests
+// To:
+(slot.available_capacity || slot.max_capacity || 1) >= numberOfGuests
+
+// ========================================
+// CRITICAL FIX 5: Fix Null Safety Issues
+// File: Multiple files with user?.property errors
+// ========================================
+
+// For all files with "user is possibly null" errors, wrap in null checks:
+// Change from:
+// if (user.id) {
+// To:
+if (user?.id) {
+
+// Change from:
+// const hostId = user.id
+// To:
+const hostId = user?.id
+
+// ========================================
+// CRITICAL FIX 6: Fix Business Dashboard Loading Property
+// File: lib/auth-context.tsx (or wherever AuthContextType is defined)
+// ========================================
+
+// ADD the missing 'loading' property to AuthContextType:
+export interface AuthContextType {
+  user: User | null
+  userProfile: UserProfile | null
+  businessProfile: BusinessProfile | null
+  loading: boolean  // ADD THIS LINE
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; error?: string }>
+  signOut: () => Promise<void>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>
+}
+
+// ========================================
+// CRITICAL FIX 7: Fix Database Column References
+// File: All files using Supabase queries
+// ========================================
+
+// Change all references from:
+// bookings.start_date
+// To:
+// bookings.booking_date
+
+// Change all references from:
+// customer_profiles
+// To:
+// users
+
+// Example Supabase query fix:
+const { data: bookings } = await supabase
+  .from('bookings')
+  .select(`
+    id,
+    booking_date,
+    user_id,
+    experience_id,
+    host_id,
+    booking_status,
+    total_price,
+    number_of_guests,
+    users!bookings_user_id_fkey (
+      id,
+      first_name,
+      last_name,
+      email
+    )
+  `)
+
+// ========================================
+// CRITICAL FIX 8: Fix Import Errors and Missing Functions
+// File: lib/auth-utils.ts
+// ========================================
+
+// ADD the missing getSession function:
+export async function getSession() {
+  const supabase = createClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
+  
+  if (error) {
+    console.error('Error getting session:', error)
+    return null
+  }
+  
+  return session
+}
+
+// ========================================
+// PRIORITY IMPLEMENTATION ORDER:
+// ========================================
+// 1. Fix HostAvailability interface (types/business.ts) - BLOCKS EVERYTHING
+// 2. Fix homepage type errors (app/page.tsx) - PREVENTS COMPILATION  
+// 3. Fix experience page type errors (app/experience/[id]/page.tsx) - CORE FUNCTIONALITY
+// 4. Fix search page type errors (app/search/page.tsx) - MAIN FEATURE
+// 5. Add missing AuthContext loading property - BUSINESS DASHBOARD
+// 6. Fix database queries throughout - DATA ACCESS
+// 7. Add missing utility functions - AUTHENTICATION
+
+// After implementing these fixes, run:
+// npm run type-check
+// npm run build
+// npm run dev
+
+// These fixes should resolve the majority of critical compilation errors
+// and allow the site to run in development mode.
