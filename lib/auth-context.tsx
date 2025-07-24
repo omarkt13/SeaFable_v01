@@ -12,6 +12,7 @@ interface AuthContextType {
   businessProfile: BusinessProfile | null
   userType: "customer" | "business" | null
   isLoading: boolean
+  loading: boolean  // Add alias for compatibility
   login: (email: string, password: string, type: string) => Promise<{ success: boolean; user?: User; error?: string }>
   signUp: (
     email: string,
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getInitialSession()
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id)
 
       if (event !== 'INITIAL_SESSION') {
@@ -180,108 +181,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: "Business accounts should use the business login page." }
         }
 
-        // If validation passes, fetch profiles
-        await fetchUserAndProfiles(data.user)
-        return { success: true, user: data.user }
-      }
-      return { success: false, error: "Login failed: No user data." }
-    } catch (error: any) {
-      return { success: false, error: error.message || "An unexpected error occurred during login." }
-    }
-  }
-
-  const signUp = async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-  ): Promise<{ success: boolean; user?: User; error?: string }> => {
-    if (!supabase) {
-      return { success: false, error: "Authentication not initialized" };
-    }
-
-    try {
-      // 1. Sign up with Supabase Auth
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            user_type: "customer", // Store user type in metadata for quicker lookup
-          },
-        },
-      })
-
-      if (authError) {
-        console.error("Sign up auth error:", authError.message)
-        return { success: false, error: authError.message }
-      }
-
-      if (data.user) {
-        console.log("Sign up successful for user:", data.user.id)
-        // 2. Insert user profile into 'users' table
-        const { error: profileError } = await supabase.from("users").insert([
-          {
-            id: data.user.id,
-            email: data.user.email,
-            first_name: firstName,
-            last_name: lastName,
-            role: "customer", // Assign a default role
-          },
-        ])
-
-        if (profileError) {
-          // If profile creation fails, consider rolling back auth user or logging
-          console.error("Error creating user profile:", profileError)
-          // Optionally, delete the auth user if profile creation fails
-          // await supabase.auth.admin.deleteUser(data.user.id);
-          return { success: false, error: profileError.message || "Failed to create user profile." }
-        }
-
-        // After successful signup and profile creation, re-fetch profiles and user type
-        await fetchUserAndProfiles(data.user)
-        return { success: true, user: data.user }
-      }
-
-      return { success: false, error: "Sign up failed: No user data." }
-    } catch (error: any) {
-      return { success: false, error: error.message || "An unexpected error occurred during sign up." }
-    }
-  }
-
-  const signOut = async () => {
-    await authUtilsSignOut() // Use the signOut from auth-utils
-    setUser(null)
-    setUserProfile(null)
-    setBusinessProfile(null)
-    setUserType(null)
-  }
-
-  // Ensure client-side only initialization
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Prevent hydration mismatch by not rendering auth-dependent content on server
-  if (!isClient) {
-    return (
-      <AuthContext.Provider value={{ user: null, userProfile: null, businessProfile: null, userType: null, isLoading: true, login, signUp, signOut }}>
-        {children}
-      </AuthContext.Provider>
-    )
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, login, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
+        //
