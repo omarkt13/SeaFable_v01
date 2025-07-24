@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { signOutAndRedirect } from "@/lib/auth-utils"
 import Link from "next/link"
@@ -8,7 +9,6 @@ import { Search, Calendar, Heart, Settings, LogOut, X } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 
 export function CustomerNavigation() {
   const { user, userProfile } = useAuth()
@@ -19,7 +19,8 @@ export function CustomerNavigation() {
   }
 
   const userInitials =
-    (userProfile?.first_name?.charAt(0) || "") + (userProfile?.last_name?.charAt(0) || "") || user?.email?.charAt(0) || "U"
+    ((userProfile?.first_name?.charAt(0) || "") + (userProfile?.last_name?.charAt(0) || "")) || 
+    user?.email?.charAt(0) || "U"
 
   const navigationItems = [
     { name: 'Find Adventures', href: '/search', icon: Search },
