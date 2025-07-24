@@ -1,143 +1,151 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react"
-import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
-import { getUserProfile, getBusinessProfile, signOut as authUtilsSignOut } from "@/lib/auth-utils"
-import type { UserProfile, BusinessProfile } from "@/types/auth"
+import React, { createContext, useContext, useEffect, useState } from "react"
+import { User } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
+import { signOut as authUtilsSignOut } from "@/lib/auth-utils"
+
+interface HostProfile {
+  id: string
+  user_id: string
+  business_name: string
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  bio?: string
+  profile_image_url?: string
+  location?: string
+  certifications?: string[]
+  years_experience?: number
+  specialties?: string[]
+  created_at: string
+  updated_at: string
+}
+
+interface BusinessProfile {
+  id: string
+  user_id: string
+  business_name: string
+  business_type: string
+  contact_email: string
+  contact_phone?: string
+  address?: string
+  city?: string
+  state?: string
+  zip_code?: string
+  country?: string
+  description?: string
+  website?: string
+  social_links?: Record<string, string>
+  logo_url?: string
+  cover_image_url?: string
+  business_hours?: Record<string, any>
+  created_at: string
+  updated_at: string
+}
+
+type UserType = "customer" | "business" | null
 
 interface AuthContextType {
   user: User | null
-  userProfile: UserProfile | null
+  userType: UserType
+  hostProfile: HostProfile | null
   businessProfile: BusinessProfile | null
-  userType: "customer" | "business" | null
   isLoading: boolean
-  login: (email: string, password: string, type: string) => Promise<{ success: boolean; user?: User; error?: string }>
-  signUp: (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-  ) => Promise<{ success: boolean; user?: User; error?: string }>
-  signOut: () => Promise<void>
+  login: (email: string, password: string, type: "customer" | "business") => Promise<{
+    success: boolean
+    user?: User
+    error?: string
+  }>
+  logout: () => Promise<void>
+  refreshProfiles: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userType, setUserType] = useState<UserType>(null)
+  const [hostProfile, setHostProfile] = useState<HostProfile | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [userType, setUserType] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-
-  // Use useMemo to prevent multiple client instances
-  const supabase = useMemo(() => createClient(), [])
 
   const fetchUserAndProfiles = async (currentUser: User | null) => {
-    console.log("fetchUserAndProfiles called. Current user:", currentUser?.id);
-    
+    console.log("fetchUserAndProfiles called. Current user:", currentUser)
+
     if (!currentUser) {
-      setUser(null);
-      setUserType(null);
-      setUserProfile(null);
-      setBusinessProfile(null);
-      setIsLoading(false);
-      console.log("fetchUserAndProfiles finished. User:", null, "User Type:", null);
-      return;
+      setUser(null)
+      setUserType(null)
+      setHostProfile(null)
+      setBusinessProfile(null)
+      setIsLoading(false)
+      console.log("fetchUserAndProfiles finished. User:", null, "User Type:", null)
+      return
     }
-
-    // Enhanced caching - check if we already have complete data for this user
-    if (user && user.id === currentUser.id && userType && 
-        (userType === "business" ? businessProfile : userProfile)) {
-      console.log("User already loaded with complete profile, skipping refetch");
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
 
     try {
-      // Set user immediately
-      setUser(currentUser);
+      setUser(currentUser)
 
-      // Determine user type from metadata
-      const userTypeFromMetadata = currentUser.user_metadata?.user_type;
-      console.log("User type from metadata:", userTypeFromMetadata);
+      // Get user type from user metadata
+      const userTypeFromMetadata = currentUser.user_metadata?.user_type || currentUser.app_metadata?.user_type
+      setUserType(userTypeFromMetadata)
 
-      if (userTypeFromMetadata === "business") {
-        setUserType("business");
+      // Fetch host profile
+      const { data: hostData, error: hostError } = await supabase
+        .from("host_profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .single()
 
-        // Fetch business profile
-        try {
-          const businessData = await getBusinessProfile(currentUser.id);
-          console.log("Business profile fetched:", businessData);
-          setBusinessProfile(businessData);
-          setUserProfile(null);
-        } catch (error) {
-          console.error("Error fetching business profile:", error);
-          setBusinessProfile(null);
-        }
-      } else {
-        setUserType("customer");
-
-        // Fetch customer profile
-        try {
-          const customerData = await getUserProfile(currentUser.id);
-          console.log("Customer profile fetched:", customerData);
-          setUserProfile(customerData);
-          setBusinessProfile(null);
-        } catch (error) {
-          console.error("Error fetching customer profile:", error);
-          setUserProfile(null);
-        }
+      if (!hostError && hostData) {
+        setHostProfile(hostData)
       }
 
-      console.log("fetchUserAndProfiles finished. User:", currentUser.id, "User Type:", userTypeFromMetadata);
+      // Fetch business profile
+      const { data: businessData, error: businessError } = await supabase
+        .from("business_profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .single()
+
+      if (!businessError && businessData) {
+        setBusinessProfile(businessData)
+      }
+
+      console.log("fetchUserAndProfiles finished. User:", currentUser, "User Type:", userTypeFromMetadata)
     } catch (error) {
-      console.error("Error fetching user profiles:", error);
-      setUser(currentUser);
-      setUserType(null);
-      setUserProfile(null);
-      setBusinessProfile(null);
+      console.error("Error fetching user profiles:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    setMounted(true)
-
     // Get initial session
     const getInitialSession = async () => {
       console.log("Getting initial session...")
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        console.log("Initial getSession result:", session?.user?.id || null, "(attempt 1)")
-
         if (error) {
           console.error("Error getting session:", error)
-        } else {
-          await fetchUserAndProfiles(session?.user || null)
+          setIsLoading(false)
+          return
         }
+        console.log("Initial getSession result:", session?.user || null, "(attempt 1)")
+        await fetchUserAndProfiles(session?.user || null)
       } catch (error) {
         console.error("Error in getInitialSession:", error)
-      } finally {
         setIsLoading(false)
       }
     }
 
     getInitialSession()
 
-    // Listen for auth state changes
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("onAuthStateChange event:", event, "Session user:", session?.user?.id)
-
-      if (event !== 'INITIAL_SESSION') {
-        await fetchUserAndProfiles(session?.user || null)
-      }
+      console.log("onAuthStateChange event:", event, "Session user:", session?.user || null)
+      await fetchUserAndProfiles(session?.user || null)
     })
 
     return () => {
@@ -148,12 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string,
-    type: string,
+    type: "customer" | "business"
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
-    if (!supabase) {
-      return { success: false, error: "Authentication not initialized" };
-    }
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -161,180 +165,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
-        console.error("Login error:", error.message)
         return { success: false, error: error.message }
       }
 
-      if (data.user) {
-        console.log("Login successful for user:", data.user.id)
-
-        // Check user type from metadata first
-        const userTypeFromMetadata = data.user.user_metadata?.user_type;
-        console.log("User type from metadata:", userTypeFromMetadata);
-
-        // Validate user type matches the login portal
-        if (type === "business" && userTypeFromMetadata !== "business") {
-          await authUtilsSignOut()
-          return { success: false, error: "This account is not registered as a business. Please use the customer login or register your business first." }
-        }
-        if (type === "customer" && userTypeFromMetadata === "business") {
-          await authUtilsSignOut()
-          return { success: false, error: "Business accounts should use the business login page." }
-        }
-
-        // Proceed with login if all checks pass
-        await fetchUserAndProfiles(data.user)
-
-        return { 
-          success: true, 
-          user: data.user,
-          error: undefined 
-        }
-
-      } catch (error: any) {
-        console.error("Login error:", error)
-        return { 
-          success: false, 
-          error: error.message || "An unexpected error occurred" 
-        }
+      if (!data.user) {
+        return { success: false, error: "No user data returned" }
       }
-    }
 
-    const logout = async (): Promise<void> => {
-      try {
-        await supabase.auth.signOut()
-        setUser(null)
-        setUserType(null)
-        setHostProfile(null)
-        setBusinessProfile(null)
-      } catch (error) {
-        console.error("Logout error:", error)
+      // Check user type matches login type
+      const userTypeFromMetadata = data.user.user_metadata?.user_type || data.user.app_metadata?.user_type
+
+      if (type === "customer" && userTypeFromMetadata === "business") {
+        await authUtilsSignOut()
+        return { success: false, error: "Business accounts should use the business login page." }
       }
-    }
 
-    const value = {
-      user,
-      userType,
-      hostProfile,
-      businessProfile,
-      isLoading,
-      login,
-      logout,
-      refreshProfiles: () => fetchUserAndProfiles(user),
-    }
+      // Proceed with login if all checks pass
+      await fetchUserAndProfiles(data.user)
 
-    return (
-      <AuthContext.Provider value={value}>
-        {children}
-      </AuthContext.Provider>
-    )
-  }
-
-  export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (context === undefined) {
-      throw new Error("useAuth must be used within an AuthProvider")
-    }
-    return context
-  } If validation passes, fetch profiles
-        await fetchUserAndProfiles(data.user)
-        return { success: true, user: data.user }
+      return { 
+        success: true, 
+        user: data.user,
+        error: undefined 
       }
-      return { success: false, error: "Login failed: No user data." }
+
     } catch (error: any) {
-      return { success: false, error: error.message || "An unexpected error occurred during login." }
+      console.error("Login error:", error)
+      return { 
+        success: false, 
+        error: error.message || "An unexpected error occurred" 
+      }
     }
   }
 
-  const signUp = async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-  ): Promise<{ success: boolean; user?: User; error?: string }> => {
-    if (!supabase) {
-      return { success: false, error: "Authentication not initialized" };
-    }
-
+  const logout = async (): Promise<void> => {
     try {
-      // 1. Sign up with Supabase Auth
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            user_type: "customer", // Store user type in metadata for quicker lookup
-          },
-        },
-      })
-
-      if (authError) {
-        console.error("Sign up auth error:", authError.message)
-        return { success: false, error: authError.message }
-      }
-
-      if (data.user) {
-        console.log("Sign up successful for user:", data.user.id)
-        // 2. Insert user profile into 'users' table
-        const { error: profileError } = await supabase.from("users").insert([
-          {
-            id: data.user.id,
-            email: data.user.email,
-            first_name: firstName,
-            last_name: lastName,
-            role: "customer", // Assign a default role
-          },
-        ])
-
-        if (profileError) {
-          // If profile creation fails, consider rolling back auth user or logging
-          console.error("Error creating user profile:", profileError)
-          // Optionally, delete the auth user if profile creation fails
-          // await supabase.auth.admin.deleteUser(data.user.id);
-          return { success: false, error: profileError.message || "Failed to create user profile." }
-        }
-
-        // After successful signup and profile creation, re-fetch profiles and user type
-        await fetchUserAndProfiles(data.user)
-        return { success: true, user: data.user }
-      }
-
-      return { success: false, error: "Sign up failed: No user data." }
-    } catch (error: any) {
-      return { success: false, error: error.message || "An unexpected error occurred during sign up." }
+      await supabase.auth.signOut()
+      setUser(null)
+      setUserType(null)
+      setHostProfile(null)
+      setBusinessProfile(null)
+    } catch (error) {
+      console.error("Logout error:", error)
     }
   }
 
-  const signOut = async () => {
-    await authUtilsSignOut() // Use the signOut from auth-utils
-    setUser(null)
-    setUserProfile(null)
-    setBusinessProfile(null)
-    setUserType(null)
-  }
-
-  // Ensure client-side only initialization
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Prevent hydration mismatch by not rendering auth-dependent content on server
-  if (!isClient) {
-    return (
-      <AuthContext.Provider value={{ user: null, userProfile: null, businessProfile: null, userType: null, isLoading: true, login, signUp, signOut }}>
-        {children}
-      </AuthContext.Provider>
-    )
+  const value = {
+    user,
+    userType,
+    hostProfile,
+    businessProfile,
+    isLoading,
+    login,
+    logout,
+    refreshProfiles: () => fetchUserAndProfiles(user),
   }
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, businessProfile, userType, isLoading, login, signUp, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")
