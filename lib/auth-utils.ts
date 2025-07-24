@@ -144,6 +144,18 @@ export async function isBusinessUser(userId: string): Promise<boolean> {
   return !error && !!data
 }
 
+export async function getSession() {
+  const supabase = createClientComponentClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (error) {
+    console.error('Error getting session:', error)
+    return null
+  }
+
+  return session
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
   if (error) {

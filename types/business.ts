@@ -29,7 +29,7 @@ export type Experience = {
   price: number
   duration: number // in minutes
   itinerary?: ItineraryItem[]
-  
+
   // New activity-specific fields from v3
   activityType: 'sailing' | 'surfing' | 'kayaking' | 'diving' | 'jet-skiing' | 
                 'fishing' | 'whale-watching' | 'paddleboarding' | 'windsurfing' | 'snorkeling'
@@ -42,13 +42,13 @@ export type Experience = {
   cancellationPolicy: string
   weatherDependency: boolean
   instantBooking: boolean
-  
+
   // Enhanced metadata
   tags: string[]
   highlights: string[]
   includedServices: string[]
   excludedServices: string[]
-  
+
   created_at: string
   updated_at: string
 }
@@ -175,16 +175,22 @@ export type FishingDetails = {
 }
 
 // HostAvailability type for managing host schedules
-export type HostAvailability = {
+export interface HostAvailability {
   id: string
   host_id: string
-  business_id: string
-  available_date: string // YYYY-MM-DD
-  start_time: string // HH:MM
-  end_time: string // HH:MM
-  max_capacity: number
-  current_bookings: number
-  is_available: boolean
+  business_id?: string
+  date: string  // Primary property expected by components
+  available_date?: string // Keep for backward compatibility
+  start_time: string
+  end_time: string
+  available_capacity: number // Primary property expected by components
+  max_capacity?: number // Keep for backward compatibility
+  current_bookings?: number
+  price_override?: number
+  is_available?: boolean
+  weather_dependent?: boolean
+  is_recurring?: boolean
+  recurring_pattern?: any
   notes?: string
   created_at: string
   updated_at: string
