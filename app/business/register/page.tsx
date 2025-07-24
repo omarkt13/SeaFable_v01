@@ -5,9 +5,10 @@ import type React from "react"
 import { supabase, createBusinessProfile } from "@/lib/auth-utils"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Building } from "lucide-react"
+import { ArrowRight, Building, Lock, Briefcase } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Eye, EyeOff, Building2, User, Phone, MapPin, Mail } from "lucide-react"
 
 export default function BusinessRegisterPage() {
   const [email, setEmail] = useState("")
