@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-22T20:54:08.827Z",
+  "timestamp": "2025-07-24T13:36:52.182Z",
   "summary": {
     "total": 20,
     "passed": 18,
@@ -11,106 +11,106 @@
     {
       "message": "Package configuration exists",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.064Z"
+      "timestamp": "2025-07-24T13:36:34.880Z"
     },
     {
       "message": "Script \"build\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.880Z"
     },
     {
       "message": "Script \"start\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.881Z"
     },
     {
       "message": "Script \"dev\" defined",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.881Z"
     },
     {
       "message": "Essential dependency \"next\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.881Z"
     },
     {
       "message": "Essential dependency \"react\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.881Z"
     },
     {
       "message": "Essential dependency \"react-dom\" installed",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.065Z"
+      "timestamp": "2025-07-24T13:36:34.881Z"
     },
     {
       "message": "Next.js configuration exists: next.config.mjs",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.066Z"
+      "timestamp": "2025-07-24T13:36:34.882Z"
     },
     {
       "message": "TypeScript configuration exists",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.066Z"
+      "timestamp": "2025-07-24T13:36:34.882Z"
     },
     {
       "message": "TypeScript compiler options configured",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.066Z"
+      "timestamp": "2025-07-24T13:36:34.882Z"
     },
     {
       "message": "TypeScript strict mode enabled",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.066Z"
+      "timestamp": "2025-07-24T13:36:34.883Z"
     },
     {
       "message": "Environment file exists: .env.local",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.068Z"
+      "timestamp": "2025-07-24T13:36:34.883Z"
     },
     {
       "message": "Environment file exists: .env.example",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.068Z"
+      "timestamp": "2025-07-24T13:36:34.883Z"
     },
     {
       "message": "Critical directory exists: app",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.068Z"
+      "timestamp": "2025-07-24T13:36:34.884Z"
     },
     {
       "message": "Critical directory exists: components",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.068Z"
+      "timestamp": "2025-07-24T13:36:34.884Z"
     },
     {
       "message": "Critical directory exists: lib",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.069Z"
+      "timestamp": "2025-07-24T13:36:34.884Z"
     },
     {
       "message": "Critical directory exists: public",
       "type": "success",
-      "timestamp": "2025-07-22T20:53:59.069Z"
+      "timestamp": "2025-07-24T13:36:34.885Z"
     },
     {
       "message": "No obvious missing React keys found",
       "type": "success",
-      "timestamp": "2025-07-22T20:54:08.827Z"
+      "timestamp": "2025-07-24T13:36:52.182Z"
     }
   ],
   "warnings": [
     {
       "message": "ESLint found issues",
       "type": "warning",
-      "timestamp": "2025-07-22T20:54:08.545Z"
+      "timestamp": "2025-07-24T13:36:51.891Z"
     }
   ],
   "errors": [
     {
       "message": "TypeScript check failed: Command failed: npx tsc --noEmit\n",
       "type": "error",
-      "timestamp": "2025-07-22T20:54:06.708Z"
+      "timestamp": "2025-07-24T13:36:50.157Z"
     }
   ]
 }
