@@ -48,15 +48,15 @@ export async function signUp(formData: FormData) {
     return { success: false, message: error.message }
   }
 
-  // Insert into public.users table
+  // Insert into public.user_profiles table
   if (data.user) {
-    const { error: profileError } = await supabase.from("users").insert([
+    const { error: profileError } = await supabase.from("user_profiles").insert([
       {
         id: data.user.id,
         email: data.user.email,
         first_name: firstName,
         last_name: lastName,
-        user_type: "customer",
+        role: "user",
       },
     ])
 

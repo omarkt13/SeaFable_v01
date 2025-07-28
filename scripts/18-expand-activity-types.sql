@@ -29,7 +29,7 @@ ALTER TABLE host_profiles ADD COLUMN IF NOT EXISTS emergency_contact VARCHAR(255
 -- Create equipment table
 CREATE TABLE IF NOT EXISTS equipment (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    business_id UUID REFERENCES business_profiles(id) ON DELETE CASCADE NOT NULL,
+    business_id UUID REFERENCES host_profiles(id) ON DELETE CASCADE NOT NULL,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (category IN ('safety', 'activity', 'comfort', 'navigation')),
     description TEXT,

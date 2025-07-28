@@ -998,7 +998,7 @@ export async function createBooking(bookingData: {
 // Database connection test functions
 export async function testDatabaseConnection() {
   try {
-    const { data, error } = await supabase.from("users").select("count").limit(1)
+    const { data, error } = await supabase.from("user_profiles").select("count").limit(1)
 
     if (error) {
       return { success: false, error: error.message }
@@ -1012,8 +1012,8 @@ export async function testDatabaseConnection() {
 
 export async function testTableAccess() {
   const tables = [
-    "users",
-    "host_profiles",
+    "user_profiles",
+    "host_profiles", 
     "experiences",
     "bookings",
     "reviews",
@@ -1044,9 +1044,9 @@ export async function testTableAccess() {
 export async function getSampleData() {
   try {
     const [usersResult, experiencesResult, bookingsResult] = await Promise.all([
-      supabase.from("users").select("*").limit(3),
+      supabase.from("user_profiles").select("*").limit(3),
       supabase.from("experiences").select("*, host_profiles(name)").limit(3),
-      supabase.from("bookings").select("*, experiences(title), users(first_name, last_name)").limit(3),
+      supabase.from("bookings").select("*, experiences(title), user_profiles(first_name, last_name)").limit(3),
     ])
 
     return {

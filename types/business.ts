@@ -2,18 +2,26 @@ import type { User } from "@supabase/supabase-js"
 
 export type BusinessProfile = {
   id: string
-  user_id: string
-  business_name: string
-  contact_email: string
-  phone_number?: string
-  address?: string
-  city?: string
-  state?: string
-  zip_code?: string
-  country?: string
-  website?: string
+  user_id?: string
+  name: string
+  business_name?: string
+  contact_name?: string
+  email?: string
+  phone?: string
+  business_type?: string
+  location?: string
   description?: string
-  logo_url?: string
+  bio?: string
+  avatar_url?: string
+  years_experience?: number
+  certifications?: string[]
+  specialties?: string[]
+  rating?: number
+  total_reviews?: number
+  host_type: string
+  languages_spoken?: string[]
+  business_registration_id?: string
+  insurance_details?: string
   created_at: string
   updated_at: string
 }

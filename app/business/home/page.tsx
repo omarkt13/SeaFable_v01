@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -134,7 +133,7 @@ export default function BusinessHomePage() {
         if (!groupedBookings[dateKey]) {
           groupedBookings[dateKey] = []
         }
-        
+
         groupedBookings[dateKey].push({
           id: booking.id,
           title: booking.experiences?.title || "Adventure",
