@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Fetch business profile
         const { data: businessData, error: businessError } = await supabase
-          .from('host_profiles')
+          .from('business_profiles')
           .select('*')
           .eq('user_id', currentUser.id)
           .single()

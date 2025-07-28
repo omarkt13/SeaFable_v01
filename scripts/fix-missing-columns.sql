@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     marketing_enabled BOOLEAN DEFAULT FALSE
 );
 
--- Ensure user_profiles table exists with proper structure  
-CREATE TABLE IF NOT EXISTS user_profiles (
+-- Ensure customer_profiles table exists with proper structure
+CREATE TABLE IF NOT EXISTS customer_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     first_name TEXT,
     last_name TEXT,
@@ -58,18 +58,18 @@ CREATE POLICY "Users can update their own profile" ON user_profiles
 CREATE POLICY "Users can insert their own profile" ON user_profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Add RLS policies for user_profiles
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+-- Add RLS policies for customer_profiles
+ALTER TABLE customer_profiles ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view their own user profile" ON user_profiles;
-DROP POLICY IF EXISTS "Users can update their own user profile" ON user_profiles;
-DROP POLICY IF EXISTS "Users can insert their own user profile" ON user_profiles;
+DROP POLICY IF EXISTS "Users can view their own customer profile" ON customer_profiles;
+DROP POLICY IF EXISTS "Users can update their own customer profile" ON customer_profiles;
+DROP POLICY IF EXISTS "Users can insert their own customer profile" ON customer_profiles;
 
-CREATE POLICY "Users can view their own user profile" ON user_profiles
+CREATE POLICY "Users can view their own customer profile" ON customer_profiles
     FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update their own user profile" ON user_profiles
+CREATE POLICY "Users can update their own customer profile" ON customer_profiles
     FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Users can insert their own user profile" ON user_profiles
+CREATE POLICY "Users can insert their own customer profile" ON customer_profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
