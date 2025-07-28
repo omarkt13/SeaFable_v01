@@ -359,7 +359,7 @@ export default function BusinessTestPage() {
       testDetails.push(`Host Profile ID: ${hostProfile.id}`, `Host Profile Name: ${hostProfile.name || 'unnamed'}`)
 
       // Test 2: experiences -> host_profiles relationship
-      const { data: experiences, error: expError } = await supabase
+      const { data: hostExperiences, error: expError } = await supabase
         .from('experiences')
         .select(`
           id,
@@ -376,15 +376,15 @@ export default function BusinessTestPage() {
       if (expError) {
         testDetails.push(`FAILED: experiences query - ${expError.message}`)
       } else {
-        testDetails.push(`Experiences found: ${experiences?.length || 0}`)
-        if (experiences && experiences.length > 0) {
-          const validExperiences = experiences.filter(exp => exp.host_profiles?.id === exp.host_id)
-          testDetails.push(`Valid experience relationships: ${validExperiences.length}/${experiences.length}`)
+        testDetails.push(`Experiences found: ${hostExperiences?.length || 0}`)
+        if (hostExperiences && hostExperiences.length > 0) {
+          const validExperiences = hostExperiences.filter(exp => exp.host_profiles?.id === exp.host_id)
+          testDetails.push(`Valid experience relationships: ${validExperiences.length}/${hostExperiences.length}`)
         }
       }
 
-      // Test 2: experiences -> host_profiles relationship
-      const { data: experiences, error: expError } = await supabase
+      // Test 3: Sample experiences for general relationship testing
+      const { data: allExperiences, error: allExpError } = await supabase
         .from('experiences')
         .select(`
           id,
@@ -398,16 +398,13 @@ export default function BusinessTestPage() {
         `)
         .limit(3)
 
-      if (expError) {
-        return {
-          name: "Table Relationships", 
-          status: "error",
-          message: "Failed to test experiences -> host_profiles relationship",
-          details: expError.message
-        }
+      if (allExpError) {
+        testDetails.push(`FAILED: general experiences query - ${allExpError.message}`)
+      } else {
+        testDetails.push(`Sample experiences found: ${allExperiences?.length || 0}`)
       }
 
-      // Test 3: bookings relationships for this host
+      // Test 4: bookings relationships for this host
       const { data: bookings, error: bookingError } = await supabase
         .from('bookings')
         .select(`
@@ -462,8 +459,8 @@ export default function BusinessTestPage() {
         schemaIssues.push(`Host profile user_id (${hostProfile.user_id}) doesn't match auth user id (${user.id})`)
       }
 
-      if (experiences && experiences.length > 0) {
-        const badExperienceRefs = experiences.filter(exp => exp.host_id !== hostProfile.id)
+      if (hostExperiences && hostExperiences.length > 0) {
+        const badExperienceRefs = hostExperiences.filter(exp => exp.host_id !== hostProfile.id)
         if (badExperienceRefs.length > 0) {
           schemaIssues.push(`${badExperienceRefs.length} experiences have incorrect host_id reference`)
         }
