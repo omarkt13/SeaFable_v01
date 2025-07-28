@@ -18,23 +18,23 @@ async function withRetry<T>(
   delay: number = 1000
 ): Promise<T> {
   let lastError: Error | null = null
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation()
     } catch (error) {
       lastError = error as Error
       console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}):`, error)
-      
+
       if (attempt === maxRetries) {
         throw lastError
       }
-      
+
       // Exponential backoff
       await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)))
     }
   }
-  
+
   throw lastError
 }
 
@@ -547,7 +547,7 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
       .select(`
         *,
         experiences ( id, title, primary_image_url, duration_display, activity_type ),
-        users:user_profiles!bookings_user_id_fkey ( first_name, last_name, avatar_url )
+        user_profiles!bookings_user_id_fkey ( first_name, last_name, avatar_url )
       `)
       .eq("host_id", actualHostId)
       .order("booking_date", { ascending: true })
@@ -698,7 +698,7 @@ export async function getHostDashboardData(userId: string): Promise<{
           duration_display,
           activity_type
         ),
-        users!bookings_user_id_fkey (
+        user_profiles!bookings_user_id_fkey (
           first_name,
           last_name,
           avatar_url
@@ -1017,7 +1017,7 @@ export async function testDatabaseConnection() {
 export async function testTableAccess() {
   const tables = [
     "user_profiles",
-    "host_profiles", 
+    "host_profiles",
     "experiences",
     "bookings",
     "reviews",
