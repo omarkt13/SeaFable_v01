@@ -91,30 +91,77 @@ export default function BusinessTestPage() {
 
   async function testBusinessProfile(): Promise<TestResult> {
     try {
+      const supabase = createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      const details = []
+      
+      if (authError || !user) {
+        details.push(`Auth Check: FAILED - ${authError?.message || 'No user session'}`)
+        return {
+          name: "Business Profile Access",
+          status: "error",
+          message: "Authentication required",
+          details: details.join(' | ')
+        }
+      }
+      
+      details.push(
+        `User ID: ${user.id}`,
+        `User Type: ${user.user_metadata?.user_type || 'unknown'}`,
+        `Email: ${user.email || 'unknown'}`
+      )
+      
+      // Test direct database access
+      const { data: hostProfile, error: dbError } = await supabase
+        .from('host_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+        
+      if (dbError) {
+        details.push(`Database Query: FAILED - ${dbError.message}`)
+        if (dbError.code === 'PGRST116') {
+          details.push('No host profile found in database')
+        }
+      } else {
+        details.push(
+          `Host Profile Found: YES`,
+          `Profile ID: ${hostProfile.id}`,
+          `Profile Name: ${hostProfile.name || 'unnamed'}`,
+          `Host Type: ${hostProfile.host_type || 'unknown'}`
+        )
+      }
+      
+      // Test API endpoint
       const response = await fetch("/api/business/dashboard")
       const data = await response.json()
-
+      
+      details.push(`API Response: ${response.status}`)
+      
       if (data.success && data.businessProfile) {
+        details.push(`API Profile: Found - ${data.businessProfile.name || "Unnamed"}`)
         return {
           name: "Business Profile Access",
           status: "success",
           message: "Business profile loaded successfully",
-          details: `Profile: ${data.businessProfile.name || "Unnamed Business"}`
+          details: details.join(' | ')
         }
       } else {
+        details.push(`API Error: ${data.error || 'Unknown API error'}`)
         return {
           name: "Business Profile Access",
           status: "error",
-          message: "Failed to load business profile",
-          details: data.error || "Profile not found"
+          message: "Failed to load business profile via API",
+          details: details.join(' | ')
         }
       }
     } catch (error) {
       return {
         name: "Business Profile Access",
         status: "error",
-        message: "Profile access failed",
-        details: error instanceof Error ? error.message : "Unknown error"
+        message: "Profile access test failed",
+        details: `Exception: ${error instanceof Error ? error.message : "Unknown error"}`
       }
     }
   }
@@ -184,19 +231,49 @@ export default function BusinessTestPage() {
       const response = await fetch("/api/business/dashboard")
       const data = await response.json()
 
+      const details = [
+        `HTTP Status: ${response.status}`,
+        `Response Success: ${data.success || false}`
+      ]
+
+      if (!response.ok) {
+        details.push(`Error: ${data.error || 'Unknown API error'}`)
+        if (response.status === 401) {
+          details.push('Authentication required - please log in as business user')
+        }
+        if (response.status === 404) {
+          details.push('Dashboard endpoint not found')
+        }
+      }
+
       if (data.success && data.overview) {
+        details.push(
+          `Total Revenue: €${data.overview.totalRevenue || 0}`,
+          `Active Bookings: ${data.overview.activeBookings || 0}`,
+          `Total Experiences: ${data.overview.totalExperiences || 0}`,
+          `Recent Bookings: ${data.recentBookings?.length || 0}`,
+          `Business Profile: ${data.businessProfile ? 'Found' : 'Missing'}`
+        )
+        
         return {
           name: "Dashboard Data",
           status: "success",
           message: "Dashboard data loaded successfully",
-          details: `Revenue: €${data.overview.totalRevenue}, Bookings: ${data.overview.activeBookings}`
+          details: details.join(' | ')
         }
       } else {
+        if (data.error) {
+          details.push(`API Error: ${data.error}`)
+        }
+        if (!data.overview) {
+          details.push('Missing overview data')
+        }
+        
         return {
           name: "Dashboard Data",
           status: "error",
           message: "Failed to load dashboard data",
-          details: data.error || "No dashboard data returned"
+          details: details.join(' | ')
         }
       }
     } catch (error) {
@@ -204,7 +281,7 @@ export default function BusinessTestPage() {
         name: "Dashboard Data",
         status: "error",
         message: "Dashboard data fetch failed",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: `Network/Parse Error: ${error instanceof Error ? error.message : "Unknown error"}`
       }
     }
   }
@@ -240,19 +317,69 @@ export default function BusinessTestPage() {
   async function testTableRelationships(): Promise<TestResult> {
     try {
       const supabase = createClient()
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        return {
+          name: "Table Relationships",
+          status: "error",
+          message: "Authentication required for relationship tests",
+          details: `Auth Error: ${authError?.message || 'No user session found'}. Please ensure you're logged in as a business user.`
+        }
+      }
+
+      const testDetails = [`Current User ID: ${user.id}`, `User Type: ${user.user_metadata?.user_type || 'unknown'}`]
 
       // Test 1: host_profiles relationship correctness
       const { data: hostProfiles, error: hostError } = await supabase
         .from('host_profiles')
         .select('id, user_id, name, email')
-        .limit(3)
+        .eq('user_id', user.id)
 
       if (hostError) {
         return {
           name: "Table Relationships",
           status: "error",
           message: "Failed to fetch host_profiles",
-          details: hostError.message
+          details: `Database Error: ${hostError.message}. Query: host_profiles where user_id = ${user.id}`
+        }
+      }
+
+      if (!hostProfiles || hostProfiles.length === 0) {
+        return {
+          name: "Table Relationships",
+          status: "error",
+          message: "No host profile found for current user",
+          details: `Expected: host_profiles record with user_id = ${user.id}. Found: none. This user may not be properly set up as a business host.`
+        }
+      }
+
+      const hostProfile = hostProfiles[0]
+      testDetails.push(`Host Profile ID: ${hostProfile.id}`, `Host Profile Name: ${hostProfile.name || 'unnamed'}`)
+
+      // Test 2: experiences -> host_profiles relationship
+      const { data: experiences, error: expError } = await supabase
+        .from('experiences')
+        .select(`
+          id,
+          title,
+          host_id,
+          host_profiles!experiences_host_id_fkey (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('host_id', hostProfile.id)
+
+      if (expError) {
+        testDetails.push(`FAILED: experiences query - ${expError.message}`)
+      } else {
+        testDetails.push(`Experiences found: ${experiences?.length || 0}`)
+        if (experiences && experiences.length > 0) {
+          const validExperiences = experiences.filter(exp => exp.host_profiles?.id === exp.host_id)
+          testDetails.push(`Valid experience relationships: ${validExperiences.length}/${experiences.length}`)
         }
       }
 
@@ -280,7 +407,7 @@ export default function BusinessTestPage() {
         }
       }
 
-      // Test 3: bookings relationships (user_id -> users, host_id -> host_profiles.id, experience_id -> experiences)
+      // Test 3: bookings relationships for this host
       const { data: bookings, error: bookingError } = await supabase
         .from('bookings')
         .select(`
@@ -290,6 +417,7 @@ export default function BusinessTestPage() {
           experience_id,
           booking_date,
           total_price,
+          booking_status,
           experiences!bookings_experience_id_fkey (
             id,
             title,
@@ -301,51 +429,66 @@ export default function BusinessTestPage() {
             email
           )
         `)
-        .limit(3)
+        .eq('host_id', hostProfile.id)
 
       if (bookingError) {
-        return {
-          name: "Table Relationships",
-          status: "error", 
-          message: "Failed to test booking relationships",
-          details: bookingError.message
+        testDetails.push(`FAILED: bookings query - ${bookingError.message}`)
+      } else {
+        testDetails.push(`Bookings found: ${bookings?.length || 0}`)
+        if (bookings && bookings.length > 0) {
+          const validBookings = bookings.filter(b => b.experiences && b.users)
+          testDetails.push(`Bookings with valid relationships: ${validBookings.length}/${bookings.length}`)
+          
+          // Check for relationship consistency
+          const invalidHostIds = bookings.filter(b => b.host_id !== hostProfile.id)
+          if (invalidHostIds.length > 0) {
+            testDetails.push(`ERROR: ${invalidHostIds.length} bookings have incorrect host_id`)
+          }
         }
       }
 
-      // Test 4: Verify host_profiles.id is used correctly (not user_id) in relationships
-      const relationshipIssues = []
+      // Test 4: Schema compliance check
+      const schemaIssues = []
+      
+      // Check if host_profile has required fields according to schema
+      const requiredHostFields = ['id', 'user_id', 'name', 'email']
+      const missingHostFields = requiredHostFields.filter(field => !(field in hostProfile))
+      if (missingHostFields.length > 0) {
+        schemaIssues.push(`Missing host_profile fields: ${missingHostFields.join(', ')}`)
+      }
+
+      // Verify the relationship correctness according to schema
+      if (hostProfile.user_id !== user.id) {
+        schemaIssues.push(`Host profile user_id (${hostProfile.user_id}) doesn't match auth user id (${user.id})`)
+      }
 
       if (experiences && experiences.length > 0) {
-        const expWithHostProfile = experiences.find(exp => exp.host_profiles)
-        if (expWithHostProfile) {
-          if (expWithHostProfile.host_id !== expWithHostProfile.host_profiles.id) {
-            relationshipIssues.push(`Experience host_id (${expWithHostProfile.host_id}) doesn't match host_profiles.id (${expWithHostProfile.host_profiles.id})`)
-          }
+        const badExperienceRefs = experiences.filter(exp => exp.host_id !== hostProfile.id)
+        if (badExperienceRefs.length > 0) {
+          schemaIssues.push(`${badExperienceRefs.length} experiences have incorrect host_id reference`)
         }
       }
 
       if (bookings && bookings.length > 0) {
-        const bookingWithData = bookings.find(b => b.experiences && b.users)
-        if (bookingWithData) {
-          // Check if booking references are correct
-          if (!bookingWithData.user_id || !bookingWithData.host_id || !bookingWithData.experience_id) {
-            relationshipIssues.push("Booking missing required foreign key references")
-          }
+        const badBookingRefs = bookings.filter(b => b.host_id !== hostProfile.id)
+        if (badBookingRefs.length > 0) {
+          schemaIssues.push(`${badBookingRefs.length} bookings have incorrect host_id reference`)
         }
       }
 
-      const details = [
-        `Host Profiles: ${hostProfiles?.length || 0} found`,
-        `Experiences with host data: ${experiences?.filter(e => e.host_profiles).length || 0}/${experiences?.length || 0}`,
-        `Bookings with relationships: ${bookings?.filter(b => b.experiences && b.users).length || 0}/${bookings?.length || 0}`,
-        relationshipIssues.length > 0 ? `Issues: ${relationshipIssues.join(', ')}` : "No relationship issues found"
-      ].join(' | ')
+      // Determine final status
+      const hasErrors = testDetails.some(detail => detail.includes('FAILED:')) || schemaIssues.length > 0
+      const hasWarnings = testDetails.some(detail => detail.includes('WARNING:'))
+
+      if (schemaIssues.length > 0) {
+        testDetails.push('SCHEMA ISSUES:', ...schemaIssues)
+      }
 
       return {
         name: "Table Relationships",
-        status: relationshipIssues.length > 0 ? "warning" : "success",
-        message: relationshipIssues.length > 0 ? "Relationships work but found issues" : "All table relationships working correctly",
-        details
+        status: hasErrors ? "error" : hasWarnings ? "warning" : "success",
+        message: hasErrors ? "Critical relationship errors found" : hasWarnings ? "Relationships work with warnings" : "All relationships working correctly",
+        details: testDetails.join(' | ')
       }
 
     } catch (error) {
@@ -528,9 +671,33 @@ export default function BusinessTestPage() {
                       <CardContent>
                         <p className="text-sm text-gray-600 mb-2">{result.message}</p>
                         {result.details && (
-                          <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                            {result.details}
-                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-gray-700">Details:</p>
+                            <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border">
+                              {result.details.includes(' | ') ? (
+                                <ul className="space-y-1">
+                                  {result.details.split(' | ').map((detail, idx) => (
+                                    <li key={idx} className={`${
+                                      detail.includes('FAILED:') || detail.includes('ERROR:') ? 'text-red-600 font-medium' :
+                                      detail.includes('WARNING:') ? 'text-yellow-600 font-medium' :
+                                      detail.includes('SUCCESS:') || detail.includes('Found: YES') ? 'text-green-600 font-medium' :
+                                      'text-gray-600'
+                                    }`}>
+                                      • {detail}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className={
+                                  result.details.includes('FAILED') || result.details.includes('ERROR') ? 'text-red-600' :
+                                  result.details.includes('WARNING') ? 'text-yellow-600' :
+                                  'text-gray-600'
+                                }>
+                                  {result.details}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </CardContent>
                     )}
