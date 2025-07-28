@@ -528,31 +528,41 @@ export async function getUserBookings(userId: string) {
 
 export async function getHostBookings(hostId: string): Promise<Booking[]> {
   try {
+    // First get the host profile to get the correct host_id
+    const { data: hostProfile, error: hostProfileError } = await supabase
+      .from("host_profiles")
+      .select("id")
+      .eq("user_id", hostId)
+      .single()
+
+    if (hostProfileError) {
+      console.error("Error fetching host profile:", hostProfileError)
+      return []
+    }
+
+    const actualHostId = hostProfile?.id || hostId
+
     const { data, error } = await supabase
       .from("bookings")
       .select(`
-        id,
-        booking_date,
-        booking_status,
-        number_of_guests,
-        total_price,
-        departure_time,
-        special_requests,
-        experiences ( id, title, primary_image_url, duration_display, activity_type )
+        *,
+        experiences ( id, title, primary_image_url, duration_display, activity_type ),
+        users:user_profiles!bookings_user_id_fkey ( first_name, last_name, avatar_url )
       `)
-      .eq("host_id", hostId)
+      .eq("host_id", actualHostId)
       .order("booking_date", { ascending: true })
 
     if (error) {
       console.error("Error fetching host bookings:", error)
-      throw new Error(error.message)
+      // Return empty array instead of throwing
+      return []
     }
 
     // Ensure data is an array, even if null or undefined
     return Array.isArray(data) ? data : []
   } catch (error: any) {
     console.error("Bookings error:", error.message)
-    throw error
+    return []
   }
 }
 
@@ -659,7 +669,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     const { data: hostProfile, error: hostError } = await supabase
       .from("host_profiles")
       .select("*")
-      .eq("id", userId)
+      .eq("user_id", userId)  // Fixed: use user_id for lookup
       .single()
 
     if (hostError) {
@@ -1116,38 +1126,44 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
 export async function getUserProfile(userId: string) {
   const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('user_id', userId)  // Fixed: use user_id instead of id
+      .single()
 
-  if (error) {
-    console.error('Error fetching user profile:', error)
-    // If table doesn't exist, return a default profile structure
-    if (error.code === '42P01') {
-      return {
-        id: userId,
-        first_name: '',
-        last_name: '',
-        email: '',
-        avatar_url: null,
-        role: 'user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        bio: null,
-        phone_number: null,
-        location: null,
-        date_of_birth: null,
-        notifications_enabled: true,
-        newsletter_enabled: false,
-        marketing_enabled: false
+    if (error) {
+      console.error('Error fetching user profile:', error)
+      // If table doesn't exist or no profile found, return a default profile structure
+      if (error.code === '42P01' || error.code === 'PGRST116') {
+        return {
+          id: userId,
+          user_id: userId,
+          first_name: '',
+          last_name: '',
+          email: '',
+          avatar_url: null,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          bio: null,
+          phone_number: null,
+          location: null,
+          date_of_birth: null,
+          notifications_enabled: true,
+          newsletter_enabled: false,
+          marketing_enabled: false
+        }
       }
+      return null
     }
+
+    return data
+  } catch (error) {
+    console.error('Unexpected error fetching user profile:', error)
     return null
   }
-
-  return data
 }
 export async function getBusinessDashboardData(businessId: string) {
   try {
