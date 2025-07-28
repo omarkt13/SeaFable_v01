@@ -81,15 +81,18 @@ export type AvailabilitySlot = {
 export type Booking = {
   id: string
   experience_id: string
-  customer_id: string
-  booked_at: string
+  user_id: string
+  host_id: string
   booking_date: string
-  start_time: string
-  end_time: string
-  num_guests: number
+  departure_time?: string
+  number_of_guests: number
   total_price: number
-  status: "pending" | "confirmed" | "cancelled" | "completed"
-  notes?: string
+  booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+  special_requests?: string
+  dietary_requirements?: string[]
+  payment_status?: string
+  currency?: string
+  booked_at?: string
   created_at: string
   updated_at: string
 }

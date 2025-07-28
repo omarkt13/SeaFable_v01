@@ -139,12 +139,6 @@ export async function GET(request: NextRequest) {
             primary_image_url,
             duration_display,
             activity_type
-          ),
-          user_profiles!bookings_user_id_fkey (
-            first_name,
-            last_name,
-            email,
-            avatar_url
           )
         `)
         .eq("host_id", businessId)
@@ -175,12 +169,12 @@ export async function GET(request: NextRequest) {
     // Recent bookings (last 5)
     const recentBookings = bookings.slice(0, 5).map(booking => ({
       id: booking.id,
-      customerName: `${booking.user_profiles?.first_name || "Unknown"} ${booking.user_profiles?.last_name || "User"}`,
+      customerName: "Guest User", // Simplified for now
       experienceTitle: booking.experiences?.title || "N/A",
       date: new Date(booking.booking_date).toLocaleDateString(),
       amount: booking.total_price || 0,
       guests: booking.number_of_guests || 1,
-      avatar: booking.user_profiles?.avatar_url || "/placeholder.svg?height=40&width=40",
+      avatar: "/placeholder.svg?height=40&width=40",
       status: booking.booking_status || "pending",
     }))
 
@@ -191,13 +185,13 @@ export async function GET(request: NextRequest) {
       .slice(0, 5)
       .map(booking => ({
         id: booking.id,
-        customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
+        customerName: "Guest User", // Simplified for now
         experienceTitle: booking.experiences?.title || "N/A",
         date: new Date(booking.booking_date).toLocaleDateString(),
         time: booking.departure_time || "N/A",
         guests: booking.number_of_guests || 1,
         specialRequests: booking.special_requests || "",
-        phone: "N/A", // Will be added when user table includes phone
+        phone: "N/A",
       }))
 
     // Build dashboard data

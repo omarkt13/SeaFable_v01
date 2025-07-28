@@ -497,7 +497,7 @@ export async function getUserBookings(userId: string) {
       .from("bookings")
       .select(`
         *,
-        experiences!bookings_experience_id_fkey (
+        experiences (
           id,
           title,
           location,
@@ -505,7 +505,7 @@ export async function getUserBookings(userId: string) {
           duration_display,
           activity_type
         ),
-        host_profiles!bookings_host_id_fkey (
+        host_profiles (
           id,
           name,
           avatar_url
@@ -538,13 +538,7 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
         total_price,
         departure_time,
         special_requests,
-        experiences ( id, title, primary_image_url, duration_display, activity_type ),
-        users (
-        first_name,
-        last_name,
-        email,
-        avatar_url
-      )
+        experiences ( id, title, primary_image_url, duration_display, activity_type )
       `)
       .eq("host_id", hostId)
       .order("booking_date", { ascending: true })
