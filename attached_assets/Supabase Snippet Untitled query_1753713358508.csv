@@ -1,0 +1,236 @@
+table_name,column_name,data_type,character_maximum_length,is_nullable,column_default
+bookings,id,uuid,null,NO,gen_random_uuid()
+bookings,user_id,uuid,null,NO,null
+bookings,experience_id,uuid,null,NO,null
+bookings,host_id,uuid,null,NO,null
+bookings,booking_date,date,null,NO,null
+bookings,departure_time,time without time zone,null,YES,null
+bookings,number_of_guests,integer,null,NO,null
+bookings,guest_details,jsonb,null,YES,'{}'::jsonb
+bookings,total_price,numeric,null,NO,null
+bookings,booking_status,character varying,50,NO,'pending'::character varying
+bookings,special_requests,text,null,YES,null
+bookings,dietary_requirements,ARRAY,null,YES,'{}'::text[]
+bookings,payment_id,character varying,255,YES,null
+bookings,payment_method,character varying,100,YES,null
+bookings,payment_status,character varying,50,YES,'pending'::character varying
+bookings,amount_paid,numeric,null,YES,null
+bookings,currency,character varying,10,YES,'EUR'::character varying
+bookings,booked_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+bookings,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+bookings,start_date,timestamp with time zone,null,YES,null
+bookings,end_date,timestamp with time zone,null,YES,null
+captains,id,integer,null,NO,nextval('captains_id_seq'::regclass)
+captains,name,character varying,255,NO,null
+captains,email,character varying,255,NO,null
+captains,phone,character varying,50,YES,null
+captains,bio,text,null,YES,null
+captains,avatar_url,character varying,500,YES,null
+captains,years_experience,integer,null,YES,null
+captains,languages,ARRAY,null,YES,null
+captains,specialties,ARRAY,null,YES,null
+captains,certifications,ARRAY,null,YES,null
+captains,rating,numeric,null,YES,0.0
+captains,total_reviews,integer,null,YES,0
+captains,location,character varying,255,YES,null
+captains,country,character varying,100,YES,null
+captains,vessel_name,character varying,255,YES,null
+captains,vessel_type,character varying,100,YES,null
+captains,vessel_capacity,integer,null,YES,null
+captains,vessel_year,integer,null,YES,null
+captains,insurance_valid,boolean,null,YES,true
+captains,created_at,timestamp without time zone,null,YES,CURRENT_TIMESTAMP
+captains,updated_at,timestamp without time zone,null,YES,CURRENT_TIMESTAMP
+experience_images,id,uuid,null,NO,gen_random_uuid()
+experience_images,experience_id,uuid,null,NO,null
+experience_images,image_url,text,null,NO,null
+experience_images,alt_text,character varying,255,YES,null
+experience_images,display_order,integer,null,YES,0
+experience_images,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+experience_itinerary,id,integer,null,NO,nextval('experience_itinerary_id_seq'::regclass)
+experience_itinerary,experience_id,integer,null,YES,null
+experience_itinerary,step_order,integer,null,NO,null
+experience_itinerary,time_start,character varying,10,YES,null
+experience_itinerary,duration_minutes,integer,null,YES,null
+experience_itinerary,title,character varying,255,NO,null
+experience_itinerary,description,text,null,YES,null
+experience_itinerary,location,character varying,255,YES,null
+experience_itinerary,activities,ARRAY,null,YES,null
+experience_itinerary,created_at,timestamp without time zone,null,YES,CURRENT_TIMESTAMP
+experiences,id,uuid,null,NO,gen_random_uuid()
+experiences,host_id,uuid,null,NO,null
+experiences,title,character varying,255,NO,null
+experiences,description,text,null,YES,null
+experiences,short_description,text,null,YES,null
+experiences,location,character varying,255,YES,null
+experiences,specific_location,character varying,255,YES,null
+experiences,country,character varying,100,YES,null
+experiences,activity_type,character varying,50,NO,null
+experiences,category,ARRAY,null,NO,'{}'::text[]
+experiences,duration_hours,numeric,null,YES,null
+experiences,duration_display,character varying,100,YES,null
+experiences,max_guests,integer,null,YES,null
+experiences,min_guests,integer,null,YES,1
+experiences,price_per_person,numeric,null,YES,null
+experiences,difficulty_level,character varying,50,YES,null
+experiences,rating,numeric,null,YES,0.0
+experiences,total_reviews,integer,null,YES,0
+experiences,total_bookings,integer,null,YES,0
+experiences,primary_image_url,text,null,YES,null
+experiences,weather_contingency,text,null,YES,null
+experiences,included_amenities,ARRAY,null,YES,'{}'::text[]
+experiences,what_to_bring,ARRAY,null,YES,'{}'::text[]
+experiences,min_age,integer,null,YES,null
+experiences,max_age,integer,null,YES,null
+experiences,age_restriction_details,text,null,YES,null
+experiences,activity_specific_details,jsonb,null,YES,'{}'::jsonb
+experiences,tags,ARRAY,null,YES,'{}'::text[]
+experiences,seasonal_availability,ARRAY,null,YES,'{}'::text[]
+experiences,is_active,boolean,null,YES,true
+experiences,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+experiences,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+experiences,itinerary,jsonb,null,YES,null
+host_analytics,id,uuid,null,NO,gen_random_uuid()
+host_analytics,host_profile_id,uuid,null,YES,null
+host_analytics,date,date,null,NO,null
+host_analytics,total_bookings,integer,null,YES,0
+host_analytics,total_revenue,numeric,null,YES,0
+host_analytics,total_guests,integer,null,YES,0
+host_analytics,average_rating,numeric,null,YES,null
+host_analytics,cancellation_rate,numeric,null,YES,0
+host_analytics,repeat_customer_rate,numeric,null,YES,0
+host_analytics,marketplace_bookings,integer,null,YES,0
+host_analytics,direct_bookings,integer,null,YES,0
+host_analytics,weather_cancellations,integer,null,YES,0
+host_analytics,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_availability,id,uuid,null,NO,gen_random_uuid()
+host_availability,host_profile_id,uuid,null,YES,null
+host_availability,date,date,null,NO,null
+host_availability,start_time,time without time zone,null,YES,null
+host_availability,end_time,time without time zone,null,YES,null
+host_availability,available_capacity,integer,null,YES,1
+host_availability,price_override,numeric,null,YES,null
+host_availability,notes,text,null,YES,null
+host_availability,weather_dependent,boolean,null,YES,true
+host_availability,is_recurring,boolean,null,YES,false
+host_availability,recurring_pattern,jsonb,null,YES,'{}'::jsonb
+host_availability,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_availability,max_capacity,integer,null,NO,1
+host_business_settings,id,uuid,null,NO,gen_random_uuid()
+host_business_settings,host_profile_id,uuid,null,YES,null
+host_business_settings,business_email,character varying,255,YES,null
+host_business_settings,business_phone,character varying,50,YES,null
+host_business_settings,website_url,text,null,YES,null
+host_business_settings,social_media_links,jsonb,null,YES,'{}'::jsonb
+host_business_settings,operating_license,text,null,YES,null
+host_business_settings,insurance_policy_number,text,null,YES,null
+host_business_settings,tax_id,text,null,YES,null
+host_business_settings,bank_account_info,jsonb,null,YES,'{}'::jsonb
+host_business_settings,notification_preferences,jsonb,null,YES,"'{""smsReminders"": true, ""emailBookings"": true, ""weatherAlerts"": true, ""marketingEmails"": false}'::jsonb"
+host_business_settings,subscription_tier,character varying,50,YES,'free'::character varying
+host_business_settings,onboarding_completed,boolean,null,YES,false
+host_business_settings,onboarding_step,integer,null,YES,1
+host_business_settings,marketplace_enabled,boolean,null,YES,true
+host_business_settings,auto_accept_bookings,boolean,null,YES,false
+host_business_settings,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_business_settings,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_earnings,id,uuid,null,NO,gen_random_uuid()
+host_earnings,host_profile_id,uuid,null,YES,null
+host_earnings,booking_id,uuid,null,YES,null
+host_earnings,gross_amount,numeric,null,NO,null
+host_earnings,platform_fee,numeric,null,NO,null
+host_earnings,payment_processing_fee,numeric,null,NO,null
+host_earnings,net_amount,numeric,null,NO,null
+host_earnings,currency,character varying,10,YES,'EUR'::character varying
+host_earnings,payout_date,date,null,YES,null
+host_earnings,payout_status,character varying,50,YES,'pending'::character varying
+host_earnings,stripe_transfer_id,text,null,YES,null
+host_earnings,transaction_id,text,null,YES,null
+host_earnings,fee_percentage,numeric,null,YES,15.0
+host_earnings,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_profiles,id,uuid,null,NO,null
+host_profiles,user_id,uuid,null,YES,null
+host_profiles,name,character varying,200,NO,null
+host_profiles,bio,text,null,YES,null
+host_profiles,avatar_url,text,null,YES,null
+host_profiles,years_experience,integer,null,YES,null
+host_profiles,certifications,ARRAY,null,YES,'{}'::text[]
+host_profiles,specialties,ARRAY,null,YES,'{}'::text[]
+host_profiles,rating,numeric,null,YES,0.0
+host_profiles,total_reviews,integer,null,YES,0
+host_profiles,host_type,character varying,50,NO,null
+host_profiles,languages_spoken,ARRAY,null,YES,'{}'::text[]
+host_profiles,business_name,character varying,255,YES,null
+host_profiles,contact_name,character varying,255,YES,null
+host_profiles,email,character varying,255,YES,null
+host_profiles,phone,character varying,50,YES,null
+host_profiles,business_type,character varying,100,YES,null
+host_profiles,location,character varying,255,YES,null
+host_profiles,description,text,null,YES,null
+host_profiles,business_registration_id,character varying,100,YES,null
+host_profiles,insurance_details,text,null,YES,null
+host_profiles,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_profiles,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_team_members,id,uuid,null,NO,gen_random_uuid()
+host_team_members,host_profile_id,uuid,null,YES,null
+host_team_members,user_id,uuid,null,YES,null
+host_team_members,role,character varying,50,NO,null
+host_team_members,permissions,jsonb,null,YES,"'[""view_bookings""]'::jsonb"
+host_team_members,hourly_rate,numeric,null,YES,null
+host_team_members,commission_rate,numeric,null,YES,null
+host_team_members,certifications,ARRAY,null,YES,'{}'::text[]
+host_team_members,hire_date,date,null,YES,CURRENT_DATE
+host_team_members,is_active,boolean,null,YES,true
+host_team_members,notes,text,null,YES,null
+host_team_members,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+host_team_members,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+reviews,id,uuid,null,NO,gen_random_uuid()
+reviews,booking_id,uuid,null,NO,null
+reviews,user_id,uuid,null,NO,null
+reviews,experience_id,uuid,null,NO,null
+reviews,host_id,uuid,null,NO,null
+reviews,rating,integer,null,NO,null
+reviews,title,character varying,255,YES,null
+reviews,comment,text,null,YES,null
+reviews,pros,ARRAY,null,YES,'{}'::text[]
+reviews,cons,ARRAY,null,YES,'{}'::text[]
+reviews,would_recommend,boolean,null,YES,null
+reviews,verified_booking,boolean,null,YES,true
+reviews,helpful_votes,integer,null,YES,0
+reviews,response_from_host_comment,text,null,YES,null
+reviews,response_from_host_at,timestamp with time zone,null,YES,null
+reviews,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+reviews,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+schema_migrations,version,character varying,255,NO,null
+schema_migrations,applied_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+user_profiles,id,uuid,null,NO,null
+user_profiles,first_name,text,null,YES,null
+user_profiles,last_name,text,null,YES,null
+user_profiles,email,text,null,YES,null
+user_profiles,avatar_url,text,null,YES,null
+user_profiles,phone,text,null,YES,null
+user_profiles,role,text,null,YES,'user'::text
+user_profiles,bio,text,null,YES,null
+user_profiles,location,text,null,YES,null
+user_profiles,date_of_birth,date,null,YES,null
+user_profiles,notifications_enabled,boolean,null,YES,true
+user_profiles,newsletter_enabled,boolean,null,YES,false
+user_profiles,marketing_enabled,boolean,null,YES,false
+user_profiles,created_at,timestamp with time zone,null,YES,now()
+user_profiles,updated_at,timestamp with time zone,null,YES,now()
+users,id,uuid,null,NO,gen_random_uuid()
+users,first_name,character varying,100,NO,null
+users,last_name,character varying,100,NO,null
+users,email,character varying,255,NO,null
+users,password_hash,character varying,255,YES,null
+users,avatar_url,text,null,YES,null
+users,role,character varying,20,NO,'user'::character varying
+users,created_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+users,updated_at,timestamp with time zone,null,YES,CURRENT_TIMESTAMP
+users,bio,text,null,YES,null
+users,phone_number,character varying,20,YES,null
+users,location,character varying,255,YES,null
+users,date_of_birth,date,null,YES,null
+users,notifications_enabled,boolean,null,YES,true
+users,newsletter_enabled,boolean,null,YES,false
+users,marketing_enabled,boolean,null,YES,false
