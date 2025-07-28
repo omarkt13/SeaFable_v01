@@ -1,6 +1,44 @@
 import { createClient } from "@/lib/supabase/client"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 
-const supabase = createClient()
+// Connection pool management
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    supabaseClient = createClient()
+  }
+  return supabaseClient
+}
+
+// Retry mechanism for database operations
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error as Error
+      console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}):`, error)
+      
+      if (attempt === maxRetries) {
+        throw lastError
+      }
+      
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)))
+    }
+  }
+  
+  throw lastError
+}
+
+const supabase = getSupabaseClient()
 import type { BusinessProfile } from "../types/auth"
 import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
 import type { HostAvailability } from "@/types/business" // Import HostAvailability type
