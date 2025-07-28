@@ -1,13 +1,14 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
-import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
-import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle, AlertTriangle, XCircle, Loader2, Clock } from "lucide-react"
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
+import { createClient } from "@/lib/supabase/client"
 
 interface TestResult {
   name: string
@@ -28,13 +29,15 @@ export default function BusinessTestPage() {
     { name: "Booking Management", test: testBookingManagement },
     { name: "Dashboard Data", test: testDashboardData },
     { name: "Calendar/Availability", test: testAvailability },
+    { name: "Table Relationships", test: testTableRelationships },
+    { name: "Schema Compliance", test: testSchemaCompliance },
   ]
 
   async function testDatabaseConnection(): Promise<TestResult> {
     try {
       const response = await fetch("/api/database/test")
       const data = await response.json()
-      
+
       if (data.success) {
         return {
           name: "Database Connection",
@@ -90,7 +93,7 @@ export default function BusinessTestPage() {
     try {
       const response = await fetch("/api/business/dashboard")
       const data = await response.json()
-      
+
       if (data.success && data.businessProfile) {
         return {
           name: "Business Profile Access",
@@ -120,7 +123,7 @@ export default function BusinessTestPage() {
     try {
       const response = await fetch("/api/business/experiences")
       const data = await response.json()
-      
+
       if (response.ok) {
         return {
           name: "Experience Creation",
@@ -150,7 +153,7 @@ export default function BusinessTestPage() {
     try {
       const response = await fetch("/api/business/dashboard")
       const data = await response.json()
-      
+
       if (data.success && data.recentBookings !== undefined) {
         return {
           name: "Booking Management",
@@ -180,27 +183,27 @@ export default function BusinessTestPage() {
     try {
       const response = await fetch("/api/business/dashboard")
       const data = await response.json()
-      
+
       if (data.success && data.overview) {
         return {
           name: "Dashboard Data",
           status: "success",
-          message: "Dashboard data loading correctly",
-          details: `Revenue: €${data.overview.totalRevenue || 0}, Experiences: ${data.overview.totalExperiences || 0}`
+          message: "Dashboard data loaded successfully",
+          details: `Revenue: €${data.overview.totalRevenue}, Bookings: ${data.overview.activeBookings}`
         }
       } else {
         return {
           name: "Dashboard Data",
           status: "error",
-          message: "Dashboard data incomplete",
-          details: data.error || "Missing overview data"
+          message: "Failed to load dashboard data",
+          details: data.error || "No dashboard data returned"
         }
       }
     } catch (error) {
       return {
         name: "Dashboard Data",
         status: "error",
-        message: "Dashboard test failed",
+        message: "Dashboard data fetch failed",
         details: error instanceof Error ? error.message : "Unknown error"
       }
     }
@@ -209,7 +212,7 @@ export default function BusinessTestPage() {
   async function testAvailability(): Promise<TestResult> {
     try {
       const response = await fetch("/api/business/availability")
-      
+
       if (response.ok) {
         return {
           name: "Calendar/Availability",
@@ -229,6 +232,209 @@ export default function BusinessTestPage() {
         name: "Calendar/Availability",
         status: "error",
         message: "Availability test failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      }
+    }
+  }
+
+  async function testTableRelationships(): Promise<TestResult> {
+    try {
+      const supabase = createClient()
+
+      // Test 1: host_profiles relationship correctness
+      const { data: hostProfiles, error: hostError } = await supabase
+        .from('host_profiles')
+        .select('id, user_id, name, email')
+        .limit(3)
+
+      if (hostError) {
+        return {
+          name: "Table Relationships",
+          status: "error",
+          message: "Failed to fetch host_profiles",
+          details: hostError.message
+        }
+      }
+
+      // Test 2: experiences -> host_profiles relationship
+      const { data: experiences, error: expError } = await supabase
+        .from('experiences')
+        .select(`
+          id,
+          title,
+          host_id,
+          host_profiles!experiences_host_id_fkey (
+            id,
+            name,
+            email
+          )
+        `)
+        .limit(3)
+
+      if (expError) {
+        return {
+          name: "Table Relationships", 
+          status: "error",
+          message: "Failed to test experiences -> host_profiles relationship",
+          details: expError.message
+        }
+      }
+
+      // Test 3: bookings relationships (user_id -> users, host_id -> host_profiles.id, experience_id -> experiences)
+      const { data: bookings, error: bookingError } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          user_id,
+          host_id,
+          experience_id,
+          booking_date,
+          total_price,
+          experiences!bookings_experience_id_fkey (
+            id,
+            title,
+            location
+          ),
+          users!bookings_user_id_fkey (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .limit(3)
+
+      if (bookingError) {
+        return {
+          name: "Table Relationships",
+          status: "error", 
+          message: "Failed to test booking relationships",
+          details: bookingError.message
+        }
+      }
+
+      // Test 4: Verify host_profiles.id is used correctly (not user_id) in relationships
+      const relationshipIssues = []
+
+      if (experiences && experiences.length > 0) {
+        const expWithHostProfile = experiences.find(exp => exp.host_profiles)
+        if (expWithHostProfile) {
+          if (expWithHostProfile.host_id !== expWithHostProfile.host_profiles.id) {
+            relationshipIssues.push(`Experience host_id (${expWithHostProfile.host_id}) doesn't match host_profiles.id (${expWithHostProfile.host_profiles.id})`)
+          }
+        }
+      }
+
+      if (bookings && bookings.length > 0) {
+        const bookingWithData = bookings.find(b => b.experiences && b.users)
+        if (bookingWithData) {
+          // Check if booking references are correct
+          if (!bookingWithData.user_id || !bookingWithData.host_id || !bookingWithData.experience_id) {
+            relationshipIssues.push("Booking missing required foreign key references")
+          }
+        }
+      }
+
+      const details = [
+        `Host Profiles: ${hostProfiles?.length || 0} found`,
+        `Experiences with host data: ${experiences?.filter(e => e.host_profiles).length || 0}/${experiences?.length || 0}`,
+        `Bookings with relationships: ${bookings?.filter(b => b.experiences && b.users).length || 0}/${bookings?.length || 0}`,
+        relationshipIssues.length > 0 ? `Issues: ${relationshipIssues.join(', ')}` : "No relationship issues found"
+      ].join(' | ')
+
+      return {
+        name: "Table Relationships",
+        status: relationshipIssues.length > 0 ? "warning" : "success",
+        message: relationshipIssues.length > 0 ? "Relationships work but found issues" : "All table relationships working correctly",
+        details
+      }
+
+    } catch (error) {
+      return {
+        name: "Table Relationships",
+        status: "error",
+        message: "Relationship test failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      }
+    }
+  }
+
+  async function testSchemaCompliance(): Promise<TestResult> {
+    try {
+      const supabase = createClient()
+
+      // Test schema compliance based on provided CSV
+      const schemaTests = [
+        {
+          table: 'bookings',
+          requiredColumns: ['id', 'user_id', 'experience_id', 'host_id', 'booking_date', 'number_of_guests', 'total_price', 'booking_status'],
+          foreignKeys: [
+            { column: 'user_id', references: 'users.id' },
+            { column: 'experience_id', references: 'experiences.id' },
+            { column: 'host_id', references: 'host_profiles.id' }
+          ]
+        },
+        {
+          table: 'experiences',
+          requiredColumns: ['id', 'host_id', 'title', 'description', 'location', 'price_per_person'],
+          foreignKeys: [
+            { column: 'host_id', references: 'host_profiles.id' }
+          ]
+        },
+        {
+          table: 'host_profiles', 
+          requiredColumns: ['id', 'user_id', 'name', 'email', 'host_type'],
+          foreignKeys: [
+            { column: 'user_id', references: 'auth.users.id' }
+          ]
+        }
+      ]
+
+      const testResults = []
+
+      for (const test of schemaTests) {
+        try {
+          const { data, error } = await supabase
+            .from(test.table)
+            .select('*')
+            .limit(1)
+
+          if (error) {
+            testResults.push(`❌ ${test.table}: ${error.message}`)
+            continue
+          }
+
+          if (data && data.length > 0) {
+            const record = data[0]
+            const missingColumns = test.requiredColumns.filter(col => !(col in record))
+
+            if (missingColumns.length > 0) {
+              testResults.push(`⚠️ ${test.table}: Missing columns: ${missingColumns.join(', ')}`)
+            } else {
+              testResults.push(`✅ ${test.table}: Schema valid`)
+            }
+          } else {
+            testResults.push(`ℹ️ ${test.table}: No data to validate schema`)
+          }
+        } catch (error) {
+          testResults.push(`❌ ${test.table}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
+      }
+
+      const hasErrors = testResults.some(result => result.startsWith('❌'))
+      const hasWarnings = testResults.some(result => result.startsWith('⚠️'))
+
+      return {
+        name: "Schema Compliance",
+        status: hasErrors ? "error" : hasWarnings ? "warning" : "success",
+        message: hasErrors ? "Schema compliance issues found" : hasWarnings ? "Schema warnings found" : "Schema fully compliant",
+        details: testResults.join(' | ')
+      }
+
+    } catch (error) {
+      return {
+        name: "Schema Compliance",
+        status: "error",
+        message: "Schema compliance test failed",
         details: error instanceof Error ? error.message : "Unknown error"
       }
     }
@@ -268,7 +474,7 @@ export default function BusinessTestPage() {
       warning: "secondary",
       pending: "outline"
     }
-    
+
     return (
       <Badge variant={variants[status] as any}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -306,7 +512,7 @@ export default function BusinessTestPage() {
               {tests.map((test, index) => {
                 const result = testResults.find(r => r.name === test.name)
                 const status = result?.status || (isRunning && index <= testResults.length ? "pending" : "pending")
-                
+
                 return (
                   <Card key={test.name} className="transition-colors">
                     <CardHeader className="pb-3">
