@@ -676,13 +676,47 @@ export async function getHostDashboardData(userId: string): Promise<{
       return { success: false, error: hostError.message, data: null }
     }
 
-    if (!hostProfiles || hostProfiles.length === 0) {
-      console.error("No host profile found for user:", userId)
-      return { success: false, error: "Host profile not found", data: null }
-    }
+    let hostProfile = null
 
-    // Take the first host profile if multiple exist
-    const hostProfile = hostProfiles[0]
+    if (!hostProfiles || hostProfiles.length === 0) {
+      console.log("No host profile found for user:", userId, "- creating one...")
+      
+      // Try to get user info to create a basic host profile
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        console.error("Error getting user for profile creation:", userError)
+        return { success: false, error: "Host profile not found and could not create one", data: null }
+      }
+
+      // Create a basic host profile
+      const { data: newHostProfile, error: createError } = await supabase
+        .from("host_profiles")
+        .insert({
+          user_id: userId,
+          name: user.user_metadata?.business_name || user.user_metadata?.contact_name || "Business Host",
+          business_name: user.user_metadata?.business_name || "",
+          contact_name: user.user_metadata?.contact_name || "",
+          email: user.email || "",
+          host_type: "business",
+          years_experience: 0,
+          rating: 0,
+          total_reviews: 0,
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        console.error("Error creating host profile:", createError)
+        return { success: false, error: "Host profile not found and could not create one", data: null }
+      }
+
+      hostProfile = newHostProfile
+      console.log("Created new host profile:", hostProfile.id)
+    } else {
+      // Take the first host profile if multiple exist
+      hostProfile = hostProfiles[0]
+    }
 
     // 2. Get Experiences with booking counts
     const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", userId)
