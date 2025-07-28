@@ -51,31 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Fetch business profile
         const { data: businessData, error: businessError } = await supabase
-          .from('host_profiles')
-          .select(`
-            *,
-            host_business_settings (
-              onboarding_completed,
-              marketplace_enabled
-            )
-          `)
+          .from('business_profiles')
+          .select('*')
           .eq('user_id', currentUser.id)
           .single()
 
         if (businessError) {
-          console.error('Error fetching host profile:', businessError)
-          // If profile doesn't exist, that's okay for business users
-          if (businessError.code !== 'PGRST116') {
-            console.error('Unexpected error:', businessError)
-          }
+          console.error('Error fetching business profile:', businessError)
         } else {
-          // Flatten the business settings into the profile object
-          const flattenedProfile = {
-            ...businessData,
-            onboarding_completed: businessData.host_business_settings?.onboarding_completed || false,
-            marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
-          }
-          setBusinessProfile(flattenedProfile)
+          setBusinessProfile(businessData)
         }
       } else {
         setUserType('customer')
