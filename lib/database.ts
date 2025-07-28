@@ -614,7 +614,7 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
           images
         )
       `)
-      .eq('customer_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (bookingsError) {
@@ -633,7 +633,7 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
           images
         )
       `)
-      .eq('customer_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (reviewsError) {

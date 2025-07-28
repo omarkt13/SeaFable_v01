@@ -18,14 +18,14 @@ export async function updateUserProfile(prevState: any, formData: FormData) {
       return { success: false, message: "User not authenticated" }
     }
 
-    // Update customer profile
+    // Update user profile
     const { error } = await supabase
-      .from("customer_profiles")
+      .from("user_profiles")
       .update({
         first_name: firstName,
         last_name: lastName,
         email: email,
-        // Note: phone_number field may need to be added to the customer_profiles table
+        // Note: phone_number field may need to be added to the user_profiles table
       })
       .eq("id", user.id)
 
