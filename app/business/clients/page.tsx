@@ -41,29 +41,23 @@ export default function BusinessClientsPage() {
         throw new Error(fetchError)
       }
 
-      const clientsMap = new Map()
-
-      bookings.forEach((booking: any) => {
-        if (booking.user_profiles) {
-          const clientId = booking.user_profiles.id
-          if (!clientsMap.has(clientId)) {
-            clientsMap.set(clientId, {
-              id: clientId,
-              name: `${booking.user_profiles.first_name || "Unknown"} ${booking.user_profiles.last_name || "Customer"}`,
-              email: booking.user_profiles.email || "N/A",
-              phone: booking.user_profiles.phone_number || "N/A",
-              location: booking.user_profiles.location || "N/A",
-              avatar: booking.user_profiles.avatar_url || "/placeholder.svg?height=40&width=40",
+      const clientMap = new Map<string, ClientData>()
+      ;(bookings || []).forEach((booking) => {
+        if (booking.users?.id) {
+          const userId = booking.users.id
+          if (!clientMap.has(userId)) {
+            clientMap.set(userId, {
+              id: userId,
+              name: `${booking.users.first_name || "Unknown"} ${booking.users.last_name || "User"}`,
+              email: booking.users.email || "N/A",
+              phone: booking.users.phone || null,
               totalBookings: 0,
-              totalSpent: 0,
-              lastBooking: null,
-              experiences: new Set(),
             })
           }
-          const client = clientsMap.get(clientId)
+          const client = clientMap.get(userId)
           if (client) {
             client.totalBookings += 1
-            clientMap.set(clientId, client)
+            clientMap.set(userId, client)
           }
         }
       })

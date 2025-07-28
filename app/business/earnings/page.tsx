@@ -23,105 +23,56 @@ interface HostEarning {
 }
 
 export default function BusinessEarningsPage() {
-  const { user, userType, isLoading: authLoading } = useAuth()
-  const [earnings, setEarnings] = useState({
-    thisMonth: 0,
-    lastMonth: 0,
-    thisYear: 0,
-    lastYear: 0,
-    pending: 0,
-    nextPayout: "N/A",
-    recentTransactions: []
-  })
-  const [loading, setLoading] = useState(true)
+  const { user, isLoading: authLoading } = useAuth()
+  const [earnings, setEarnings] = useState<HostEarning[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [totalEarnings, setTotalEarnings] = useState(0)
+  const [thisMonthEarnings, setThisMonthEarnings] = useState(0)
 
   useEffect(() => {
-    const fetchEarnings = async () => {
-      if (!user || userType !== "business") return
-
-      try {
-        setLoading(true)
-
-        const result = await getHostEarnings(user.id)
-
-        if (result.error) {
-          console.error("Error fetching earnings:", result.error)
-          setError("Failed to load earnings data")
-          return
-        }
-
-        const bookings = result.data || []
-
-        // Calculate earnings from booking data
-        const now = new Date()
-        const currentMonth = now.getMonth()
-        const currentYear = now.getFullYear()
-        const lastMonth = new Date(currentYear, currentMonth - 1, 1)
-
-        const thisMonthEarnings = bookings
-          .filter(b => {
-            const bookingDate = new Date(b.booked_at)
-            return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear
-          })
-          .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-        const lastMonthEarnings = bookings
-          .filter(b => {
-            const bookingDate = new Date(b.booked_at)
-            return bookingDate.getMonth() === lastMonth.getMonth() && bookingDate.getFullYear() === lastMonth.getFullYear()
-          })
-          .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-        const thisYearEarnings = bookings
-          .filter(b => {
-            const bookingDate = new Date(b.booked_at)
-            return bookingDate.getFullYear() === currentYear
-          })
-          .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-        const lastYearEarnings = bookings
-          .filter(b => {
-            const bookingDate = new Date(b.booked_at)
-            return bookingDate.getFullYear() === (currentYear - 1)
-          })
-          .reduce((sum, b) => sum + (b.total_price || 0), 0)
-
-        // Recent transactions from bookings
-        const recentTransactions = bookings
-          .slice(0, 10)
-          .map((booking, index) => ({
-            id: index + 1,
-            customer: "Customer", // Will be populated when user relationships are fixed
-            experience: "Experience", // Will be populated when experience relationships are fixed
-            amount: booking.total_price || 0,
-            date: new Date(booking.booked_at).toLocaleDateString(),
-            status: booking.payment_status === "succeeded" ? "completed" : "pending"
-          }))
-
-        setEarnings({
-          thisMonth: thisMonthEarnings,
-          lastMonth: lastMonthEarnings,
-          thisYear: thisYearEarnings,
-          lastYear: lastYearEarnings,
-          pending: 0, // Will be calculated when payment status is properly tracked
-          nextPayout: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          recentTransactions
-        })
-
-        setError(null)
-      } catch (error) {
-        console.error("Error fetching earnings:", error)
-        setError("Failed to load earnings data")
-      } finally {
-        setLoading(false)
-      }
+    if (!authLoading && user?.id) {
+      fetchEarnings(user.id)
+    } else if (!authLoading && !user) {
+      setError("You must be logged in as a business user to view earnings.")
+      setIsLoading(false)
     }
+  }, [user, authLoading])
 
-    fetchEarnings()
-  }, [user, userType])
+  const fetchEarnings = async (hostId: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const { data, error: fetchError } = await getHostEarnings(hostId)
+      if (fetchError) {
+        throw new Error(fetchError.message)
+      }
+      setEarnings(data || [])
 
-  if (loading) {
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+
+      let calculatedTotal = 0
+      let calculatedThisMonth = 0
+      ;(data || []).forEach((earning) => {
+        calculatedTotal += earning.amount
+        const earningDate = new Date(earning.created_at)
+        if (earningDate.getMonth() === currentMonth && earningDate.getFullYear() === currentYear) {
+          calculatedThisMonth += earning.amount
+        }
+      })
+
+      setTotalEarnings(calculatedTotal)
+      setThisMonthEarnings(calculatedThisMonth)
+    } catch (err: any) {
+      console.error("Failed to fetch earnings:", err)
+      setError(err.message || "Failed to load earnings.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
     return (
       <BusinessLayout>
         <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
@@ -139,7 +90,7 @@ export default function BusinessEarningsPage() {
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Earnings</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => {}}>Try Again</Button>
+          <Button onClick={() => user?.id && fetchEarnings(user.id)}>Try Again</Button>
         </div>
       </BusinessLayout>
     )
@@ -149,68 +100,78 @@ export default function BusinessEarningsPage() {
     <BusinessLayout>
       <div className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Your Earnings</h1>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€{earnings.thisMonth.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Earnings for this month</p>
+              <div className="text-2xl font-bold">€{totalEarnings.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">All-time earnings</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Last Month</CardTitle>
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€{earnings.lastMonth.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Earnings from last month</p>
+              <div className="text-2xl font-bold">€{thisMonthEarnings.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Earnings for current month</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Year</CardTitle>
+              <CardTitle className="text-sm font-medium">Next Payout</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€{earnings.thisYear.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Total earnings this year</p>
+              <div className="text-2xl font-bold">€0.00</div> {/* Placeholder for actual next payout logic */}
+              <p className="text-xs text-muted-foreground">Estimated payout date: N/A</p>
             </CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>A history of your recent transactions</CardDescription>
+            <CardTitle>Earnings History</CardTitle>
+            <CardDescription>Detailed breakdown of your past earnings.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {earnings.recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell>{transaction.experience}</TableCell>
-                    <TableCell className="text-right">€{transaction.amount.toFixed(2)}</TableCell>
-                    <TableCell>{transaction.status}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {earnings.length === 0 ? (
+              <div className="text-center py-8">
+                <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-lg font-semibold text-gray-700 mb-2">No earnings recorded yet.</p>
+                <p className="text-gray-500 mb-4">
+                  Earnings will appear here once bookings are completed and payments are processed.
+                </p>
+                <Button onClick={() => (window.location.href = "/business/bookings")}>View Bookings</Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Booking Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {earnings.map((earning) => (
+                      <TableRow key={earning.id}>
+                        <TableCell>{new Date(earning.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>{earning.bookings?.experiences?.title || "N/A"}</TableCell>
+                        <TableCell className="text-right">€{earning.amount.toFixed(2)}</TableCell>
+                        <TableCell>{new Date(earning.bookings?.booking_date).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

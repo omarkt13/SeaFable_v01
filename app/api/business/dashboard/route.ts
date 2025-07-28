@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       if (!data) throw new Error("Business profile not found")
       
       return data
-    }, "Business profile fetch")</old_str>
+    }, "Business profile fetch")
 
     // Fetch experiences with retry
     const experiences = await fetchWithRetry(async () => {
@@ -140,13 +140,13 @@ export async function GET(request: NextRequest) {
             duration_display,
             activity_type
           ),
-          user_profiles!bookings_user_id_fkey (
+          users!bookings_user_id_fkey (
             first_name,
             last_name,
             email,
             avatar_url
           )
-        `)</old_str>
+        `)
         .eq("host_id", businessId)
         .order("booking_date", { ascending: false })
 
@@ -175,14 +175,14 @@ export async function GET(request: NextRequest) {
     // Recent bookings (last 5)
     const recentBookings = bookings.slice(0, 5).map(booking => ({
       id: booking.id,
-      customerName: `${booking.user_profiles?.first_name || "Unknown"} ${booking.user_profiles?.last_name || "User"}`,
+      customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
       experienceTitle: booking.experiences?.title || "N/A",
       date: new Date(booking.booking_date).toLocaleDateString(),
       amount: booking.total_price || 0,
       guests: booking.number_of_guests || 1,
-      avatar: booking.user_profiles?.avatar_url || "/placeholder.svg?height=40&width=40",
+      avatar: booking.users?.avatar_url || "/placeholder.svg?height=40&width=40",
       status: booking.booking_status || "pending",
-    }))</old_str>
+    }))
 
     // Upcoming bookings
     const upcomingBookings = bookings
@@ -191,14 +191,14 @@ export async function GET(request: NextRequest) {
       .slice(0, 5)
       .map(booking => ({
         id: booking.id,
-        customerName: `${booking.user_profiles?.first_name || "Unknown"} ${booking.user_profiles?.last_name || "User"}`,
+        customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
         experienceTitle: booking.experiences?.title || "N/A",
         date: new Date(booking.booking_date).toLocaleDateString(),
         time: booking.departure_time || "N/A",
         guests: booking.number_of_guests || 1,
         specialRequests: booking.special_requests || "",
         phone: "N/A", // Will be added when user table includes phone
-      }))</old_str>
+      }))
 
     // Build dashboard data
     const dashboardData = {

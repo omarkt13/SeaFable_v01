@@ -73,23 +73,31 @@ export default function BusinessAdventuresPage() {
 
       try {
         setLoading(true)
-        const result = await getExperiences({ hostId: user.id })
+        const supabase = createClient()
 
-        if (result.success) {
-          setExperiences(result.data || [])
-        } else {
-          setError(result.error || "Failed to fetch experiences")
+        const { data, error: fetchError } = await supabase
+          .from("experiences")
+          .select("*")
+          .eq("host_id", user.id)
+          .order("created_at", { ascending: false })
+
+        if (fetchError) {
+          throw fetchError
         }
-      } catch (error) {
-        console.error("Error fetching experiences:", error)
-        setError("An unexpected error occurred")
+
+        setExperiences(data || [])
+      } catch (err) {
+        console.error("Error fetching experiences:", err)
+        setError("Failed to load experiences")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchExperiences()
-  }, [user, userType])
+    if (!authLoading) {
+      fetchExperiences()
+    }
+  }, [user, userType, authLoading])
 
   const filteredExperiences = experiences.filter(exp =>
     exp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

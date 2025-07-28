@@ -1,7 +1,4 @@
-The script updates the database schema, refactoring table names and policies related to user and host profiles.
-```
 
-```sql
 -- SeaFable Database Schema Fix
 -- Fix missing columns, constraints, and relationships
 
