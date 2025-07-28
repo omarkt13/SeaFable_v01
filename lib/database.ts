@@ -666,16 +666,23 @@ export async function getHostDashboardData(userId: string): Promise<{
 }> {
   try {
     // 1. Get Host Profile
-    const { data: hostProfile, error: hostError } = await supabase
+    const { data: hostProfiles, error: hostError } = await supabase
       .from("host_profiles")
       .select("*")
       .eq("user_id", userId)  // Fixed: use user_id for lookup
-      .single()
 
     if (hostError) {
       console.error("Error fetching host profile:", hostError)
       return { success: false, error: hostError.message, data: null }
     }
+
+    if (!hostProfiles || hostProfiles.length === 0) {
+      console.error("No host profile found for user:", userId)
+      return { success: false, error: "Host profile not found", data: null }
+    }
+
+    // Take the first host profile if multiple exist
+    const hostProfile = hostProfiles[0]
 
     // 2. Get Experiences with booking counts
     const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", userId)
