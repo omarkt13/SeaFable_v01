@@ -114,7 +114,7 @@ export default function BusinessHomePage() {
         .select(`
           *,
           experiences!bookings_experience_id_fkey(title, location, duration),
-          users!bookings_customer_id_fkey(first_name, last_name, email, phone)
+          users!bookings_user_id_fkey(first_name, last_name, email, phone)
         `)
         .eq("host_id", user.id)
         .gte("booking_date", weekStart.toISOString())

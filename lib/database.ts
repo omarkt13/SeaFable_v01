@@ -511,7 +511,7 @@ export async function getUserBookings(userId: string) {
           avatar_url
         )
       `)
-      .eq("user_id", userId)
+      .eq("user_id", userId)  // For regular users, userId matches bookings.user_id
       .order("booking_date", { ascending: false })
 
     if (error) {
@@ -528,28 +528,15 @@ export async function getUserBookings(userId: string) {
 
 export async function getHostBookings(hostId: string): Promise<Booking[]> {
   try {
-    // First get the host profile to get the correct host_id
-    const { data: hostProfile, error: hostProfileError } = await supabase
-      .from("host_profiles")
-      .select("id")
-      .eq("user_id", hostId)
-      .single()
-
-    if (hostProfileError) {
-      console.error("Error fetching host profile:", hostProfileError)
-      return []
-    }
-
-    const actualHostId = hostProfile?.id || hostId
-
+    // For business users, hostId directly matches the host_id in bookings
     const { data, error } = await supabase
       .from("bookings")
       .select(`
         *,
         experiences ( id, title, primary_image_url, duration_display, activity_type ),
-        user_profiles!bookings_user_id_fkey ( first_name, last_name, avatar_url )
+        users!bookings_user_id_fkey ( first_name, last_name, avatar_url )
       `)
-      .eq("host_id", actualHostId)
+      .eq("host_id", hostId)  // Use hostId directly
       .order("booking_date", { ascending: true })
 
     if (error) {
@@ -665,61 +652,61 @@ export async function getHostDashboardData(userId: string): Promise<{
   data: BusinessDashboardData | null
 }> {
   try {
-    // 1. Get Host Profile
-    const { data: hostProfiles, error: hostError } = await supabase
+    // 1. Get Host Profile - for business users, userId matches host_profiles.id directly
+    const { data: hostProfile, error: hostError } = await supabase
       .from("host_profiles")
       .select("*")
-      .eq("user_id", userId)  // Fixed: use user_id for lookup
+      .eq("id", userId)  // Fixed: use id field for business users
+      .single()
 
     if (hostError) {
       console.error("Error fetching host profile:", hostError)
+      
+      if (hostError.code === 'PGRST116') {
+        // Host profile not found - try to create one
+        console.log("No host profile found for user:", userId, "- creating one...")
+        
+        // Try to get user info to create a basic host profile
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError || !user) {
+          console.error("Error getting user for profile creation:", userError)
+          return { success: false, error: "Host profile not found and could not create one", data: null }
+        }
+
+        // Create a basic host profile using the userId as the id
+        const { data: newHostProfile, error: createError } = await supabase
+          .from("host_profiles")
+          .insert({
+            id: userId,  // Use userId as the id
+            user_id: userId,  // Also set user_id for backward compatibility
+            name: user.user_metadata?.business_name || user.user_metadata?.contact_name || "Business Host",
+            business_name: user.user_metadata?.business_name || "",
+            contact_name: user.user_metadata?.contact_name || "",
+            email: user.email || "",
+            host_type: "business",
+            years_experience: 0,
+            rating: 0,
+            total_reviews: 0,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error("Error creating host profile:", createError)
+          return { success: false, error: "Host profile not found and could not create one", data: null }
+        }
+
+        console.log("Created new host profile:", newHostProfile.id)
+        // Use the newly created profile
+        return getHostDashboardData(userId) // Retry with the new profile
+      }
+      
       return { success: false, error: hostError.message, data: null }
     }
 
-    let hostProfile = null
-
-    if (!hostProfiles || hostProfiles.length === 0) {
-      console.log("No host profile found for user:", userId, "- creating one...")
-      
-      // Try to get user info to create a basic host profile
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError || !user) {
-        console.error("Error getting user for profile creation:", userError)
-        return { success: false, error: "Host profile not found and could not create one", data: null }
-      }
-
-      // Create a basic host profile
-      const { data: newHostProfile, error: createError } = await supabase
-        .from("host_profiles")
-        .insert({
-          user_id: userId,
-          name: user.user_metadata?.business_name || user.user_metadata?.contact_name || "Business Host",
-          business_name: user.user_metadata?.business_name || "",
-          contact_name: user.user_metadata?.contact_name || "",
-          email: user.email || "",
-          host_type: "business",
-          years_experience: 0,
-          rating: 0,
-          total_reviews: 0,
-        })
-        .select()
-        .single()
-
-      if (createError) {
-        console.error("Error creating host profile:", createError)
-        return { success: false, error: "Host profile not found and could not create one", data: null }
-      }
-
-      hostProfile = newHostProfile
-      console.log("Created new host profile:", hostProfile.id)
-    } else {
-      // Take the first host profile if multiple exist
-      hostProfile = hostProfiles[0]
-    }
-
-    // 2. Get Experiences with booking counts
-    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", hostProfile.id)
+    // 2. Get Experiences with booking counts - use userId directly as host_id
+    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", userId)
 
     if (expError) {
       console.error("Error fetching experiences:", expError)
@@ -745,8 +732,8 @@ export async function getHostDashboardData(userId: string): Promise<{
           avatar_url
         )
       `)
-      .eq("host_id", hostProfile.id)
-      .order("booked_at", { ascending: false }) // Already correct, no change needed here
+      .eq("host_id", userId)  // Use userId directly as host_id
+      .order("booked_at", { ascending: false })
 
     if (bookingsError) {
       console.error("Error fetching bookings:", bookingsError)
@@ -1169,9 +1156,9 @@ export async function getUserProfile(userId: string) {
 
   try {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('users')  // Fixed: use users table instead of user_profiles
       .select('*')
-      .eq('user_id', userId)  // Fixed: use user_id instead of id
+      .eq('id', userId)  // Fixed: use id field for regular users
       .single()
 
     if (error) {
@@ -1180,7 +1167,6 @@ export async function getUserProfile(userId: string) {
       if (error.code === '42P01' || error.code === 'PGRST116') {
         return {
           id: userId,
-          user_id: userId,
           first_name: '',
           last_name: '',
           email: '',
