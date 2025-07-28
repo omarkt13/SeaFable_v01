@@ -1,19 +1,17 @@
-
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
-import { useAuth } from "@/lib/auth-context"
+import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
 import { getHostDashboardData } from "@/lib/database"
 import { createClient } from "@/lib/supabase/client"
-import type { BusinessDashboardData } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ErrorFallback } from "@/components/ui/ErrorFallback"
 import {
   CalendarDays,
   DollarSign,
@@ -23,44 +21,59 @@ import {
   Activity,
   Clock,
   MapPin,
-  Plus,
-  Eye,
-  Calendar,
-  BarChart3,
+  Phone,
   MessageSquare,
-  Settings,
+  Eye,
+  BarChart3,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  Phone,
-  Mail,
+  Plus,
+  Calendar,
+  Settings,
+  FileText,
+  CreditCard,
+  UserPlus,
 } from "lucide-react"
 import Link from "next/link"
 
-// Types for weekly bookings
 interface WeeklyBooking {
   id: string
-  title: string
-  client_name: string
-  client_email: string
-  client_phone: string
+  customerName: string
+  experienceTitle: string
   date: string
   time: string
-  duration: number
-  group_size: number
-  max_group_size: number
-  total_sales: number
-  status: 'confirmed' | 'pending' | 'cancelled'
-  created_at: string
-  special_requests?: string
+  guests: number
+  status: string
 }
 
-interface WeeklyBookings {
-  [key: string]: WeeklyBooking[]
+interface BusinessDashboardData {
+  businessProfile: any
+  overview: {
+    totalRevenue: number
+    activeBookings: number
+    totalExperiences: number
+    averageRating: number
+    revenueGrowth: number
+    bookingGrowth: number
+  }
+  recentBookings: any[]
+  upcomingBookings: any[]
+  earnings: {
+    thisMonth: number
+    lastMonth: number
+    pending: number
+    nextPayout: { amount: number; date: string }
+    monthlyTrend: { month: string; revenue: number }[]
+  }
+  analytics: {
+    conversionRate: number
+    customerSatisfaction: number
+    repeatCustomerRate: number
+    marketplaceVsDirectRatio: number
+    metricsTrend: { name: string; value: number }[]
+  }
+  experiences: any[]
+  recentActivity: { description: string; time: string; color: string }[]
 }
 
 export default function BusinessHomePage() {
@@ -104,100 +117,101 @@ export default function BusinessHomePage() {
       setBookingsLoading(true)
       const supabase = createClient()
 
-      const weekStart = new Date(currentWeekStart)
-      weekStart.setHours(0, 0, 0, 0)
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekEnd.getDate() + 6)
-      weekEnd.setHours(23, 59, 59, 999)
+      const weekStart = getDateKey(currentWeekStart)
+      const weekEnd = getDateKey(new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000))
 
-      const { data, error: fetchError } = await supabase
-        .from("bookings")
+      const { data: bookings, error } = await supabase
+        .from('bookings')
         .select(`
-          *,
-          experiences!bookings_experience_id_fkey(title, location, duration),
-          users!bookings_customer_id_fkey(first_name, last_name, email, phone)
+          id,
+          booking_date,
+          departure_time,
+          number_of_guests,
+          booking_status,
+          experiences!bookings_experience_id_fkey (
+            title
+          ),
+          users!bookings_user_id_fkey (
+            first_name,
+            last_name
+          )
         `)
-        .eq("host_id", user.id)
-        .gte("booking_date", weekStart.toISOString())
-        .lte("booking_date", weekEnd.toISOString())
-        .order("booking_date", { ascending: true })
+        .eq('host_id', user.id)
+        .gte('booking_date', weekStart)
+        .lte('booking_date', weekEnd)
+        .order('booking_date', { ascending: true })
 
-      if (fetchError) {
-        console.error("Error fetching weekly bookings:", fetchError)
+      if (error) {
+        console.error('Error fetching weekly bookings:', error)
         return
       }
 
       // Group bookings by date
       const groupedBookings: WeeklyBookings = {}
-      data?.forEach((booking) => {
-        const dateKey = getDateKey(new Date(booking.booking_date))
+
+      bookings?.forEach((booking) => {
+        const dateKey = booking.booking_date
         if (!groupedBookings[dateKey]) {
           groupedBookings[dateKey] = []
         }
-        
+
         groupedBookings[dateKey].push({
           id: booking.id,
-          title: booking.experiences?.title || "Adventure",
-          client_name: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "Guest"}`,
-          client_email: booking.users?.email || "",
-          client_phone: booking.users?.phone || "",
+          customerName: `${booking.users?.first_name || 'Unknown'} ${booking.users?.last_name || 'Customer'}`,
+          experienceTitle: booking.experiences?.title || 'Unknown Experience',
           date: booking.booking_date,
-          time: booking.departure_time || "TBD",
-          duration: booking.experiences?.duration || 120,
-          group_size: booking.number_of_guests || 1,
-          max_group_size: 8, // Default max
-          total_sales: booking.total_price || 0,
-          status: booking.booking_status as 'confirmed' | 'pending' | 'cancelled',
-          created_at: booking.created_at,
-          special_requests: booking.special_requests
+          time: booking.departure_time || 'TBD',
+          guests: booking.number_of_guests || 1,
+          status: booking.booking_status || 'pending'
         })
       })
 
       setWeeklyBookings(groupedBookings)
-    } catch (err) {
-      console.error("Error fetching weekly bookings:", err)
+    } catch (error) {
+      console.error('Error fetching weekly bookings:', error)
     } finally {
       setBookingsLoading(false)
     }
   }
 
-  useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user || userType !== "business") return
+        if (!user || userType !== "business") return;
 
-      try {
-        setLoading(true)
-        const result = await getHostDashboardData(user.id)
+        try {
+            setLoading(true);
+            setError(null);
 
-        if (result.success && result.data) {
-          setDashboardData(result.data)
-        } else {
-          setError(result.error || "Failed to load dashboard data")
+            const result = await getHostDashboardData(user.id);
+
+            if (result.success && result.data) {
+                setDashboardData(result.data);
+            } else {
+                setError(result.error || "Failed to load dashboard data");
+            }
+        } catch (err) {
+            console.error("Error fetching dashboard data:", err);
+            setError("An unexpected error occurred");
+        } finally {
+            setLoading(false);
         }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err)
-        setError("An unexpected error occurred")
-      } finally {
-        setLoading(false)
-      }
-    }
+    };
 
-    if (!authLoading) {
-      fetchDashboardData()
+  useEffect(() => {
+    if (!authLoading && user && userType === "business") {
+        fetchDashboardData()
+      fetchWeeklyBookings()
     }
   }, [user, userType, authLoading])
 
   useEffect(() => {
-    if (!authLoading && user && userType === "business") {
-      fetchWeeklyBookings()
-    }
-  }, [user, userType, authLoading, currentWeekStart])
+    fetchWeeklyBookings()
+  }, [currentWeekStart])
 
   if (authLoading || loading) {
     return (
       <BusinessProtectedRoute>
         <BusinessLayoutWrapper title="Dashboard">
-          <div className="px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
                 <Card key={i}>
@@ -223,15 +237,7 @@ export default function BusinessHomePage() {
       <BusinessProtectedRoute>
         <BusinessLayoutWrapper title="Dashboard">
           <div className="px-4 sm:px-6 lg:px-8">
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader>
-                <CardTitle className="text-red-800">Error Loading Dashboard</CardTitle>
-                <CardDescription className="text-red-600">{error}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => window.location.reload()}>Try Again</Button>
-              </CardContent>
-            </Card>
+            <ErrorFallback error={new Error(error)} resetError={() => window.location.reload()} />
           </div>
         </BusinessLayoutWrapper>
       </BusinessProtectedRoute>
@@ -344,21 +350,21 @@ export default function BusinessHomePage() {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">€{overview.totalRevenue.toLocaleString()}</div>
+                <div className="text-2xl font-bold">€{dashboardData?.overview.totalRevenue.toLocaleString() || '0'}</div>
                 <div className="flex items-center text-xs text-muted-foreground">
-                  {overview.revenueGrowth >= 0 ? (
+                  {(dashboardData?.overview.revenueGrowth || 0) >= 0 ? (
                     <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
                   ) : (
                     <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
                   )}
-                  {Math.abs(overview.revenueGrowth)}% from last month
+                  {Math.abs(dashboardData?.overview.revenueGrowth || 0)}% from last month
                 </div>
               </CardContent>
             </Card>
@@ -369,25 +375,25 @@ export default function BusinessHomePage() {
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{overview.activeBookings}</div>
+                <div className="text-2xl font-bold">{dashboardData?.overview.activeBookings || 0}</div>
                 <div className="flex items-center text-xs text-muted-foreground">
-                  {overview.bookingGrowth >= 0 ? (
+                  {(dashboardData?.overview.bookingGrowth || 0) >= 0 ? (
                     <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
                   ) : (
                     <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
                   )}
-                  {Math.abs(overview.bookingGrowth)}% from last month
+                  {Math.abs(dashboardData?.overview.bookingGrowth || 0)}% from last month
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Experiences</CardTitle>
+                <CardTitle className="text-sm font-medium">Experiences</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{overview.totalExperiences}</div>
+                <div className="text-2xl font-bold">{dashboardData?.overview.totalExperiences || 0}</div>
                 <p className="text-xs text-muted-foreground">Active listings</p>
               </CardContent>
             </Card>
@@ -398,7 +404,7 @@ export default function BusinessHomePage() {
                 <Star className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{overview.averageRating}/5.0</div>
+                <div className="text-2xl font-bold">{dashboardData?.overview.averageRating || 0}/5.0</div>
                 <p className="text-xs text-muted-foreground">Based on all reviews</p>
               </CardContent>
             </Card>
@@ -465,7 +471,7 @@ export default function BusinessHomePage() {
                                   {getStatusIcon(booking.status)}
                                 </div>
                                 <div className="truncate font-medium">{booking.title}</div>
-                                <div className="truncate text-muted-foreground">{booking.client_name}</div>
+                                <div className="truncate text-muted-foreground">{booking.customerName}</div>
                                 <div className="flex items-center justify-between mt-1">
                                   <span className="flex items-center">
                                     <Users className="h-3 w-3 mr-1" />
