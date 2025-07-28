@@ -719,7 +719,7 @@ export async function getHostDashboardData(userId: string): Promise<{
     }
 
     // 2. Get Experiences with booking counts
-    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", userId)
+    const { data: experiences, error: expError } = await supabase.from("experiences").select("*").eq("host_id", hostProfile.id)
 
     if (expError) {
       console.error("Error fetching experiences:", expError)
@@ -745,7 +745,7 @@ export async function getHostDashboardData(userId: string): Promise<{
           avatar_url
         )
       `)
-      .eq("host_id", userId)
+      .eq("host_id", hostProfile.id)
       .order("booked_at", { ascending: false }) // Already correct, no change needed here
 
     if (bookingsError) {
