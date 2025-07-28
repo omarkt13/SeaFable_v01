@@ -13,7 +13,7 @@ export const supabase = (() => {
     // Server-side: create a new instance each time
     return createClientComponentClient()
   }
-  
+
   if (!globalThis.supabaseClientInstance) {
     globalThis.supabaseClientInstance = createClientComponentClient()
   }
