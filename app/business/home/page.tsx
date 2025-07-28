@@ -141,10 +141,10 @@ export default function BusinessHomePage() {
           departure_time,
           number_of_guests,
           booking_status,
-          experiences (
+          experiences!bookings_experience_id_fkey (
             title
           ),
-          users (
+          users!bookings_user_id_fkey (
             first_name,
             last_name
           )

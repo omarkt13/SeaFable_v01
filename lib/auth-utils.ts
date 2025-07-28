@@ -13,7 +13,7 @@ export const supabase = (() => {
     // Server-side: create a new instance each time
     return createClientComponentClient()
   }
-  
+
   if (!globalThis.supabaseClientInstance) {
     globalThis.supabaseClientInstance = createClientComponentClient()
   }
@@ -127,7 +127,7 @@ export async function determineUserType(userId: string): Promise<"customer" | "b
   const businessProfile = await getBusinessProfile(userId)
   if (businessProfile) return "business"
 
-  const userProfile = await getUserProfile(userId)
+  const userProfile = await supabase.from('user_profiles').select('*').eq('id', userId).single()
   if (userProfile) return "customer"
 
   return null

@@ -614,7 +614,7 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
           images
         )
       `)
-      .eq('customer_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (bookingsError) {
@@ -633,7 +633,7 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
           images
         )
       `)
-      .eq('customer_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (reviewsError) {
@@ -1171,7 +1171,7 @@ export async function getBusinessDashboardData(businessId: string) {
       console.error("Error fetching business profile:", profileError)
       // For missing table errors, return a default structure
       if (profileError.code === '42P01') {
-        console.warn("business_profiles table doesn't exist, using mock data")
+        console.warn("host_profiles table doesn't exist, using mock data")
         return {
           overview: { totalExperiences: 0, totalBookings: 0, upcomingBookings: 0, totalRevenue: 0, monthlyRevenue: 0 },
           experiences: [],
