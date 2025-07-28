@@ -29,6 +29,18 @@ export async function getCurrentUser() {
   return user
 }
 
+export async function getSession() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession()
+  if (error) {
+    console.error("Error getting session:", error)
+    return null
+  }
+  return session
+}
+
 
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
@@ -48,7 +60,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
         marketplace_enabled
       )
     `)
-    .eq("id", userId)
+    .eq("user_id", userId)
     .single()
 
   if (error) {
