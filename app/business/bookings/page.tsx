@@ -94,8 +94,8 @@ export default function BusinessBookingsPage() {
 
         const formattedBookings = bookings?.map(booking => ({
           id: booking.id,
-          guestName: `${booking.users?.first_name || 'Unknown'} ${booking.users?.last_name || ''}`.trim(),
-          email: booking.users?.email || 'No email',
+          customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "Customer"}`,
+          customerEmail: booking.users?.email || "unknown@example.com",
           phone: 'No phone', // Phone not in users table yet
           experienceName: booking.experiences?.title || 'Unknown Experience',
           date: new Date(booking.booking_date).toLocaleDateString(),

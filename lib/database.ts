@@ -18,23 +18,23 @@ async function withRetry<T>(
   delay: number = 1000
 ): Promise<T> {
   let lastError: Error | null = null
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation()
     } catch (error) {
       lastError = error as Error
       console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}):`, error)
-      
+
       if (attempt === maxRetries) {
         throw lastError
       }
-      
+
       // Exponential backoff
       await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)))
     }
   }
-  
+
   throw lastError
 }
 
@@ -988,7 +988,8 @@ export async function createBooking(bookingData: {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data }
+    return { success: true, data }```text
+
   } catch (error: any) {
     console.error("Error creating booking:", error)
     return { success: false, error: "Network error occurred", data: null }
@@ -1159,7 +1160,7 @@ export async function getBusinessDashboardData(businessId: string) {
   try {
     console.log("Fetching business dashboard data for:", businessId)
 
-    // Get business profile
+    // Fetch business profile
     const { data: businessProfile, error: profileError } = await supabase
       .from("host_profiles")
       .select("*")
