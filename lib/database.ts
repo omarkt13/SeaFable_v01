@@ -1160,7 +1160,7 @@ export async function getBusinessDashboardData(businessId: string) {
   try {
     console.log("Fetching business dashboard data for:", businessId)
 
-    // Fetch business profile
+    // Fetch business profile - handle missing table gracefully
     const { data: businessProfile, error: profileError } = await supabase
       .from("host_profiles")
       .select("*")
@@ -1169,6 +1169,20 @@ export async function getBusinessDashboardData(businessId: string) {
 
     if (profileError) {
       console.error("Error fetching business profile:", profileError)
+      // For missing table errors, return a default structure
+      if (profileError.code === '42P01') {
+        console.warn("business_profiles table doesn't exist, using mock data")
+        return {
+          overview: { totalExperiences: 0, totalBookings: 0, upcomingBookings: 0, totalRevenue: 0, monthlyRevenue: 0 },
+          experiences: [],
+          recentBookings: [],
+          upcomingBookings: [],
+          analytics: { totalViews: 0, conversionRate: 0, averageRating: 0, responseTime: "0 hours" },
+          businessProfile: null,
+          earnings: { thisMonth: 0, lastMonth: 0, growth: 0, pendingPayouts: 0 },
+          recentActivity: []
+        }
+      }
       throw profileError
     }
 

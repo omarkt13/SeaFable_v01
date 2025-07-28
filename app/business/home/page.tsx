@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorFallback } from "@/components/ui/ErrorFallback"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   CalendarDays,
   DollarSign,
@@ -33,6 +35,12 @@ import {
   FileText,
   CreditCard,
   UserPlus,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Mail,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -44,7 +52,12 @@ interface WeeklyBooking {
   time: string
   guests: number
   status: string
+  title?: string
+  group_size?: number
+  total_sales?: number
 }
+
+type WeeklyBookings = Record<string, WeeklyBooking[]>
 
 interface BusinessDashboardData {
   businessProfile: any
@@ -128,10 +141,10 @@ export default function BusinessHomePage() {
           departure_time,
           number_of_guests,
           booking_status,
-          experiences!bookings_experience_id_fkey (
+          experiences (
             title
           ),
-          users!bookings_user_id_fkey (
+          users (
             first_name,
             last_name
           )
@@ -143,6 +156,8 @@ export default function BusinessHomePage() {
 
       if (error) {
         console.error('Error fetching weekly bookings:', error)
+        // Set empty bookings on error to prevent UI crashes
+        setWeeklyBookings({})
         return
       }
 
