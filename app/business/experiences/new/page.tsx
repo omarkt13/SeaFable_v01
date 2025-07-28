@@ -266,7 +266,7 @@ export default function NewExperiencePage() {
     setIsLoading(true)
     try {
       const experienceData = {
-        host_id: businessProfile.id,
+        host_id: user.id,
         title: formData.title,
         description: formData.fullDescription,
         short_description: formData.shortDescription || formData.fullDescription.substring(0, 150) + '...',

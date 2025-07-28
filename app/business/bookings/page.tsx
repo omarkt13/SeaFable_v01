@@ -73,7 +73,7 @@ export default function BusinessBookingsPage() {
           .select(`
             *,
             experiences!bookings_experience_id_fkey(title, location),
-            customer_profiles!bookings_customer_id_fkey(first_name, last_name, email)
+            user_profiles!bookings_user_id_fkey(first_name, last_name, email)
           `)
           .eq("host_id", user.id)
           .order("created_at", { ascending: false })
@@ -86,10 +86,10 @@ export default function BusinessBookingsPage() {
           // Transform the data to match our interface
           const transformedBookings = data?.map((booking: any) => ({
             id: booking.id,
-            customer_name: booking.customer_profiles 
-              ? `${booking.customer_profiles.first_name} ${booking.customer_profiles.last_name}`.trim()
+            customer_name: booking.user_profiles 
+              ? `${booking.user_profiles.first_name} ${booking.user_profiles.last_name}`.trim()
               : 'Unknown Customer',
-            customer_email: booking.customer_profiles?.email || 'No email',
+            customer_email: booking.user_profiles?.email || 'No email',
             experience_title: booking.experiences?.title || 'Unknown Experience',
             experience_location: booking.experiences?.location || '',
             booking_date: booking.booking_date,

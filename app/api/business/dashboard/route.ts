@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
             duration_display,
             activity_type
           ),
-          users!bookings_user_id_fkey (
+          user_profiles!bookings_user_id_fkey (
             first_name,
             last_name,
             email,
@@ -175,12 +175,12 @@ export async function GET(request: NextRequest) {
     // Recent bookings (last 5)
     const recentBookings = bookings.slice(0, 5).map(booking => ({
       id: booking.id,
-      customerName: `${booking.users?.first_name || "Unknown"} ${booking.users?.last_name || "User"}`,
+      customerName: `${booking.user_profiles?.first_name || "Unknown"} ${booking.user_profiles?.last_name || "User"}`,
       experienceTitle: booking.experiences?.title || "N/A",
       date: new Date(booking.booking_date).toLocaleDateString(),
       amount: booking.total_price || 0,
       guests: booking.number_of_guests || 1,
-      avatar: booking.users?.avatar_url || "/placeholder.svg?height=40&width=40",
+      avatar: booking.user_profiles?.avatar_url || "/placeholder.svg?height=40&width=40",
       status: booking.booking_status || "pending",
     }))
 
