@@ -625,56 +625,63 @@ export default function BusinessTestPage() {
   return (
     <BusinessProtectedRoute>
       <BusinessLayoutWrapper title="Business Function Tests">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Business Function Tests</h1>
-                <p className="text-gray-600 mt-1">Verify all business dashboard functions are working correctly</p>
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 max-w-7xl">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words">Business Function Tests</h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1 break-words">Verify all business dashboard functions are working correctly</p>
               </div>
-              <Button 
-                onClick={runAllTests} 
-                disabled={isRunning}
-                className="w-full sm:w-auto"
-              >
-                {isRunning ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Running Tests...
-                  </>
-                ) : (
-                  "Run All Tests"
-                )}
-              </Button>
+              <div className="flex-shrink-0">
+                <Button 
+                  onClick={runAllTests} 
+                  disabled={isRunning}
+                  className="w-full sm:w-auto min-w-[140px] h-10 sm:h-11"
+                  size="default"
+                >
+                  {isRunning ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span className="text-sm sm:text-base">Running Tests...</span>
+                    </>
+                  ) : (
+                    <span className="text-sm sm:text-base">Run All Tests</span>
+                  )}
+                </Button>
+              </div>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4 lg:gap-6">
               {tests.map((test, index) => {
                 const result = testResults.find(r => r.name === test.name)
                 const status = result?.status || (isRunning && index <= testResults.length ? "pending" : "pending")
 
                 return (
-                  <Card key={test.name} className="transition-colors">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-3">
-                          {getStatusIcon(status)}
-                          {test.name}
+                  <Card key={test.name} className="transition-colors hover:shadow-md">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-3 break-words flex-1 min-w-0">
+                          <div className="flex-shrink-0">
+                            {getStatusIcon(status)}
+                          </div>
+                          <span className="truncate">{test.name}</span>
                         </CardTitle>
-                        {getStatusBadge(status)}
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(status)}
+                        </div>
                       </div>
                     </CardHeader>
                     {result && (
-                      <CardContent>
-                        <p className="text-sm text-gray-600 mb-2">{result.message}</p>
+                      <CardContent className="pt-2">
+                        <p className="text-sm sm:text-base text-gray-600 mb-3 break-words">{result.message}</p>
                         {result.details && (
                           <div className="space-y-2">
-                            <p className="text-xs font-medium text-gray-700">Details:</p>
-                            <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border">
+                            <p className="text-xs sm:text-sm font-medium text-gray-700">Details:</p>
+                            <div className="text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 sm:p-3 rounded-lg border overflow-hidden">
                               {result.details.includes(' | ') ? (
-                                <ul className="space-y-1">
+                                <ul className="space-y-1 overflow-x-auto">
                                   {result.details.split(' | ').map((detail, idx) => (
-                                    <li key={idx} className={`${
+                                    <li key={idx} className={`break-words ${
                                       detail.includes('FAILED:') || detail.includes('ERROR:') ? 'text-red-600 font-medium' :
                                       detail.includes('WARNING:') ? 'text-yellow-600 font-medium' :
                                       detail.includes('SUCCESS:') || detail.includes('Found: YES') ? 'text-green-600 font-medium' :
@@ -685,11 +692,11 @@ export default function BusinessTestPage() {
                                   ))}
                                 </ul>
                               ) : (
-                                <span className={
+                                <span className={`break-words ${
                                   result.details.includes('FAILED') || result.details.includes('ERROR') ? 'text-red-600' :
                                   result.details.includes('WARNING') ? 'text-yellow-600' :
                                   'text-gray-600'
-                                }>
+                                }`}>
                                   {result.details}
                                 </span>
                               )}
@@ -704,29 +711,29 @@ export default function BusinessTestPage() {
             </div>
 
             {testResults.length > 0 && !isRunning && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Test Summary</CardTitle>
+              <Card className="mt-4 sm:mt-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg sm:text-xl">Test Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                    <div className="p-2 sm:p-3 rounded-lg bg-green-50">
+                      <div className="text-lg sm:text-2xl font-bold text-green-600">
                         {testResults.filter(r => r.status === "success").length}
                       </div>
-                      <div className="text-sm text-gray-600">Passed</div>
+                      <div className="text-xs sm:text-sm text-gray-600 font-medium">Passed</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-yellow-600">
+                    <div className="p-2 sm:p-3 rounded-lg bg-yellow-50">
+                      <div className="text-lg sm:text-2xl font-bold text-yellow-600">
                         {testResults.filter(r => r.status === "warning").length}
                       </div>
-                      <div className="text-sm text-gray-600">Warnings</div>
+                      <div className="text-xs sm:text-sm text-gray-600 font-medium">Warnings</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-red-600">
+                    <div className="p-2 sm:p-3 rounded-lg bg-red-50">
+                      <div className="text-lg sm:text-2xl font-bold text-red-600">
                         {testResults.filter(r => r.status === "error").length}
                       </div>
-                      <div className="text-sm text-gray-600">Failed</div>
+                      <div className="text-xs sm:text-sm text-gray-600 font-medium">Failed</div>
                     </div>
                   </div>
                 </CardContent>
@@ -734,16 +741,34 @@ export default function BusinessTestPage() {
             )}
 
             {/* Quick Actions */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" onClick={() => window.open("/api/business/dashboard", "_blank")}>
-                Test Dashboard API
-              </Button>
-              <Button variant="outline" onClick={() => window.open("/business/home", "_blank")}>
-                Open Business Dashboard
-              </Button>
-              <Button variant="outline" onClick={() => window.open("/app/test-db", "_blank")}>
-                Database Status
-              </Button>
+            <div className="mt-6 sm:mt-8">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open("/api/business/dashboard", "_blank")}
+                  className="h-10 sm:h-11 text-sm justify-start"
+                >
+                  <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Test Dashboard API</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open("/business/home", "_blank")}
+                  className="h-10 sm:h-11 text-sm justify-start"
+                >
+                  <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Open Business Dashboard</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open("/app/test-db", "_blank")}
+                  className="h-10 sm:h-11 text-sm justify-start sm:col-span-2 lg:col-span-1"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Database Status</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

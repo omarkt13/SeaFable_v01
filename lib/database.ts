@@ -1084,7 +1084,7 @@ export async function getBusinessDashboardData(businessId: string) {
       .from("bookings")
       .select(`
         *,
-        experiences:experience_id (
+        experiences!bookings_experience_id_fkey (
           title,
           location,
           primary_image_url
