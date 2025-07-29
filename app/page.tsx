@@ -426,7 +426,11 @@ export default function LandingPage() {
                   <div
                     key={index}
                     className="bg-white rounded-xl p-4 md:p-6 text-center group cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                    onClick={() => setSearchData({ ...searchData, service: activity.name })}
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      params.set("service", activity.name)
+                      router.push(`/search?${params.toString()}`)
+                    }}
                   >
                     <div className="text-3xl md:text-4xl mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-200">
                       {activity.icon}
@@ -460,30 +464,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Activity Categories */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Explore by Activity</h2>
-              <p className="text-xl text-gray-600">Choose your adventure from our wide range of water activities</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {activities.map((activity, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:-translate-y-2"
-                >
-                  <div className="text-5xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
-                    {activity.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 text-center mb-2">{activity.name}</h3>
-                  <p className="text-gray-600 text-center text-sm">{activity.count}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        
 
         {/* Featured Experiences */}
         <section id="featured-experiences" className="py-20">
