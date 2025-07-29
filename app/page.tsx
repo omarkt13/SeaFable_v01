@@ -265,7 +265,7 @@ export default function LandingPage() {
                       />
 
                       {showDatePicker && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2 sm:p-4">
                           {/* Quick Date Options */}
                           <div className="mb-4">
                             <p className="text-sm font-medium text-gray-700 mb-2">Quick select:</p>
