@@ -124,8 +124,8 @@ export function CustomerNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-lg border-b border-gray-200 sm:hidden">
-        <div className="px-3">
+      <nav className="bg-white shadow-lg border-b border-gray-200 sm:hidden relative">
+        <div className="px-3 relative">
           <div className="flex justify-between items-center h-14">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
@@ -165,7 +165,7 @@ export function CustomerNavigation() {
                     </Link>
                   )
                 })}
-                
+
                 <div className="border-t border-gray-200 pt-3 mt-3">
                   <div className="flex items-center px-3 py-2">
                     <Avatar className="w-8 h-8 mr-3 flex-shrink-0">
@@ -179,7 +179,7 @@ export function CustomerNavigation() {
                       <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                     </div>
                   </div>
-                  
+
                   <Link
                     href="/dashboard/profile"
                     onClick={() => setMobileMenuOpen(false)}
@@ -188,7 +188,7 @@ export function CustomerNavigation() {
                     <Settings className="w-4 h-4 flex-shrink-0" />
                     <span>Profile Settings</span>
                   </Link>
-                  
+
                   <Link
                     href="/business/login"
                     onClick={() => setMobileMenuOpen(false)}
@@ -196,7 +196,7 @@ export function CustomerNavigation() {
                   >
                     <span>Business Login</span>
                   </Link>
-                  
+
                   <button
                     onClick={handleSignOut}
                     className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:text-teal-600 hover:bg-gray-50 rounded-md w-full text-left active:bg-gray-100"

@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -58,8 +57,8 @@ export function PublicNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 md:hidden">
-        <div className="px-4">
+      <nav className="bg-white shadow-sm border-b border-gray-200 md:hidden relative">
+        <div className="px-4 sm:px-6 relative">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
@@ -94,7 +93,7 @@ export function PublicNavigation() {
                     {link.name}
                   </Link>
                 ))}
-                
+
                 <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
                   <Link
                     href="/login"

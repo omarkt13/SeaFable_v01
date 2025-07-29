@@ -119,8 +119,8 @@ export function BusinessNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-lg border-b border-gray-200 lg:hidden">
-        <div className="px-4 sm:px-6">
+      <nav className="bg-white shadow-lg border-b border-gray-200 lg:hidden mobile-menu-container">
+        <div className="px-4 sm:px-6 relative">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/business/home" className="flex items-center space-x-2">
@@ -143,7 +143,7 @@ export function BusinessNavigation() {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-50">
+            <div className="mobile-menu-dropdown border-t border-gray-200">
               <div className="p-4 space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
