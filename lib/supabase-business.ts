@@ -179,24 +179,112 @@ export async function createExperience(experienceData: {
   tags: string[]
   seasonal_availability: string[]
   is_active?: boolean
-  itinerary?: any // Include itinerary
+  itinerary?: any
 }) {
-  const { data, error } = await supabase
+  // First, get the host profile ID using the provided host_id (user_id)
+  const { data: hostProfile, error: hostError } = await supabase
+    .from("host_profiles")
+    .select("id")
+    .eq("user_id", experienceData.host_id)
+    .single()
+
+  if (hostError || !hostProfile) {
+    throw new Error("Host profile not found. Please complete business registration first.")
+  }
+
+  // Prepare experience data with correct host_id
+  const experienceInsertData = {
+    host_id: hostProfile.id, // Use host_profiles.id
+    title: experienceData.title,
+    description: experienceData.description,
+    short_description: experienceData.short_description || experienceData.description.substring(0, 150) + '...',
+    location: experienceData.location,
+    specific_location: experienceData.specific_location,
+    country: experienceData.country,
+    activity_type: experienceData.activity_type,
+    category: experienceData.category || [],
+    duration_hours: experienceData.duration_hours,
+    duration_display: experienceData.duration_display || `${experienceData.duration_hours} hours`,
+    max_guests: experienceData.max_guests,
+    min_guests: experienceData.min_guests,
+    price_per_person: experienceData.price_per_person,
+    difficulty_level: experienceData.difficulty_level,
+    primary_image_url: experienceData.primary_image_url,
+    weather_contingency: experienceData.weather_contingency,
+    included_amenities: experienceData.included_amenities || [],
+    what_to_bring: experienceData.what_to_bring || [],
+    min_age: experienceData.min_age,
+    max_age: experienceData.max_age,
+    age_restriction_details: experienceData.age_restriction_details,
+    activity_specific_details: experienceData.activity_specific_details || {},
+    tags: experienceData.tags || [],
+    seasonal_availability: experienceData.seasonal_availability || [],
+    rating: 0,
+    total_reviews: 0,
+    total_bookings: 0,
+    is_active: experienceData.is_active ?? true,
+  }
+
+  const { data: newExperience, error } = await supabase
     .from("experiences")
-    .insert([
-      {
-        ...experienceData,
-        rating: 0, // Default values for new experiences
-        total_reviews: 0,
-        total_bookings: 0,
-        is_active: experienceData.is_active ?? true, // Default to active if not provided
-      },
-    ])
+    .insert([experienceInsertData])
     .select()
     .single()
 
   if (error) throw error
-  return data
+
+  // Create default availability slots for the next 30 days
+  try {
+    const availabilitySlots = []
+    const today = new Date()
+    
+    for (let i = 1; i <= 30; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      
+      // Skip weekends for default availability (can be customized later)
+      if (date.getDay() === 0 || date.getDay() === 6) continue
+      
+      // Create morning and afternoon slots
+      const slots = [
+        {
+          host_profile_id: hostProfile.id,
+          experience_id: newExperience.id,
+          date: date.toISOString().split('T')[0],
+          start_time: '09:00:00',
+          end_time: `${String(9 + Math.floor(experienceData.duration_hours)).padStart(2, '0')}:${String((experienceData.duration_hours % 1) * 60).padStart(2, '0')}:00`,
+          available_capacity: experienceData.max_guests,
+        },
+        {
+          host_profile_id: hostProfile.id,
+          experience_id: newExperience.id,
+          date: date.toISOString().split('T')[0],
+          start_time: '14:00:00',
+          end_time: `${String(14 + Math.floor(experienceData.duration_hours)).padStart(2, '0')}:${String((experienceData.duration_hours % 1) * 60).padStart(2, '0')}:00`,
+          available_capacity: experienceData.max_guests,
+        }
+      ]
+      
+      availabilitySlots.push(...slots)
+    }
+
+    // Insert availability slots
+    if (availabilitySlots.length > 0) {
+      const { error: availabilityError } = await supabase
+        .from("host_availability")
+        .insert(availabilitySlots)
+
+      if (availabilityError) {
+        console.warn("Error creating default availability slots:", availabilityError)
+        // Don't fail the experience creation for availability issues
+      }
+    }
+  } catch (availabilityError) {
+    console.warn("Error creating availability:", availabilityError)
+    // Continue without failing the experience creation
+  }
+
+  return newExperience
 }
 
 export async function updateExperience(

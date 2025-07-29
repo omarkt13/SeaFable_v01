@@ -266,7 +266,7 @@ export default function NewExperiencePage() {
     setIsLoading(true)
     try {
       const experienceData = {
-        host_id: user.id,
+        host_id: user.id, // This will be converted to host_profile.id in the createExperience function
         title: formData.title,
         description: formData.fullDescription,
         short_description: formData.shortDescription || formData.fullDescription.substring(0, 150) + '...',
@@ -287,14 +287,24 @@ export default function NewExperiencePage() {
         min_age: formData.minAge || undefined,
         max_age: formData.maxAge < 100 ? formData.maxAge : undefined,
         age_restriction_details: formData.ageRestrictionDetails,
+        activity_specific_details: {
+          itinerary: formData.itinerary
+        },
+        tags: [],
+        seasonal_availability: [],
+        itinerary: formData.itinerary, // Include itinerary for availability creation
         is_active: true
       }
 
-      const newExperience = await createExperience(experienceData)
+      const result = await createExperience(experienceData)
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
       toast({
         title: "Success!",
-        description: "Your experience has been created successfully.",
+        description: "Your experience has been created successfully with default availability slots.",
       })
 
       router.push('/business/experiences')
