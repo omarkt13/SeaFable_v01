@@ -280,3 +280,24 @@ button:not(.bg-primary):not(.bg-secondary):not(.bg-destructive) {
     background-color: hsl(var(--background)) !important;
   }
 }
+
+/* Mobile menu visibility fixes */
+.mobile-menu-open {
+  overflow: visible !important;
+}
+
+.mobile-menu-container {
+  position: relative;
+  z-index: 9999;
+}
+
+/* Ensure mobile menus are always visible */
+nav[class*="relative"] {
+  overflow: visible !important;
+}
+
+/* Force mobile menu to be above everything */
+div[class*="absolute"][class*="z-"] {
+  position: fixed !important;
+  z-index: 99999 !important;
+}
