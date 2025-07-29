@@ -150,9 +150,7 @@ export function CustomerNavigation() {
           {/* Mobile menu */}
           {mobileMenuOpen && (
             <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]">
-              <div className="p-3 space-y-1"></div>
-            </div>
-          )}
+              <div className="p-3 space-y-1">
                 {navigationItems.map((item) => {
                   const Icon = item.icon
                   return (
