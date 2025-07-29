@@ -1,113 +1,130 @@
 
-# Business Dashboard Implementation Todo List
+# Business Dashboard Implementation Todo List - UPDATED
 
-## ✅ Completed
-- [x] Basic business layout and navigation
-- [x] Authentication and auth context
-- [x] Database connection and basic queries
-- [x] Rename "Experiences" to "Adventures" across the site
+## 🚨 CRITICAL FIXES (WEEK 1)
 
-## 🔄 In Progress
-- [ ] Business dashboard functionality with backend integration
+### Authentication & Profile System
+- [ ] **FIX: host_profiles authentication mapping**
+  - Issue: Business users can't access their profiles
+  - Root cause: user_id vs id confusion in host_profiles table
+  - Action: Update authentication logic to use correct field mapping
+  - Files: `/lib/database.ts`, `/lib/supabase-business.ts`
 
-## 📋 Core Dashboard Features
+- [ ] **FIX: Dashboard API data loading**
+  - Issue: Dashboard returns empty/error data intermittently
+  - Root cause: Missing error handling, wrong queries
+  - Action: Rewrite getHostDashboardData function
+  - Files: `/lib/database.ts`, `/app/api/business/dashboard/route.ts`
 
-### 1. Dashboard Home (Priority: HIGH)
-- [ ] Fix dashboard data loading issues
-- [ ] Implement proper error handling
-- [ ] Connect real-time booking data
-- [ ] Add performance metrics visualization
-- [ ] Implement revenue tracking
-- [ ] Add upcoming bookings management
+- [ ] **FIX: Database schema relationships**
+  - Issue: Foreign key constraints not working properly
+  - Root cause: Inconsistent table relationships
+  - Action: Run complete schema fix
+  - Files: Schema fix scripts in `/scripts/`
 
-### 2. Adventures Management (Priority: HIGH)
-- [ ] Adventure creation with full form validation
-- [ ] Adventure listing with filtering and search
-- [ ] Adventure editing and status management
-- [ ] Image upload and management
-- [ ] Pricing and availability settings
-- [ ] Adventure analytics and performance
+## 🔄 IN PROGRESS
 
-### 3. Bookings Management (Priority: HIGH)
-- [ ] Real-time booking dashboard
-- [ ] Booking status management (pending, confirmed, completed, cancelled)
-- [ ] Customer communication system
-- [ ] Booking details and guest information
-- [ ] Payment status tracking
-- [ ] Refund and cancellation management
+### Test Infrastructure
+- [x] Business test page working
+- [x] Debug API endpoints functional  
+- [ ] All test cases passing (currently 1/8 passing)
+- [ ] Comprehensive error logging
 
-### 4. Calendar & Availability (Priority: HIGH)
-- [ ] Interactive calendar view
-- [ ] Availability slot management
-- [ ] Booking conflicts prevention
-- [ ] Recurring availability patterns
-- [ ] Seasonal availability settings
-- [ ] Integration with booking system
+## 📋 CORE FEATURES (WEEK 2)
 
-### 5. Customer Management (Priority: MEDIUM)
-- [ ] Customer database with booking history
-- [ ] Customer communication tools
-- [ ] Customer reviews and feedback
-- [ ] Customer segmentation and analytics
-- [ ] Marketing and promotion tools
+### 1. Adventure Management (Priority: HIGH)
+- [ ] **Adventure Creation Form**
+  - Complete form with validation
+  - Image upload functionality
+  - Draft/publish workflow
+  - Files: `/app/business/adventures/new/page.tsx`
 
-### 6. Financial Management (Priority: HIGH)
-- [ ] Revenue dashboard and analytics
-- [ ] Earnings breakdown by adventure
-- [ ] Payment processing integration
-- [ ] Financial reporting and exports
-- [ ] Tax reporting features
-- [ ] Payout management
+- [ ] **Adventure Listing & Management**
+  - Adventure dashboard with filters
+  - Edit/delete functionality
+  - Status management (active/paused/draft)
+  - Files: `/app/business/adventures/page.tsx`
 
-### 7. Analytics & Reports (Priority: MEDIUM)
-- [ ] Performance analytics dashboard
-- [ ] Booking trends and patterns
-- [ ] Customer satisfaction metrics
-- [ ] Revenue forecasting
-- [ ] Custom report generation
-- [ ] Data export functionality
+### 2. Booking Management (Priority: HIGH)
+- [ ] **Booking Dashboard**
+  - Real-time booking display
+  - Status management interface
+  - Customer communication
+  - Files: `/app/business/bookings/page.tsx`
 
-### 8. Settings & Configuration (Priority: LOW)
-- [ ] Business profile management
-- [ ] Notification preferences
-- [ ] Payment settings
-- [ ] Team member management
-- [ ] Integration settings
-- [ ] Security settings
+- [ ] **Booking Operations**
+  - Accept/decline bookings
+  - Modify booking details
+  - Cancellation handling
+  - Payment status tracking
 
-## 🔧 Technical Implementation
+### 3. Calendar & Availability (Priority: HIGH)
+- [ ] **Availability Management**
+  - Interactive calendar interface
+  - Time slot management
+  - Recurring availability patterns
+  - Files: `/app/business/calendar/page.tsx`
 
-### Database Integration
-- [ ] Optimize dashboard queries for performance
-- [ ] Implement real-time data updates
-- [ ] Add proper error handling and fallbacks
-- [ ] Create data caching strategies
-- [ ] Add database connection pooling
+## 🔧 TECHNICAL IMPLEMENTATION
 
-### UI/UX Improvements
-- [ ] Responsive design optimization
-- [ ] Loading states and error boundaries
-- [ ] Accessibility improvements
+### Database Fixes (IMMEDIATE)
+- [ ] **Run schema fix scripts**
+  - `scripts/complete-database-fix.sql`
+  - `scripts/fix-business-functionality.sql`
+  - Verify all relationships work
+
+### API Development (WEEK 1-2)
+- [ ] **Complete dashboard API**
+  - Fix `/api/business/dashboard/route.ts`
+  - Add proper error handling
+  - Implement data validation
+
+- [ ] **Adventure management APIs**
+  - `/api/business/adventures/` endpoints
+  - CRUD operations
+  - Image upload handling
+
+- [ ] **Booking management APIs**
+  - `/api/business/bookings/` endpoints
+  - Status update operations
+  - Customer communication
+
+### UI/UX (WEEK 2-3)
+- [ ] **Error handling across all pages**
+- [ ] **Loading states for all operations**
+- [ ] **Mobile responsiveness**
+- [ ] **Success/error notifications**
+
+## 🎯 SUCCESS METRICS
+
+### Week 1 Goals
+- [ ] All 8 critical tests passing
+- [ ] Dashboard loads without errors
+- [ ] Authentication works consistently
+- [ ] Basic adventure creation functional
+
+### Week 2 Goals  
+- [ ] Complete adventure management
+- [ ] Working booking system
+- [ ] Calendar functionality
+- [ ] 80% of core features operational
+
+### Week 3 Goals
+- [ ] All major features complete
+- [ ] Comprehensive error handling
 - [ ] Performance optimization
-- [ ] User feedback and notifications
+- [ ] Production readiness
 
-### Security & Performance
-- [ ] Input validation and sanitization
-- [ ] Rate limiting implementation
-- [ ] Performance monitoring
-- [ ] Error logging and monitoring
-- [ ] Backup and recovery procedures
+## 📝 IMMEDIATE NEXT STEPS
 
-## 🎯 Next Immediate Steps
-1. Fix current dashboard loading issues
-2. Implement adventures management with full CRUD
-3. Complete bookings management system
-4. Add calendar and availability management
-5. Implement financial tracking and reporting
+1. **Run the business test page** (`/business/test`) to see current failures
+2. **Fix authentication issues** in host_profiles lookup
+3. **Repair dashboard API** data loading
+4. **Execute database schema fixes**
+5. **Implement adventure creation** as first major feature
 
-## 📝 Notes
-- Focus on core business functionality first
-- Ensure mobile responsiveness
-- Implement proper error handling throughout
-- Add comprehensive testing
-- Document API endpoints and database schema
+---
+
+**Updated**: 2025-01-25
+**Current Sprint**: Critical Fixes (Week 1)
+**Next Milestone**: All tests passing by end of week
