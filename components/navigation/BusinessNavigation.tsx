@@ -143,8 +143,8 @@ export function BusinessNavigation() {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="pb-4 border-t border-gray-200">
-              <div className="mt-4 space-y-2">
+            <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-50">
+              <div className="p-4 space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
@@ -165,7 +165,7 @@ export function BusinessNavigation() {
                   )
                 })}
                 
-                <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="border-t border-gray-200 pt-4 mt-4 pb-4">
                   <div className="flex items-center px-3 py-2">
                     <Avatar className="w-10 h-10 mr-3">
                       <AvatarImage src={businessProfile?.avatar_url || "/placeholder.svg"} />
