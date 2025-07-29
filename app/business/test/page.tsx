@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle, AlertTriangle, XCircle, Loader2, Clock } from "lucide-react"
+import { CheckCircle, AlertTriangle, XCircle, Loader2, Clock, AlertCircle } from "lucide-react"
 import { BusinessProtectedRoute } from "@/components/auth/BusinessProtectedRoute"
 import { BusinessLayoutWrapper } from "@/components/layouts/BusinessLayoutWrapper"
 import { createClient } from "@/lib/supabase/client"
@@ -601,7 +601,7 @@ export default function BusinessTestPage() {
       case "error":
         return <XCircle className="h-5 w-5 text-red-500" />
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />
       default:
         return <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
     }
