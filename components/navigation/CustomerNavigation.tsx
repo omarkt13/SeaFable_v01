@@ -124,7 +124,7 @@ export function CustomerNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-lg border-b border-gray-200 sm:hidden relative">
+      <nav className="bg-white shadow-lg border-b border-gray-200 sm:hidden relative overflow-visible">
         <div className="px-3 relative">
           <div className="flex justify-between items-center h-14">
             {/* Logo */}

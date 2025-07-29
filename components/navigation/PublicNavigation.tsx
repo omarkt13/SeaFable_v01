@@ -57,7 +57,7 @@ export function PublicNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 md:hidden relative">
+      <nav className="bg-white shadow-sm border-b border-gray-200 md:hidden relative overflow-visible">
         <div className="px-4 sm:px-6 relative">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
