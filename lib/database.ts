@@ -380,11 +380,11 @@ export async function createExperience(experienceData: ExperienceData) {
         // Create some default availability slots for the next 30 days
         const availabilitySlots = []
         const today = new Date()
-        
+
         for (let i = 1; i <= 30; i++) {
           const date = new Date(today)
           date.setDate(today.getDate() + i)
-          
+
           // Create morning and afternoon slots
           const morningSlot = {
             host_profile_id: hostProfile.id,
@@ -396,7 +396,7 @@ export async function createExperience(experienceData: ExperienceData) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }
-          
+
           const afternoonSlot = {
             host_profile_id: hostProfile.id,
             experience_id: newExperience.id,
@@ -407,18 +407,30 @@ export async function createExperience(experienceData: ExperienceData) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }
-          
+
           availabilitySlots.push(morningSlot, afternoonSlot)
         }
 
-        // Insert availability slots
-        const { error: availabilityError } = await supabase
-          .from("host_availability")
-          .insert(availabilitySlots)
+        // Insert availability slots with better error handling
+        if (availabilitySlots.length > 0) {
+          try {
+            const { error: availabilityError } = await supabase
+              .from("host_availability")
+              .insert(availabilitySlots)
 
-        if (availabilityError) {
-          console.warn("Error creating default availability slots:", availabilityError)
-          // Don't fail the experience creation for availability issues
+            if (availabilityError) {
+              console.warn("Error creating default availability slots:", availabilityError)
+              // Check if table exists or has correct structure
+              if (availabilityError.code === '42703') {
+                console.error("Column missing in host_availability table:", availabilityError.message)
+              }
+              // Don't fail the experience creation for availability issues
+            } else {
+              console.log(`Created ${availabilitySlots.length} availability slots for experience ${newExperience.id}`)
+            }
+          } catch (availError) {
+            console.warn("Unexpected error creating availability:", availError)
+          }
         }
       } catch (availabilityError) {
         console.warn("Error creating availability:", availabilityError)
