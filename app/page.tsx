@@ -28,8 +28,11 @@ export default function LandingPage() {
 
   // Close date picker when clicking outside
   React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (showDatePicker && !event.target.closest('.date-picker-container')) {
+      const target = event.target as Element
+      if (showDatePicker && !target.closest('.date-picker-container')) {
         setShowDatePicker(false)
       }
     }

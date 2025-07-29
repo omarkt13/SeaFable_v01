@@ -1075,8 +1075,7 @@ export async function getBusinessDashboardData(businessId: string) {
       .order("created_at", { ascending: false })
 
     if (experiencesError) {
-      console.error```tool_code
-:("Error fetching experiences:", experiencesError)
+      console.error("Error fetching experiences:", experiencesError)
       throw experiencesError
     }
 
