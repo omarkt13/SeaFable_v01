@@ -566,6 +566,60 @@ export async function getExperienceById(id: string) {
   }
 }
 
+export async function updateExperience(
+  experienceId: string,
+  updates: Partial<{
+    title: string
+    description: string
+    short_description: string
+    location: string
+    specific_location: string
+    country: string
+    activity_type: string
+    category: string[]
+    duration_hours: number
+    duration_display: string
+    max_guests: number
+    min_guests: number
+    price_per_person: number
+    difficulty_level: string
+    primary_image_url: string
+    weather_contingency: string
+    included_amenities: string[]
+    what_to_bring: string[]
+    min_age: number | null
+    max_age: number | null
+    age_restriction_details: string
+    activity_specific_details: any
+    tags: string[]
+    seasonal_availability: string[]
+    is_active: boolean
+    itinerary: any
+  }>
+) {
+  try {
+    const { data, error } = await supabase
+      .from("experiences")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", experienceId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Database error updating experience:", error)
+      throw new Error(error.message)
+    }
+
+    return data
+  } catch (error: any) {
+    console.error("Unexpected error updating experience:", error)
+    throw new Error(error.message || "An unexpected error occurred")
+  }
+}
+
 export async function getExperienceReviews(experienceId: string) {
   try {
     const { data, error } = await supabase
