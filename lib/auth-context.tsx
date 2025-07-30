@@ -1,6 +1,7 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react'
+import { useIsomorphicLayoutEffect } from '@/hooks/use-isomorphic-layout-effect'
 import { User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { signOut as authUtilsSignOut } from './auth-utils'
@@ -101,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') {
       setIsLoading(false)

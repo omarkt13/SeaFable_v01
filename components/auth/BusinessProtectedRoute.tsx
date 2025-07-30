@@ -3,7 +3,7 @@
 import type React from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 
 interface BusinessProtectedRouteProps {
   children: React.ReactNode
@@ -13,7 +13,7 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
   const { user, userType, isLoading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // Add a small buffer to prevent redirect loops during auth state changes
     const redirectTimeout = setTimeout(() => {
       if (!isLoading && !user) {
