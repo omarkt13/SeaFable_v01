@@ -1054,10 +1054,8 @@ export async function createBooking(bookingData: {
   total_price: number
   special_requests?: string
   dietary_requirements?: string[]
-}) {
-  try {
-    ```text
-    const { data, error } = await supabase
+}) {      try {
+        const { data, error } = await supabase
       .from("bookings")
       .insert([
         {
