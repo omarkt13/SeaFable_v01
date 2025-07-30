@@ -80,8 +80,9 @@ export function PublicNavigation() {
           </div>
 
           {/* Mobile menu */}
+          {console.log('PublicNav: Rendering mobile menu, mobileMenuOpen:', mobileMenuOpen) || null}
           {mobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]">
+            <div className="absolute top-full left-0 right-0 bg-red-500 shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]" style={{ backgroundColor: 'red', border: '2px solid blue', zIndex: 9999 }}>
               <div className="p-4 space-y-2">
                 {navigationLinks.map((link) => (
                   <Link
