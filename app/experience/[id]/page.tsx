@@ -36,6 +36,16 @@ import { useAuth } from "@/lib/auth-context"
 import { getExperienceById, getExperienceReviews, type Experience, type Review } from "@/lib/database"
 import { createBooking } from "@/app/actions/booking" // Import the new Server Action
 import { supabase } from "@/lib/supabase" // Keep for auth.getUser()
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function ExperienceDetailPage() {
   const params = useParams()
@@ -58,6 +68,9 @@ export default function ExperienceDetailPage() {
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [availableTimeSlots, setAvailableTimeSlots] = useState<any[]>([])
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+  const [availableSlots, setAvailableSlots] = useState<any[]>([])
+  const [selectedSlot, setSelectedSlot] = useState<any>(null)
 
   useEffect(() => {
     if (params.id) {

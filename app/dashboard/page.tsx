@@ -33,6 +33,7 @@ import { Progress } from "@/components/ui/progress"
 import { CustomerLayout } from "@/components/layouts/CustomerLayout"
 import { useAuth } from "@/lib/auth-context"
 import { getUserDashboardData, type Booking, type Review } from "@/lib/database"
+import { CalendarDays, Camera } from "lucide-react"
 // Removed problematic Sidebar imports
 import { signOutAndRedirect } from "@/lib/auth-utils"
 import type { UserProfile } from "@/types/auth"
