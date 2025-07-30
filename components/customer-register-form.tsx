@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from '@/lib/supabase/client'
 
 export function CustomerRegisterForm() {
+  const [step, setStep] = useState<'register' | 'confirm'>('register')
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,6 +19,7 @@ export function CustomerRegisterForm() {
     password: "",
     confirmPassword: "",
   })
+  const [confirmationCode, setConfirmationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
@@ -55,6 +57,78 @@ export function CustomerRegisterForm() {
     return true
   }
 
+  const createUserProfile = async (user: any) => {
+    const supabase = createClient()
+    const { error: profileError } = await supabase.from("user_profiles").insert([
+      {
+        id: user.id,
+        email: user.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        user_type: "customer",
+      },
+    ])
+
+    if (profileError) {
+      console.error("Error creating user profile:", profileError)
+      setError("Account created but profile setup failed. Please contact support.")
+      return false
+    }
+    return true
+  }
+
+  const handleConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: formData.email,
+        token: confirmationCode,
+        type: 'signup'
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        await createUserProfile(data.user)
+        router.push('/dashboard')
+      }
+    } catch (error: any) {
+      setError(error.message || "Confirmation failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resendConfirmation = async () => {
+    setLoading(true)
+    setError("")
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setError("Confirmation email sent!")
+      }
+    } catch (error: any) {
+      setError(error.message || "Failed to resend email")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -83,23 +157,12 @@ export function CustomerRegisterForm() {
         return
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase.from("user_profiles").insert([
-          {
-            id: data.user.id,
-            email: data.user.email,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            user_type: "customer",
-          },
-        ])
-
-        if (profileError) {
-          console.error("Error creating user profile:", profileError)
-          setError("Account created but profile setup failed. Please contact support.")
-          return
-        }
-
+      if (data.user && !data.session) {
+        // User created but needs email confirmation
+        setStep('confirm')
+      } else if (data.user && data.session) {
+        // User is already confirmed (shouldn't happen with email confirmation enabled)
+        await createUserProfile(data.user)
         router.push("/dashboard")
       }
     } catch (error: any) {
@@ -107,6 +170,65 @@ export function CustomerRegisterForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (step === 'confirm') {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Check Your Email</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleConfirmation} className="space-y-4">
+            {error && (
+              <Alert variant={error === "Confirmation email sent!" ? "default" : "destructive"}>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div>
+              <Label htmlFor="confirmationCode">Confirmation Code</Label>
+              <Input
+                id="confirmationCode"
+                type="text"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+                required
+                disabled={loading}
+                className="text-center text-lg tracking-widest"
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Verifying..." : "Verify Account"}
+            </Button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={resendConfirmation}
+                disabled={loading}
+                className="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50"
+              >
+                Didn't receive the code? Resend
+              </button>
+            </div>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setStep('register')}
+                className="text-sm text-gray-600 hover:text-gray-500"
+              >
+                ← Back to registration
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

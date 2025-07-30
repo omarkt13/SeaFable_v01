@@ -37,42 +37,8 @@ export async function signUpBusiness(formData: FormData) {
       return { success: false, error: "Failed to create user" }
     }
 
-    // 2. Create host profile
-    const { error: profileError } = await supabase
-      .from("host_profiles")
-      .insert({
-        id: authData.user.id,
-        user_id: authData.user.id,
-        name: businessName,
-        business_name: businessName,
-        contact_name: contactName,
-        email: email,
-        phone: phone,
-        location: location,
-        host_type: "business",
-        years_experience: 0,
-        rating: 0,
-        total_reviews: 0,
-      })
-
-    if (profileError) {
-      console.error("Profile creation error:", profileError)
-      // Continue anyway, profile can be created later
-    }
-
-    // 3. Create business settings
-    const { error: settingsError } = await supabase
-      .from("host_business_settings")
-      .insert({
-        host_profile_id: authData.user.id,
-        onboarding_completed: false,
-        marketplace_enabled: true,
-      })
-
-    if (settingsError) {
-      console.error("Settings creation error:", settingsError)
-      // Continue anyway, settings can be created later
-    }
+    // Note: Profile and settings will be created after email confirmation
+    // Store user metadata for later profile creation
 
     return { success: true, data: authData }
   } catch (error: any) {
@@ -132,6 +98,64 @@ export async function signOutUser() {
     redirect("/")
   } catch (error: any) {
     console.error("Sign out error:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+
+export async function createBusinessProfileAfterConfirmation(userId: string) {
+  const supabase = createClient()
+
+  try {
+    // Get user data from auth
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { success: false, error: "User not found" }
+    }
+
+    const userData = user.user_metadata
+    
+    // 1. Create host profile
+    const { error: profileError } = await supabase
+      .from("host_profiles")
+      .insert({
+        id: user.id,
+        user_id: user.id,
+        name: userData.business_name,
+        business_name: userData.business_name,
+        contact_name: userData.contact_name,
+        email: user.email,
+        phone: userData.phone || "",
+        location: userData.location || "",
+        host_type: "business",
+        years_experience: 0,
+        rating: 0,
+        total_reviews: 0,
+      })
+
+    if (profileError) {
+      console.error("Profile creation error:", profileError)
+      return { success: false, error: "Failed to create business profile" }
+    }
+
+    // 2. Create business settings
+    const { error: settingsError } = await supabase
+      .from("host_business_settings")
+      .insert({
+        host_profile_id: user.id,
+        onboarding_completed: false,
+        marketplace_enabled: true,
+      })
+
+    if (settingsError) {
+      console.error("Settings creation error:", settingsError)
+      // Continue anyway, settings can be created later
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    console.error("Profile creation error:", error)
     return { success: false, error: "An unexpected error occurred" }
   }
 }

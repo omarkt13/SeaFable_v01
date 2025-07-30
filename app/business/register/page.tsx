@@ -1,20 +1,27 @@
+
 "use client"
 import { useState } from "react"
 import type React from "react"
-
-import { supabase, createBusinessProfile } from "@/lib/auth-utils"
+import { signUpBusiness } from "@/app/actions/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Building, Lock, Briefcase } from "lucide-react"
+import { ArrowRight, Building, Lock, Briefcase, Mail } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Eye, EyeOff, Building2, User, Phone, MapPin, Mail } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function BusinessRegisterPage() {
+  const [step, setStep] = useState<'register' | 'confirm'>('register')
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [businessName, setBusinessName] = useState("")
-  const [hostType, setHostType] = useState<string>("")
+  const [contactName, setContactName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [location, setLocation] = useState("")
+  const [confirmationCode, setConfirmationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
@@ -25,150 +32,259 @@ export default function BusinessRegisterPage() {
     setError("")
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            user_type: "business",
-          },
-        },
-      })
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('password', password)
+      formData.append('businessName', businessName)
+      formData.append('contactName', contactName)
+      formData.append('phone', phone)
+      formData.append('location', location)
 
-      if (signUpError) throw signUpError
+      const result = await signUpBusiness(formData)
 
-      if (data.user) {
-        // Create initial business profile
-        await createBusinessProfile(data.user.id, email, businessName, hostType)
-        router.push("/business/onboarding") // Redirect to onboarding
+      if (result.success) {
+        setStep('confirm')
+      } else {
+        setError(result.error || 'Registration failed')
       }
     } catch (error: any) {
-      setError(error.message)
+      setError(error.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Building className="w-8 h-8 text-teal-600 mr-2" />
-              <span className="text-2xl font-bold text-gray-900">SeaFable Business</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Register Your Business</h1>
-            <p className="text-gray-600">Create your host account to get started</p>
-          </div>
+  const handleConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
 
-          {/* Registration Form */}
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="your@business.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="businessName" className="block text-gray-700 text-sm font-bold mb-2">
-                Business Name
-              </label>
-              <div className="relative">
-                <Briefcase className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  id="businessName"
-                  placeholder="Your Company Name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="hostType" className="block text-gray-700 text-sm font-bold mb-2">
-                Host Type
-              </label>
-              <Select onValueChange={setHostType} value={hostType} required>
-                <SelectTrigger className="w-full pl-3 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <SelectValue placeholder="Select your host type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="captain">Captain</SelectItem>
-                  <SelectItem value="instructor">Instructor</SelectItem>
-                  <SelectItem value="guide">Guide</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                  <SelectItem value="individual_operator">Individual Operator</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: confirmationCode,
+        type: 'signup'
+      })
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                </div>
-              ) : (
-                <>
-                  Register <ArrowRight className="ml-2 h-4 w-4 inline-block" />
-                </>
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        // Redirect to business home page
+        router.push('/business/home')
+      }
+    } catch (error: any) {
+      setError(error.message || "Confirmation failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resendConfirmation = async () => {
+    setLoading(true)
+    setError("")
+
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setError("Confirmation email sent!")
+      }
+    } catch (error: any) {
+      setError(error.message || "Failed to resend email")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (step === 'confirm') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+              <Mail className="h-6 w-6 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+            <CardDescription>
+              We've sent a confirmation code to {email}. Enter the 6-digit code below to verify your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleConfirmation} className="space-y-4">
+              {error && (
+                <Alert variant={error === "Confirmation email sent!" ? "default" : "destructive"}>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </form>
 
-          {/* Footer Links */}
-          <div className="mt-6 text-sm text-center">
-            <p>
-              Already have an account?{" "}
-              <Link href="/business/login" className="text-teal-600 hover:underline">
-                Sign In
-              </Link>
-            </p>
-          </div>
-        </div>
+              <div>
+                <Label htmlFor="confirmationCode">Confirmation Code</Label>
+                <Input
+                  id="confirmationCode"
+                  type="text"
+                  value={confirmationCode}
+                  onChange={(e) => setConfirmationCode(e.target.value)}
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  required
+                  disabled={loading}
+                  className="text-center text-lg tracking-widest"
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Verifying..." : "Verify Account"}
+              </Button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={resendConfirmation}
+                  disabled={loading}
+                  className="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50"
+                >
+                  Didn't receive the code? Resend
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setStep('register')}
+                  className="text-sm text-gray-600 hover:text-gray-500"
+                >
+                  ← Back to registration
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+            <Building className="h-6 w-6 text-blue-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Create Business Account</CardTitle>
+          <CardDescription>Join our platform and start offering experiences to customers.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleRegister} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div>
+              <Label htmlFor="businessName">Business Name</Label>
+              <Input
+                id="businessName"
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="contactName">Contact Name</Label>
+              <Input
+                id="contactName"
+                type="text"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="City, State/Province"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account"}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+
+            <div className="text-center">
+              <span className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link href="/business/login" className="text-blue-600 hover:text-blue-500">
+                  Sign in
+                </Link>
+              </span>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

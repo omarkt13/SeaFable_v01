@@ -95,9 +95,54 @@ export default function BusinessHomePage() {
     setCurrentWeekStart(newDate)
   }
 
+  // Check and create profile if needed
+  const ensureBusinessProfile = async () => {
+    if (!user) return false
+
+    try {
+      const supabase = createClient()
+      
+      // Check if host profile exists
+      const { data: hostProfile, error } = await supabase
+        .from('host_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { createBusinessProfileAfterConfirmation } = await import('@/app/actions/auth')
+        const result = await createBusinessProfileAfterConfirmation(user.id)
+        
+        if (!result.success) {
+          setError("Failed to set up business profile. Please contact support.")
+          return false
+        }
+        
+        // Refresh the page to load the new profile
+        window.location.reload()
+        return false
+      } else if (error) {
+        console.error("Error checking profile:", error)
+        setError("Error loading business profile")
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error ensuring profile:", error)
+      setError("Error setting up business profile")
+      return false
+    }
+  }
+
   // Fetch weekly bookings
   const fetchWeeklyBookings = async () => {
     if (!user || userType !== "business") return
+
+    // Ensure profile exists first
+    const profileExists = await ensureBusinessProfile()
+    if (!profileExists) return
 
     try {
       setBookingsLoading(true)
