@@ -41,19 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Only verify session if we have a user but want to double-check
-      // Don't invalidate during normal authentication flow
-      if (currentUser) {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) {
-          console.log('Session validation error:', sessionError.message)
-          // Don't immediately clear state, let the auth state change handler deal with it
-        } else if (!sessionData.session) {
-          console.log('No active session found, but user object exists - this may be normal during login')
-          // Don't clear state here, let the normal auth flow complete
-        }
-      }
-
       setUser(currentUser)
 
       // Determine user type from metadata - this is immutable once set
@@ -64,11 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!userTypeFromMetadata || !['customer', 'business'].includes(userTypeFromMetadata)) {
         console.error('Invalid or missing user type in metadata')
         await supabase.auth.signOut()
-        setUser(null)
-        setUserType(null)
-        setHostProfile(null)
-        setBusinessProfile(null)
-        setIsLoading(false)
         return
       }
 
@@ -220,19 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "No user data returned" }
       }
 
-      // Wait a moment for session to be established, then verify
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError) {
-        console.error('Session establishment error:', sessionError.message)
-        return { success: false, error: `Session error: ${sessionError.message}` }
-      }
-      
-      if (!sessionData.session) {
-        console.error('No session after successful login')
-        return { success: false, error: "Failed to establish session - please try again" }
-      }
+      // Let Supabase handle session establishment naturally through auth state changes
 
       // Check user type mismatch - this is immutable security check
       const userTypeFromMetadata = data.user.user_metadata?.user_type
