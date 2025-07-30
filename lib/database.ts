@@ -1055,7 +1055,6 @@ export async function createBooking(bookingData: {
     const { data, error } = await supabase
       .from("bookings")
       .insert([
-```text
         {
           ...bookingData,
           booking_status: "pending",
@@ -1483,7 +1482,7 @@ export async function fetchBusinessProfile(userId: string) {
   const supabase = createClient()
 
   try {
-    console.log('Fetching business profile for user ID:', userId)
+    console.log('Fetching host profile for user ID:', userId)
 
     const { data, error } = await supabase
       .from('host_profiles')

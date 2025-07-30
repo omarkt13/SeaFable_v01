@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
     // Test database connection
     const { data, error } = await supabase
-      .from('host_profiles')
+      .from('business_profiles')
       .select('id, business_name')
       .limit(1);
 
