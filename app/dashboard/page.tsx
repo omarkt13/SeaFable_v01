@@ -904,6 +904,8 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
           setUserProfile(dashboardData.data.user || null)
           setBookings(dashboardData.data.bookings || [])
           setReviews(dashboardData.data.reviews || [])
+        } else {
+          console.error("Dashboard data fetch failed:", dashboardData.error)
         }
         } catch (error) {
           console.error("Error fetching dashboard data:", error)

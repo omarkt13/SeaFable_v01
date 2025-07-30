@@ -63,7 +63,7 @@ interface WeeklyBookings {
 }
 
 export default function BusinessHomePage() {
-  const { user, userType, loading: authLoading } = useAuth()
+  const { user, userType, isLoading: authLoading } = useAuth()
   const [dashboardData, setDashboardData] = useState<BusinessDashboardData | null>(null)
   const [weeklyBookings, setWeeklyBookings] = useState<WeeklyBookings>({})
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date())

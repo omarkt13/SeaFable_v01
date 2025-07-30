@@ -11,6 +11,7 @@ interface AuthContextType {
   hostProfile: any | null
   businessProfile: any | null
   isLoading: boolean
+  loading: boolean
   login: (email: string, password: string, type: 'customer' | 'business') => Promise<{ success: boolean; user?: User; error?: string }>
   logout: () => Promise<void>
   refreshProfiles: () => Promise<void>
@@ -202,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hostProfile,
     businessProfile,
     isLoading,
+    loading: isLoading,
     login,
     logout,
     refreshProfiles: () => fetchUserAndProfiles(user),

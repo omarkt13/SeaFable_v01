@@ -67,63 +67,47 @@ export default function BusinessBookingsPage() {
       try {
         setLoading(true)
         const supabase = createClient()
-        
-        const { data: businessProfile, error: profileError } = await supabase
-            .from('business_profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single()
 
-        if (profileError) {
-            console.error("Error fetching business profile:", profileError)
-            setError("Failed to load business profile")
-            setBookings([])
-            return
-        }
+        const { data, error: fetchError } = await supabase
+          .from("bookings")
+          .select(`
+            id,
+            booking_date,
+            guests,
+            total_amount,
+            status,
+            created_at,
+            experience_id,
+            user_id,
+            experiences!inner(title, location),
+            profiles!inner(first_name, last_name, email)
+          `)
+          .eq("host_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50)
 
-        if (!businessProfile) {
-            console.warn("No business profile found for user.")
-            setBookings([])
-            return
-        }
-        
-        try {
-          const { data, error: fetchError } = await supabase
-            .from("bookings")
-            .select(`
-              *,
-              experiences!bookings_experience_id_fkey(title, location),
-              user_profiles!bookings_user_id_fkey(first_name, last_name, email)
-            `)
-            .eq("host_id", user.id)
-            .order("created_at", { ascending: false })
+        if (fetchError) {
+          console.error("Error fetching bookings:", fetchError)
+          // For now, let's show empty state instead of throwing
+          setBookings([])
+        } else {
+          // Transform the data to match our interface
+          const transformedBookings = data?.map((booking: any) => ({
+            id: booking.id,
+            customer_name: booking.profiles 
+              ? `${booking.profiles.first_name} ${booking.profiles.last_name}`.trim()
+              : 'Unknown Customer',
+            customer_email: booking.profiles?.email || 'No email',
+            experience_title: booking.experiences?.title || 'Unknown Experience',
+            experience_location: booking.experiences?.location || '',
+            booking_date: booking.booking_date,
+            guests: booking.guests || 1,
+            total_amount: booking.total_amount || 0,
+            status: booking.status || 'pending',
+            created_at: booking.created_at
+          })) || []
 
-          if (fetchError) {
-            console.error("Error fetching bookings:", fetchError)
-            // For now, let's show empty state instead of throwing
-            setBookings([])
-          } else {
-            // Transform the data to match our interface
-            const transformedBookings = data?.map((booking: any) => ({
-              id: booking.id,
-              customer_name: booking.user_profiles 
-                ? `${booking.user_profiles.first_name} ${booking.user_profiles.last_name}`.trim()
-                : 'Unknown Customer',
-              customer_email: booking.user_profiles?.email || 'No email',
-              experience_title: booking.experiences?.title || 'Unknown Experience',
-              experience_location: booking.experiences?.location || '',
-              booking_date: booking.booking_date,
-              guests: booking.guests || 1,
-              total_amount: booking.total_amount || 0,
-              status: booking.status || 'pending',
-              created_at: booking.created_at
-            })) || []
-
-            setBookings(transformedBookings)
-          }
-        } catch (fetchError) {
-            console.error("Error fetching bookings:", fetchError)
-            setBookings([])
+          setBookings(transformedBookings)
         }
       } catch (err) {
         console.error("Error fetching bookings:", err)
