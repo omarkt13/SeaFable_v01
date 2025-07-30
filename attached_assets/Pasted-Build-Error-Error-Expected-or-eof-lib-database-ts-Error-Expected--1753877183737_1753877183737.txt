@@ -1,0 +1,85 @@
+Build Error
+
+
+Error:   × Expected ';', '}' or <eof>
+./lib/database.ts
+
+Error:   × Expected ';', '}' or <eof>
+      ╭─[/home/runner/workspace/lib/database.ts:1059:1]
+ 1056 │       dietary_requirements?: string[]
+ 1057 │     }) {
+ 1058 │       try {
+ 1059 │ ╭─▶     ```text
+ 1060 │ │       const { data, error } = await supabase
+ 1061 │ │         .from("bookings")
+ 1062 │ │         .insert([
+ 1063 │ │           {
+ 1064 │ │             ...bookingData,
+ 1065 │ │             booking_status: "pending",
+ 1066 │ │             payment_status: "pending",
+ 1067 │ │             currency: "EUR",
+ 1068 │ │           },
+ 1069 │ │         ])
+ 1070 │ │         .select()
+ 1071 │ │         .single()
+ 1072 │ │   
+ 1073 │ │       if (error) {
+ 1074 │ │         console.error("Error creating booking:", error)
+ 1075 │ │         return { success: false, error: error.message, data: null }
+ 1076 │ │       }
+ 1077 │ │   
+ 1078 │ │       return { success: true, data }
+ 1079 │ │     } catch (error: any) {
+ 1080 │ │       console.error("Error creating booking:", error)
+ 1081 │ │       return { success: false, error: "Network error occurred", data: null }
+ 1082 │ │     }
+ 1083 │ │   }
+ 1084 │ │   
+ 1085 │ │   // Database connection test functions
+ 1086 │ │   export async function testDatabaseConnection() {
+ 1087 │ │     try {
+ 1088 │ │       const { data, error } = await supabase.from("user_profiles").select("count").limit(1)
+ 1089 │ │   
+ 1090 │ │       if (error) {
+ 1091 │ │         return { success: false, error: error.message }
+ 1092 │ │       }
+ 1093 │ │   
+ 1094 │ │       return { success: true, message: "Database connection successful" }
+ 1095 │ │     } catch (error: any) {
+ 1096 │ │       return { success: false, error: "Network error occurred" }
+ 1097 │ │     }
+ 1098 │ │   }
+ 1099 │ │   
+ 1100 │ │   export async function testTableAccess() {
+ 1101 │ │     const tables = [
+ 1102 │ │       "users",
+ 1103 │ │       "host_profiles", 
+ 1104 │ │       "experiences",
+ 1105 │ │       "bookings",
+ 1106 │ │       "reviews",
+ 1107 │ │       "host_business_settings",
+ 1108 │ │       "host_availability",
+ 1109 │ │       "experience_images",
+ 1110 │ │     ]
+ 1111 │ │   
+ 1112 │ │     const results: { [key: string]: { success: boolean; error?: string; count?: number } } = {}
+ 1113 │ │   
+ 1114 │ │     for (const table of tables) {
+ 1115 │ │       try {
+ 1116 │ │         const { data, error } = await supabase.from(table).select("*").limit(1)
+ 1117 │ │   
+ 1118 │ │         if (error) {
+ 1119 │ │           results[table] = { success: false, error: error.message }
+ 1120 │ │         } else {
+ 1121 │ │           results[table] = { success: true, count: data?.length || 0 }
+ 1122 │ │         }
+ 1123 │ │       } catch (error: any) {
+ 1124 │ ├─▶       results[table] = { success: false, error: `Network error: ${error.message}` }
+      · ╰───                                                 ───────
+      · ╰──── This is the expression part of an expression statement
+ 1125 │         }
+ 1126 │       }
+      ╰────
+
+Caused by:
+    Syntax Error
