@@ -1,6 +1,9 @@
 
 "use client"
 
+import { supabase } from "@/lib/supabase"
+
+
 import type React from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -25,7 +28,12 @@ export function CustomerProtectedRoute({ children }: CustomerProtectedRouteProps
 
       if (!isLoading && user && userType && userType !== "customer") {
         console.log("CustomerProtectedRoute: Redirecting to register - wrong user type:", userType);
-        router.push("/register");
+        // Force logout of wrong user type for security
+        const logout = async () => {
+          await supabase.auth.signOut()
+          router.push("/login")
+        }
+        logout()
         return;
       }
     }, 100);

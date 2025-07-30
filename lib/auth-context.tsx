@@ -41,11 +41,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Verify session is still valid before proceeding
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !sessionData.session) {
+        console.log('Invalid session detected, clearing auth state')
+        setUser(null)
+        setUserType(null)
+        setHostProfile(null)
+        setBusinessProfile(null)
+        setIsLoading(false)
+        return
+      }
+
       setUser(currentUser)
 
-      // Determine user type from metadata
+      // Determine user type from metadata - this is immutable once set
       const userTypeFromMetadata = currentUser.user_metadata?.user_type
       console.log('User type from metadata:', userTypeFromMetadata)
+
+      // Validate user type exists and is valid
+      if (!userTypeFromMetadata || !['customer', 'business'].includes(userTypeFromMetadata)) {
+        console.error('Invalid or missing user type in metadata')
+        await supabase.auth.signOut()
+        return
+      }
 
       if (userTypeFromMetadata === 'business') {
         setUserType('business')
@@ -108,6 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error in fetchUserAndProfiles:', error)
+      // On error, clear auth state for security
+      setUser(null)
+      setUserType(null)
+      setHostProfile(null)
+      setBusinessProfile(null)
     } finally {
       setIsLoading(false)
       console.log('fetchUserAndProfiles finished. User:', currentUser?.id, 'User Type:', userTypeFromMetadata)
@@ -142,15 +166,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('onAuthStateChange event:', event, 'Session user:', session?.user || null)
+      
+      // Handle specific events
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setUserType(null)
+        setHostProfile(null)
+        setBusinessProfile(null)
+        setIsLoading(false)
+        return
+      }
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed, maintaining auth state')
+        // Don't refetch profiles on token refresh, just update user object
+        if (session?.user) {
+          setUser(session.user)
+        }
+        return
+      }
+      
       await fetchUserAndProfiles(session?.user || null)
     })
 
-    return () => subscription.unsubscribe()
+    // Set up periodic session validation (every 5 minutes)
+    const sessionCheckInterval = setInterval(async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error || !session) {
+          console.log('Session validation failed, clearing auth state')
+          setUser(null)
+          setUserType(null)
+          setHostProfile(null)
+          setBusinessProfile(null)
+        }
+      } catch (error) {
+        console.error('Session validation error:', error)
+      }
+    }, 5 * 60 * 1000) // 5 minutes
+
+    return () => {
+      subscription.unsubscribe()
+      clearInterval(sessionCheckInterval)
+    }
   }, [])
 
   const login = async (email: string, password: string, type: 'customer' | 'business') => {
     try {
       setIsLoading(true)
+
+      // Clear any existing session first
+      await supabase.auth.signOut()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -165,8 +231,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "No user data returned" }
       }
 
-      // Check user type mismatch
+      // Verify session was created successfully
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !sessionData.session) {
+        return { success: false, error: "Failed to establish session" }
+      }
+
+      // Check user type mismatch - this is immutable security check
       const userTypeFromMetadata = data.user.user_metadata?.user_type
+
+      if (!userTypeFromMetadata) {
+        await authUtilsSignOut()
+        return { success: false, error: "Account type not found. Please contact support." }
+      }
 
       if (type === "business" && userTypeFromMetadata === "customer") {
         await authUtilsSignOut()
@@ -189,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     } catch (error: any) {
       console.error("Login error:", error)
+      await supabase.auth.signOut() // Clean up on error
       return { 
         success: false, 
         error: error.message || "An unexpected error occurred" 
