@@ -17,7 +17,7 @@ export function PublicNavigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 hidden md:block">
+      <nav className="bg-white shadow-sm border-b border-gray-200 hidden sm:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -57,7 +57,7 @@ export function PublicNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 md:hidden relative overflow-visible">
+      <nav className="bg-white shadow-sm border-b border-gray-200 sm:hidden relative overflow-visible">
         <div className="px-4 sm:px-6 relative">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
