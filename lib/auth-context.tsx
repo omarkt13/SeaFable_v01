@@ -63,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!userTypeFromMetadata || !['customer', 'business'].includes(userTypeFromMetadata)) {
         console.error('Invalid or missing user type in metadata')
         await supabase.auth.signOut()
+        setUser(null)
+        setUserType(null)
+        setHostProfile(null)
+        setBusinessProfile(null)
+        setIsLoading(false)
         return
       }
 
