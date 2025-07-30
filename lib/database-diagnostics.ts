@@ -1,3 +1,4 @@
+
 // Database diagnostics and health check utilities
 import { createClient } from './supabase/client'
 
@@ -8,22 +9,8 @@ export async function runDatabaseDiagnostics() {
     results: [] as Array<{ test: string; status: 'pass' | 'fail'; message: string; details?: any }>
   }
 
-  // Test 1: Authentication
+  // Test 1: Authentication (non-blocking for landing page)
   try {
-    // Check if environment variables are configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      diagnostics.results.push({
-        test: 'Authentication',
-        status: 'fail',
-        message: "Supabase environment variables not configured",
-        details: {
-          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        }
-      })
-      return diagnostics
-    }
-
     const {
       data: { user },
       error: authError,
@@ -47,7 +34,8 @@ export async function runDatabaseDiagnostics() {
       diagnostics.results.push({
         test: 'Authentication',
         status: 'fail',
-        message: 'No authenticated user'
+        message: 'Auth session missing!',
+        details: 'No user currently logged in (normal for landing page)'
       })
     }
   } catch (error) {
@@ -58,7 +46,7 @@ export async function runDatabaseDiagnostics() {
     })
   }
 
-  // Test host_profiles table access
+  // Test 2: Check host_profiles table (correct table name from schema)
   try {
     const { data, error } = await supabase
       .from('host_profiles')
@@ -86,7 +74,7 @@ export async function runDatabaseDiagnostics() {
     })
   }
 
-  // Test users table
+  // Test 3: Check users table (correct table name from schema)
   try {
     const { data, error } = await supabase
       .from('users')
@@ -109,6 +97,34 @@ export async function runDatabaseDiagnostics() {
   } catch (error) {
     diagnostics.results.push({
       test: 'Users Table',
+      status: 'fail',
+      message: `Table check failed: ${error instanceof Error ? error.message : error}`
+    })
+  }
+
+  // Test 4: Check experiences table (core table for the marketplace)
+  try {
+    const { data, error } = await supabase
+      .from('experiences')
+      .select('count(*)', { count: 'exact', head: true })
+
+    if (error) {
+      diagnostics.results.push({
+        test: 'Experiences Table',
+        status: 'fail',
+        message: `Table access error: ${error.message}`,
+        details: error
+      })
+    } else {
+      diagnostics.results.push({
+        test: 'Experiences Table',
+        status: 'pass',
+        message: 'Table accessible'
+      })
+    }
+  } catch (error) {
+    diagnostics.results.push({
+      test: 'Experiences Table',
       status: 'fail',
       message: `Table check failed: ${error instanceof Error ? error.message : error}`
     })
