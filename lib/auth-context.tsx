@@ -41,16 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Verify session is still valid before proceeding
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError || !sessionData.session) {
-        console.log('Invalid session detected, clearing auth state')
-        setUser(null)
-        setUserType(null)
-        setHostProfile(null)
-        setBusinessProfile(null)
-        setIsLoading(false)
-        return
+      // Only verify session if we have a user but want to double-check
+      // Don't invalidate during normal authentication flow
+      if (currentUser) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.log('Session validation error:', sessionError.message)
+          // Don't immediately clear state, let the auth state change handler deal with it
+        } else if (!sessionData.session) {
+          console.log('No active session found, but user object exists - this may be normal during login')
+          // Don't clear state here, let the normal auth flow complete
+        }
       }
 
       setUser(currentUser)
@@ -194,25 +195,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetchUserAndProfiles(session?.user || null)
     })
 
-    // Set up periodic session validation (every 5 minutes)
-    const sessionCheckInterval = setInterval(async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error || !session) {
-          console.log('Session validation failed, clearing auth state')
-          setUser(null)
-          setUserType(null)
-          setHostProfile(null)
-          setBusinessProfile(null)
-        }
-      } catch (error) {
-        console.error('Session validation error:', error)
-      }
-    }, 5 * 60 * 1000) // 5 minutes
-
     return () => {
       subscription.unsubscribe()
-      clearInterval(sessionCheckInterval)
     }
   }, [])
 
@@ -236,10 +220,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "No user data returned" }
       }
 
-      // Verify session was created successfully
+      // Wait a moment for session to be established, then verify
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError || !sessionData.session) {
-        return { success: false, error: "Failed to establish session" }
+      if (sessionError) {
+        console.error('Session establishment error:', sessionError.message)
+        return { success: false, error: `Session error: ${sessionError.message}` }
+      }
+      
+      if (!sessionData.session) {
+        console.error('No session after successful login')
+        return { success: false, error: "Failed to establish session - please try again" }
       }
 
       // Check user type mismatch - this is immutable security check
