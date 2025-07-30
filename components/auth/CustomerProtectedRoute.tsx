@@ -1,4 +1,3 @@
-
 "use client"
 
 import { supabase } from "@/lib/supabase"
@@ -42,18 +41,27 @@ export function CustomerProtectedRoute({ children }: CustomerProtectedRouteProps
   }, [user, userType, isLoading, router])
 
   // Show loading for a bit longer to handle auth state transitions
-  if (isLoading || (user && !userType)) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     )
   }
 
-  // Don't render children until we have confirmed auth state
-  if (!user || userType !== "customer") {
-    return null
+  if (!user) {
+    console.log("CustomerProtectedRoute: No user found, redirecting to login")
+    return <AccessDenied />
   }
 
+  if (userType === "business") {
+    console.log("CustomerProtectedRoute: Business user accessing customer area")
+    return <AccessDenied message="This area is for customers only. Please use the business portal." />
+  }
+
+  console.log("CustomerProtectedRoute: Customer access granted for:", user.email)
   return <>{children}</>
 }

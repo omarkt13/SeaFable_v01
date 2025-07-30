@@ -4,40 +4,70 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-export async function updateUserProfile(prevState: any, formData: FormData) {
+export async function updateUserProfile(data: {
+  userId: string
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+}) {
   const supabase = await createClient()
 
   try {
-    const firstName = formData.get("firstName") as string
-    const lastName = formData.get("lastName") as string
-    const email = formData.get("email") as string
-
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { success: false, message: "User not authenticated" }
+      return { success: false, error: "User not authenticated" }
     }
 
-    // Update user profile
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        // Note: phone_number field may need to be added to the user_profiles table
-      })
+    // Try to update users table first, create if doesn't exist
+    const { data: existingUser, error: fetchError } = await supabase
+      .from("users")
+      .select("id")
       .eq("id", user.id)
+      .single()
 
-    if (error) {
-      console.error("Error updating profile:", error)
-      return { success: false, message: "Failed to update profile" }
+    if (fetchError && fetchError.code === 'PGRST116') {
+      // User doesn't exist, create new record
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert({
+          id: user.id,
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone_number: data.phone || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (insertError) {
+        console.error("Error creating user profile:", insertError)
+        return { success: false, error: "Failed to create profile" }
+      }
+    } else {
+      // User exists, update record
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          phone_number: data.phone || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", user.id)
+
+      if (updateError) {
+        console.error("Error updating profile:", updateError)
+        return { success: false, error: "Failed to update profile" }
+      }
     }
 
     revalidatePath("/dashboard")
-    return { success: true, message: "Profile updated successfully" }
+    return { success: true }
   } catch (error) {
     console.error("Server error:", error)
-    return { success: false, message: "Server error occurred" }
+    return { success: false, error: "Server error occurred" }
   }
 }

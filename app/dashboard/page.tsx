@@ -199,6 +199,19 @@ const OverviewTab = ({ userProfile, bookings, reviews, userEmail }: OverviewTabP
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {resolvedSearchParams?.booking && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                      <div>
+                        <h4 className="font-medium text-green-800">Booking Confirmed!</h4>
+                        <p className="text-sm text-green-600">
+                          Your experience has been successfully booked. You'll receive a confirmation email shortly.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {upcomingBookings.length > 0 ? (
                   upcomingBookings.map((booking) => (
                     <div key={booking.id} className="border rounded-lg p-4">
@@ -899,16 +912,43 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
     const fetchDashboardData = async () => {
       if (user?.email) {
         try {
+          console.log("Fetching dashboard data for email:", user.email)
           const dashboardData = await getUserDashboardData(user.email)
-        if (dashboardData.success && dashboardData.data) {
-          setUserProfile(dashboardData.data.user || null)
-          setBookings(dashboardData.data.bookings || [])
-          setReviews(dashboardData.data.reviews || [])
-        } else {
-          console.error("Dashboard data fetch failed:", dashboardData.error)
-        }
+          
+          if (dashboardData.success && dashboardData.data) {
+            console.log("Dashboard data fetched successfully:", dashboardData.data)
+            setUserProfile(dashboardData.data.user || null)
+            setBookings(dashboardData.data.bookings || [])
+            setReviews(dashboardData.data.reviews || [])
+          } else {
+            console.error("Dashboard data fetch failed:", dashboardData.error)
+            // Set empty defaults to avoid loading forever
+            setUserProfile({
+              id: user.id,
+              email: user.email,
+              first_name: '',
+              last_name: '',
+              avatar_url: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            setBookings([])
+            setReviews([])
+          }
         } catch (error) {
           console.error("Error fetching dashboard data:", error)
+          // Set empty defaults on error
+          setUserProfile({
+            id: user.id,
+            email: user.email,
+            first_name: '',
+            last_name: '',
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          setBookings([])
+          setReviews([])
         }
       }
     }
@@ -926,6 +966,15 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
       const tab = params?.tab
       if (tab && typeof tab === "string") {
         setActiveTab(tab)
+      }
+
+      // Check for booking confirmation
+      const bookingId = params?.booking
+      if (bookingId && typeof bookingId === "string") {
+        // Show success message for new booking
+        setTimeout(() => {
+          alert(`✅ Your booking has been confirmed! Booking ID: ${bookingId}. You can view all details in your bookings tab.`)
+        }, 1000)
       }
     }
 

@@ -645,12 +645,19 @@ export async function getExperiences(filters?: any) {
       .from("experiences")
       .select(`
         *,
-        host_profiles!experiences_host_id_fkey (
+        host_profiles (
           id,
           name,
           avatar_url,
           rating,
           total_reviews
+        ),
+        host_availability (
+          id,
+          date,
+          start_time,
+          end_time,
+          available_capacity
         )
       `)
       .eq("is_active", true)
@@ -1193,45 +1200,140 @@ const dashboardData = {
   }
 }
 
-// Get user dashboard data
-export async function getUserDashboardDataOriginal(userId: string) {
+// Get user dashboard data with proper error handling
+export async function getUserDashboardData(userEmail: string): Promise<{ success: boolean; data?: { user: any, bookings: any[], reviews: any[] }; error?: string }> {
   try {
-    // Get user profile using the centralized function from auth-utils
-    const user = await getUserProfile(userId)
+    const supabase = createClient()
 
-    if (!user) {
-      console.error("Error fetching user: User profile not found for ID", userId)
-      return { success: false, error: "User profile not found", data: null }
+    // Get user profile by email since that's what we have from auth
+    const { data: userProfile, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', userEmail)
+      .single()
+
+    if (userError && userError.code !== 'PGRST116') {
+      console.error("Error fetching user profile:", userError)
+      // Create a basic user profile if none exists
+      const basicProfile = {
+        id: null,
+        email: userEmail,
+        first_name: '',
+        last_name: '',
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          experiences (
+            id,
+            title,
+            location,
+            primary_image_url,
+            duration_display,
+            activity_type
+          ),
+          host_profiles (
+            id,
+            name,
+            avatar_url
+          )
+        `)
+        .eq('user_id', userEmail) // Try with email as fallback
+        .order('booking_date', { ascending: false })
+
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          experiences (
+            id,
+            title,
+            primary_image_url
+          )
+        `)
+        .eq('user_id', userEmail) // Try with email as fallback
+        .order('created_at', { ascending: false })
+
+      return {
+        success: true,
+        data: {
+          user: basicProfile,
+          bookings: bookings || [],
+          reviews: reviews || []
+        }
+      }
     }
 
-    // Get user bookings
-    const bookingsResult = await getUserBookings(userId)
+    const userId = userProfile?.id
 
-    // Get user reviews
-    const { data: reviews, error: reviewError } = await supabase
-      .from("reviews")
+    // Get user bookings with complete relationship data
+    const { data: bookings, error: bookingsError } = await supabase
+      .from('bookings')
       .select(`
         *,
-        experiences!reviews_experience_id_fkey (title, primary_image_url)
+        experiences (
+          id,
+          title,
+          location,
+          primary_image_url,
+          duration_display,
+          activity_type
+        ),
+        host_profiles (
+          id,
+          name,
+          avatar_url
+        )
       `)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
+      .eq('user_id', userId || userEmail)
+      .order('booking_date', { ascending: false })
 
-    if (reviewError) {
-      console.error("Error fetching reviews:", reviewError)
+    if (bookingsError) {
+      console.error("Error fetching bookings:", bookingsError)
+    }
+
+    // Get user reviews with experience data
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        experiences (
+          id,
+          title,
+          primary_image_url
+        )
+      `)
+      .eq('user_id', userId || userEmail)
+      .order('created_at', { ascending: false })
+
+    if (reviewsError) {
+      console.error("Error fetching reviews:", reviewsError)
     }
 
     return {
       success: true,
       data: {
-        user,
-        bookings: bookingsResult.data || [],
-        reviews: reviews || [],
-      },
+        user: userProfile || {
+          id: userId,
+          email: userEmail,
+          first_name: '',
+          last_name: '',
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        bookings: bookings || [],
+        reviews: reviews || []
+      }
     }
   } catch (error) {
-    console.error("Error fetching user dashboard data:", error)
-    return { success: false, error: "Network error occurred", data: null }
+    console.error("Error in getUserDashboardData:", error)
+    return { success: false, error: "Failed to fetch dashboard data" }
   }
 }
 

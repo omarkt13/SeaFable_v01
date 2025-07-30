@@ -138,7 +138,9 @@ export default function ExperienceDetailPage() {
 
       const result = await createBooking(bookingPayload) // Call the Server Action
       if (result.success) {
-        router.push(`/dashboard?booking=${result.data.id}`)
+        // Show success message before redirecting
+        alert(`🎉 Booking confirmed! Your ${experience.title} experience has been booked for ${bookingData.date} at ${bookingData.time}. Check your dashboard for details.`)
+        router.push(`/dashboard?tab=bookings&booking=${result.data.id}`)
       } else {
         setBookingError(result.error || "Booking failed. Please try again.")
       }
