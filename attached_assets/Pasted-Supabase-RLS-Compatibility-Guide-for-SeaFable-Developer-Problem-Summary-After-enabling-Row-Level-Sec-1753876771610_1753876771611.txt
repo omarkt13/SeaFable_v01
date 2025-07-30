@@ -1,0 +1,207 @@
+Supabase RLS Compatibility Guide for SeaFable Developer
+Problem Summary
+After enabling Row Level Security (RLS) on the Supabase database, the application can no longer access tables because:
+
+Auth session missing - Code trying to access database without proper authentication
+RLS policies blocking access - Tables now require explicit policies to allow read/write operations
+
+
+IMMEDIATE FIXES REQUIRED
+1. Fix Authentication Context Issues
+Problem: Code is accessing Supabase without proper auth session.
+Files to Update:
+
+lib/auth-context.tsx
+lib/supabase.ts
+Any component using direct Supabase calls
+
+Required Changes:
+typescript// In lib/supabase.ts - Ensure client-side auth
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+
+export const supabase = createClientComponentClient()
+
+// Always check auth before database calls
+const getAuthenticatedSupabase = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw new Error('Authentication required')
+  }
+  return supabase
+}
+typescript// In components - Always use authenticated client
+const { data, error } = await supabase
+  .from('experiences')
+  .select('*')
+  // This will now use the authenticated user's session
+2. Create RLS Policies in Supabase
+CRITICAL: Go to Supabase Dashboard → Authentication → Policies and create these policies:
+Users Table Policies
+sql-- Allow users to read their own profile
+CREATE POLICY "Users can read own profile" ON users
+FOR SELECT USING (auth.uid() = id);
+
+-- Allow users to update their own profile
+CREATE POLICY "Users can update own profile" ON users
+FOR UPDATE USING (auth.uid() = id);
+
+-- Allow user creation during signup
+CREATE POLICY "Allow user creation" ON users
+FOR INSERT WITH CHECK (auth.uid() = id);
+Host Profiles Table Policies
+sql-- Allow authenticated users to read host profiles
+CREATE POLICY "Public read access to host profiles" ON host_profiles
+FOR SELECT TO authenticated USING (true);
+
+-- Allow hosts to manage their own profile
+CREATE POLICY "Hosts can manage own profile" ON host_profiles
+FOR ALL USING (auth.uid() = id);
+Experiences Table Policies
+sql-- Allow public read access to active experiences
+CREATE POLICY "Public read access to experiences" ON experiences
+FOR SELECT USING (is_active = true);
+
+-- Allow hosts to manage their own experiences
+CREATE POLICY "Hosts can manage own experiences" ON experiences
+FOR ALL USING (auth.uid() = host_id);
+Bookings Table Policies
+sql-- Users can read their own bookings
+CREATE POLICY "Users can read own bookings" ON bookings
+FOR SELECT USING (auth.uid() = user_id);
+
+-- Hosts can read bookings for their experiences
+CREATE POLICY "Hosts can read their bookings" ON bookings
+FOR SELECT USING (
+  auth.uid() IN (
+    SELECT host_id FROM experiences WHERE id = experience_id
+  )
+);
+
+-- Users can create bookings
+CREATE POLICY "Users can create bookings" ON bookings
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+3. Update Database Helper Functions
+File: lib/database.ts
+Add authentication checks to all functions:
+typescript// Add this helper function at the top
+const requireAuth = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw new Error('Authentication required')
+  }
+  return session
+}
+
+// Update existing functions like this:
+export async function getUserProfile(userId: string) {
+  await requireAuth() // Add this line
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single()
+    
+  if (error) throw error
+  return data
+}
+
+// For functions that need to work without auth (public data):
+export async function getPublicExperiences() {
+  // No auth check needed - RLS policy handles this
+  const { data, error } = await supabase
+    .from('experiences')
+    .select('*')
+    .eq('is_active', true)
+    
+  if (error) throw error
+  return data
+}
+4. Fix API Routes
+Files: All files in app/api/
+Add server-side authentication:
+typescript// In API routes like app/api/business/dashboard/route.ts
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+
+export async function GET(request: Request) {
+  const supabase = createRouteHandlerClient({ cookies })
+  
+  // Check authentication
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  // Now proceed with database queries
+  const { data, error } = await supabase
+    .from('host_profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    
+  // ... rest of logic
+}
+5. Update Authentication Context
+File: lib/auth-context.tsx
+Add loading state and proper session handling:
+typescriptexport interface AuthContextType {
+  user: User | null
+  loading: boolean  // Add this missing property
+  signIn: (email: string, password: string) => Promise<any>
+  signUp: (email: string, password: string) => Promise<any>
+  signOut: () => Promise<void>
+  businessProfile: BusinessProfile | null
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true) // Add loading state
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false) // Set loading to false after initial check
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // ... rest of context
+}
+
+TESTING CHECKLIST
+After implementing these changes, test:
+
+✅ User Registration - Can new users sign up?
+✅ User Login - Can existing users log in?
+✅ Public Pages - Can unauthenticated users view experiences?
+✅ Protected Pages - Do dashboard pages require authentication?
+✅ Data Access - Can users see their own data but not others'?
+✅ Business Functions - Can hosts manage their own experiences/bookings?
+
+
+DEPLOYMENT NOTES
+
+Environment Variables - Ensure all Supabase env vars are correct in production
+RLS Policies - Apply the same policies to production database
+Auth Configuration - Verify Supabase auth settings match between environments
+
+
+ADDITIONAL RECOMMENDATIONS
+
+Error Handling - Add proper error boundaries for auth failures
+Loading States - Show loading spinners while checking authentication
+Redirect Logic - Redirect unauthenticated users to login page
+Session Refresh - Handle token refresh automatically
+
+Priority: CRITICAL - The application will not function properly until these authentication and RLS issues are resolved.
