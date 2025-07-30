@@ -2,32 +2,57 @@
 import { createClient } from './supabase/client'
 
 export async function runDatabaseDiagnostics() {
-  const supabase = createClient()
   const diagnostics = {
     timestamp: new Date().toISOString(),
     results: [] as Array<{ test: string; status: 'pass' | 'fail'; message: string; details?: any }>
   }
 
-  // Test 1: Authentication
-  try {
-    // Check if environment variables are configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      diagnostics.results.push({
-        test: 'Authentication',
-        status: 'fail',
-        message: "Supabase environment variables not configured",
-        details: {
-          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        }
-      })
-      return diagnostics
-    }
+  // Check if environment variables are configured first
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    diagnostics.results.push({
+      test: 'Environment Configuration',
+      status: 'fail',
+      message: "Supabase environment variables not configured. Please check your .env.local file.",
+      details: {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        envFile: 'Make sure .env.local contains NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      }
+    })
+    return diagnostics
+  }
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+  const supabase = createClient()
+
+  // Test 1: Basic Connection
+  try {
+    const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true }).limit(1)
+    
+    if (error) {
+      diagnostics.results.push({
+        test: 'Database Connection',
+        status: 'fail',
+        message: `Connection failed: ${error.message}`,
+        details: error
+      })
+    } else {
+      diagnostics.results.push({
+        test: 'Database Connection',
+        status: 'pass',
+        message: 'Successfully connected to database'
+      })
+    }
+  } catch (error) {
+    diagnostics.results.push({
+      test: 'Database Connection',
+      status: 'fail',
+      message: `Connection error: ${error instanceof Error ? error.message : error}`
+    })
+  }
+
+  // Test 2: Authentication Status (non-blocking)
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError) {
       diagnostics.results.push({
@@ -47,7 +72,8 @@ export async function runDatabaseDiagnostics() {
       diagnostics.results.push({
         test: 'Authentication',
         status: 'fail',
-        message: 'No authenticated user'
+        message: 'Auth session missing!',
+        details: 'No user currently logged in. This is normal for unauthenticated access.'
       })
     }
   } catch (error) {
@@ -58,77 +84,5 @@ export async function runDatabaseDiagnostics() {
     })
   }
 
-  // Test 2: Check business_profiles table
-  try {
-    const { data, error } = await supabase
-      .from('business_profiles')
-      .select('count(*)', { count: 'exact', head: true })
-
-    if (error) {
-      diagnostics.results.push({
-        test: 'Business Profiles Table',
-        status: 'fail',
-        message: `Table access error: ${error.message}`,
-        details: error
-      })
-    } else {
-      diagnostics.results.push({
-        test: 'Business Profiles Table',
-        status: 'pass',
-        message: 'Table accessible'
-      })
-    }
-  } catch (error) {
-    diagnostics.results.push({
-      test: 'Business Profiles Table',
-      status: 'fail',
-      message: `Table check failed: ${error instanceof Error ? error.message : error}`
-    })
-  }
-
-  // Test 3: Check customer_profiles table
-  try {
-    const { data, error } = await supabase
-      .from('customer_profiles')
-      .select('count(*)', { count: 'exact', head: true })
-
-    if (error) {
-      diagnostics.results.push({
-        test: 'Customer Profiles Table',
-        status: 'fail',
-        message: `Table access error: ${error.message}`,
-        details: error
-      })
-    } else {
-      diagnostics.results.push({
-        test: 'Customer Profiles Table',
-        status: 'pass',
-        message: 'Table accessible'
-      })
-    }
-  } catch (error) {
-    diagnostics.results.push({
-      test: 'Customer Profiles Table',
-      status: 'fail',
-      message: `Table check failed: ${error instanceof Error ? error.message : error}`
-    })
-  }
-
-  return diagnostics
-}
-
-export function logDatabaseDiagnostics() {
-  runDatabaseDiagnostics().then(diagnostics => {
-    console.log('🔍 Database Diagnostics Report:')
-    console.log('Timestamp:', diagnostics.timestamp)
-    diagnostics.results.forEach(result => {
-      const emoji = result.status === 'pass' ? '✅' : '❌'
-      console.log(`${emoji} ${result.test}: ${result.message}`)
-      if (result.details && result.status === 'fail') {
-        console.log('   Details:', result.details)
-      }
-    })
-  }).catch(error => {
-    console.error('Failed to run database diagnostics:', error)
-  })
-}
+  // Test 3: Check core tables exist
+  const tabl
