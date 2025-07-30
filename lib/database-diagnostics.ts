@@ -1,4 +1,3 @@
-
 // Database diagnostics and health check utilities
 import { createClient } from './supabase/client'
 
@@ -9,15 +8,33 @@ export async function runDatabaseDiagnostics() {
     results: [] as Array<{ test: string; status: 'pass' | 'fail'; message: string; details?: any }>
   }
 
-  // Test 1: Check authentication
+  // Test 1: Authentication
   try {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error) {
+    // Check if environment variables are configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       diagnostics.results.push({
         test: 'Authentication',
         status: 'fail',
-        message: `Auth error: ${error.message}`,
-        details: error
+        message: "Supabase environment variables not configured",
+        details: {
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        }
+      })
+      return diagnostics
+    }
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError) {
+      diagnostics.results.push({
+        test: 'Authentication',
+        status: 'fail',
+        message: `Auth error: ${authError.message}`,
+        details: authError
       })
     } else if (user) {
       diagnostics.results.push({

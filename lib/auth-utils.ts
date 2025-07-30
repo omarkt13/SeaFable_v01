@@ -41,6 +41,15 @@ export async function getSession() {
   return session
 }
 
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error("Error signing out:", error)
+    return { error }
+  }
+  return { error: null }
+}
+
 
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
