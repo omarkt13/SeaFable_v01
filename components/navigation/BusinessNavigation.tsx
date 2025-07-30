@@ -134,11 +134,7 @@ export function BusinessNavigation() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                console.log('Mobile menu button clicked, current state:', mobileMenuOpen)
-                setMobileMenuOpen(!mobileMenuOpen)
-                console.log('Mobile menu button clicked, new state should be:', !mobileMenuOpen)
-              }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -146,22 +142,20 @@ export function BusinessNavigation() {
           </div>
 
           {/* Mobile menu */}
-          {console.log('Rendering mobile menu, mobileMenuOpen:', mobileMenuOpen) || null}
           {mobileMenuOpen && (
             <div 
-              className="absolute top-full left-0 right-0 bg-red-500 shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]"
+              className="fixed top-16 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]"
               style={{ 
-                position: 'absolute',
-                top: '100%',
+                position: 'fixed',
+                top: '64px',
                 left: '0',
                 right: '0',
-                backgroundColor: 'red',
-                zIndex: 9999,
-                minHeight: '200px',
-                border: '2px solid blue'
+                backgroundColor: 'white',
+                zIndex: 99999,
+                minHeight: '200px'
               }}
             >
-              <div className="p-4 space-y-2 bg-yellow-300">
+              <div className="p-4 space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
