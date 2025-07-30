@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-07-30T11:14:47.915Z",
+  "environment": {
+    "nodeVersion": "v20.19.3",
+    "platform": "linux"
+  },
+  "tests": {
+    "Basic Database Connectivity": {
+      "status": "passed",
+      "connectionStatus": "active",
+      "responseTime": 1753874088879
+    },
+    "Environment Configuration": {
+      "status": "passed",
+      "environmentVariables": {
+        "NEXT_PUBLIC_SUPABASE_URL": {
+          "present": true,
+          "length": 40,
+          "masked": "https://..."
+        },
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+          "present": true,
+          "length": 46,
+          "masked": "sb_publi..."
+        }
+      },
+      "urlFormat": "valid",
+      "configComplete": true
+    },
+    "Authentication Systems": {
+      "status": "passed",
+      "authEndpoint": "failing",
+      "customerProfile": "accessible",
+      "businessProfile": "inaccessible",
+      "errors": {
+        "user": "Auth session missing!",
+        "business": "JSON object requested, multiple (or no) rows returned"
+      }
+    },
+    "Database Table Access": {
+      "status": "passed",
+      "tables": {
+        "users": {
+          "accessible": true,
+          "recordCount": 1
+        },
+        "host_profiles": {
+          "accessible": true,
+          "recordCount": 1
+        },
+        "experiences": {
+          "accessible": true,
+          "recordCount": 1
+        },
+        "bookings": {
+          "accessible": true,
+          "recordCount": 0
+        },
+        "reviews": {
+          "accessible": true,
+          "recordCount": 1
+        },
+        "host_business_settings": {
+          "accessible": true,
+          "recordCount": 0
+        },
+        "host_availability": {
+          "accessible": true,
+          "recordCount": 0
+        }
+      }
+    },
+    "Database Relationships": {
+      "status": "passed",
+      "experienceRelations": true,
+      "bookingRelations": true,
+      "errors": {}
+    },
+    "Connection Pool Behavior": {
+      "status": "passed",
+      "concurrentRequests": 5,
+      "successful": 5,
+      "failed": 0,
+      "totalTime": 570,
+      "avgTime": 114
+    }
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "warnings": 0
+  }
+}
