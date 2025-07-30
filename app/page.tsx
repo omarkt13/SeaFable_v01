@@ -651,14 +651,17 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-white text-teal-600 px-8 py-4 rounded-xl hover:bg-gray-100 transition-colors font-semibold"
+                asChild
               >
-                Start Exploring
-                <ChevronRight className="ml-2 h-5 w-5" />
+                <Link href="/search">
+                  Start Exploring
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-white px-8 py-4 rounded-xl hover:bg-white hover:text-teal-600 transition-colors font-semibold text-black"
+                className="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-teal-600 transition-colors font-semibold"
                 asChild
               >
                 <Link href="/demo">
