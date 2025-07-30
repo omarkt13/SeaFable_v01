@@ -1039,52 +1039,32 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
 }
 
 export async function getHostDashboardData(userId: string) {
-  const supabase = createClient()
-
   try {
-    // Require authentication
-    await requireAuth()
-
-    // For business users, try both user_id and id mapping
-    let businessProfile = null
-    let profileError = null
-
-    // First try: lookup by user_id (new business users)
-    const { data: profileByUserId, error: userIdError } = await supabase
-      .from('host_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
-
-    if (!userIdError && profileByUserId) {
-      businessProfile = profileByUserId
-    } else {
-      // Second try: lookup by id (existing business users)
-      const { data: profileById, error: idError } = await supabase
-        .from('host_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (!idError && profileById) {
-        businessProfile = profileById
-      } else {
-        profileError = userIdError || idError
+    console.log("getHostDashboardData called for userId:", userId)
+    
+    // Use getBusinessDashboardData which has proper error handling
+    const result = await getBusinessDashboardData(userId)
+    
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error,
+        details: result.details
       }
     }
 
-    if (!businessProfile) {
-      console.error('Profile lookup failed:', { userIdError, profileError })
-      return { 
-        success: false, 
-        error: 'Business profile not found. Please complete your business registration.',
-        details: {
-          userId,
-          userIdError: userIdError?.message,
-          idError: profileError?.message
-        }
-      }
+    return {
+      success: true,
+      data: result.data
     }
+  } catch (error) {
+    console.error("Error in getHostDashboardData:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    }
+  }
+}
 const hostId = businessProfile.id
 
     // Get experiences with error handling
@@ -1543,22 +1523,51 @@ export async function getUserProfile(userId: string) {
     return null
   }
 }
-export async function getBusinessDashboardData(businessId: string): Promise<{ success: boolean; data?: any; error?: string }> {
+export async function getBusinessDashboardData(businessId: string): Promise<{ success: boolean; data?: any; error?: string; details?: string }> {
   try {
     console.log("Fetching business dashboard data for:", businessId)
 
-    // Get business profile
-    const { data: businessProfile, error: profileError } = await supabase
+    // Try to get business profile by user_id first, then by id
+    let businessProfile = null
+    let profileError = null
+
+    // First attempt: lookup by user_id (for new business users)
+    const { data: profileByUserId, error: userIdError } = await supabase
       .from("host_profiles")
       .select("*")
-      .eq("id", businessId)
+      .eq("user_id", businessId)
       .single()
 
-    if (profileError) {
-      console.error("Error fetching business profile:", profileError)
+    if (!userIdError && profileByUserId) {
+      businessProfile = profileByUserId
+      console.log("Found profile by user_id:", businessProfile.id)
+    } else {
+      // Second attempt: lookup by id (for existing business users)
+      const { data: profileById, error: idError } = await supabase
+        .from("host_profiles")
+        .select("*")
+        .eq("id", businessId)
+        .single()
+
+      if (!idError && profileById) {
+        businessProfile = profileById
+        console.log("Found profile by id:", businessProfile.id)
+      } else {
+        profileError = userIdError || idError
+        console.error("Profile lookup failed:", { userIdError, idError, businessId })
+        return {
+          success: false,
+          error: "Business profile not found. Please complete your business registration.",
+          details: `User ID: ${businessId}, User ID Error: ${userIdError?.message}, ID Error: ${idError?.message}`
+        }
+      }
+    }
+
+    if (!businessProfile) {
       return {
         success: false,
-        error: `Failed to fetch business profile: ${profileError.message}`
+        error: "Business profile not found",
+        details: `No profile found for business ID: ${businessId}`
       }
     }
 

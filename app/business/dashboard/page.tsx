@@ -42,16 +42,53 @@ export default function BusinessDashboard() {
         setLoading(true)
         setError(null)
         
-        const result = await getHostDashboardData(user.id)
+        console.log("Fetching dashboard data for user:", user.id)
         
-        if (result.success && result.data) {
-          setDashboardData(result.data)
+        // Call the API endpoint instead of direct database function
+        const response = await fetch('/api/business/dashboard')
+        const result = await response.json()
+        
+        if (result.success && response.ok) {
+          // Transform API response to match expected dashboard data structure
+          const transformedData = {
+            businessProfile: result.businessProfile,
+            overview: result.overview || {
+              totalRevenue: 0,
+              activeBookings: 0,
+              totalExperiences: 0,
+              averageRating: 0,
+              revenueGrowth: 0,
+              bookingGrowth: 0
+            },
+            recentBookings: result.recentBookings || [],
+            upcomingBookings: result.upcomingBookings || [],
+            earnings: result.earnings || {
+              thisMonth: 0,
+              lastMonth: 0,
+              pending: 0,
+              nextPayout: { amount: 0, date: new Date().toISOString() },
+              monthlyTrend: []
+            },
+            analytics: result.analytics || {
+              conversionRate: 0,
+              customerSatisfaction: 0,
+              repeatCustomerRate: 0,
+              marketplaceVsDirectRatio: 0,
+              metricsTrend: []
+            },
+            experiences: result.experiences || [],
+            recentActivity: result.recentActivity || []
+          }
+          
+          setDashboardData(transformedData)
         } else {
-          setError(result.error || "Failed to load dashboard data")
+          const errorMessage = result.error || "Failed to load dashboard data"
+          console.error("Dashboard API error:", errorMessage, result.details)
+          setError(errorMessage)
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err)
-        setError("An unexpected error occurred")
+        setError("Network error occurred while loading dashboard")
       } finally {
         setLoading(false)
       }
