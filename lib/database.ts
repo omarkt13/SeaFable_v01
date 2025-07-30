@@ -689,22 +689,57 @@ export async function getHostBookings(hostId: string): Promise<Booking[]> {
       .from("bookings")
       .select(`
         *,
-        experiences ( id, title, primary_image_url, duration_display, activity_type ),
-        users!bookings_user_id_fkey ( first_name, last_name, avatar_url )
+        experiences ( 
+          id, 
+          title, 
+          location,
+          primary_image_url, 
+          duration_display, 
+          activity_type 
+        ),
+        users ( 
+          first_name, 
+          last_name, 
+          email,
+          avatar_url 
+        )
       `)
-      .eq("host_id", hostId)  // Use hostId directly
+      .eq("host_id", hostId)
       .order("booking_date", { ascending: true })
 
     if (error) {
       console.error("Error fetching host bookings:", error)
-      // Return empty array instead of throwing
       return []
     }
 
-    // Ensure data is an array, even if null or undefined
-    return Array.isArray(data) ? data : []
+    // Ensure data is an array and properly formatted
+    if (!Array.isArray(data)) {
+      console.warn("Bookings data is not an array:", data)
+      return []
+    }
+
+    // Transform the data to ensure consistent structure
+    const transformedBookings = data.map(booking => ({
+      ...booking,
+      experiences: booking.experiences || { 
+        id: '', 
+        title: 'Unknown Experience', 
+        location: '',
+        primary_image_url: null, 
+        duration_display: '',
+        activity_type: '' 
+      },
+      users: booking.users || { 
+        first_name: 'Unknown', 
+        last_name: 'Guest', 
+        email: '',
+        avatar_url: null 
+      }
+    }))
+
+    return transformedBookings
   } catch (error: any) {
-    console.error("Bookings error:", error.message)
+    console.error("Unexpected error fetching bookings:", error)
     return []
   }
 }
@@ -1353,19 +1388,37 @@ export async function getWeeklyBookings() {
   endOfWeek.setDate(endOfWeek.getDate() + 6)
   endOfWeek.setHours(23, 59, 59, 999)
 
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .gte('booking_date', startOfWeek.toISOString())
-    .lte('booking_date', endOfWeek.toISOString())
-    .order('booking_date', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        experiences (
+          id,
+          title,
+          duration_hours
+        ),
+        users (
+          first_name,
+          last_name,
+          email,
+          phone
+        )
+      `)
+      .gte('booking_date', startOfWeek.toISOString().split('T')[0])
+      .lte('booking_date', endOfWeek.toISOString().split('T')[0])
+      .order('booking_date', { ascending: true })
 
-  if (error) {
-    console.error('Error fetching weekly bookings:', error)
+    if (error) {
+      console.error('Error fetching weekly bookings:', error)
+      return []
+    }
+
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Unexpected error fetching weekly bookings:', error)
     return []
   }
-
-  return data || []
 }
 
 export async function getRecentBookings(limit: number = 5) {
