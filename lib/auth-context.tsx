@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { signOut as authUtilsSignOut } from './auth-utils'

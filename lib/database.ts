@@ -1473,3 +1473,52 @@ export async function getUpcomingBookings(startDate: string) {
 
   return data || []
 }
+
+export async function fetchBusinessProfile(userId: string) {
+  if (!userId) {
+    throw new Error('User ID is required to fetch business profile')
+  }
+
+  const supabase = createClient()
+
+  try {
+    console.log('Fetching business profile for user ID:', userId)
+
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching business profile:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        userId
+      })
+
+      // Handle specific error cases
+      if (error.code === 'PGRST116') {
+        throw new Error(`Business profile not found for user ${userId}. Please complete your business profile setup.`)
+      } else if (error.code === '22P02') {
+        throw new Error(`Invalid user ID format: ${userId}`)
+      } else if (error.code === '42P01') {
+        throw new Error('Business profiles table does not exist. Please check database setup.')
+      }
+
+      throw new Error(`Database error: ${error.message}`)
+    }
+
+    console.log('Business profile fetched successfully:', data)
+    return data
+  } catch (error) {
+    console.error('Unexpected error fetching business profile:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      userId
+    })
+    throw error
+  }
+}
