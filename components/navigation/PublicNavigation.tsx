@@ -82,7 +82,7 @@ export function PublicNavigation() {
           {/* Mobile menu */}
           {mobileMenuOpen && (
             <div className="fixed top-16 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]">
-              <div className="p-4 space-y-2"></div>
+              <div className="p-4 space-y-2">
                 {navigationLinks.map((link) => (
                   <Link
                     key={link.name}

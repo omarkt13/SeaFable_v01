@@ -166,29 +166,7 @@ export function CustomerNavigation() {
                   )
                 })}
 
-                <div className="border-t border-gray-200 pt-3 mt-3">
-                  <div className="flex items-center px-3 py-2">
-                    <Avatar className="w-8 h-8 mr-3 flex-shrink-0">
-                      <AvatarImage src={userProfile?.avatar_url || "/placeholder.svg"} />
-                      <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {userProfile?.first_name || user?.email}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/dashboard/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:text-teal-600 hover:bg-gray-50 rounded-md active:bg-gray-100"
-                  >
-                    <Settings className="w-4 h-4 flex-shrink-0" />
-                    <span>Profile Settings</span>
-                  </Link>
-
+                <div className="border-t border-gray-200 pt-3 mt-3 space-y-1">
                   <Link
                     href="/business/login"
                     onClick={() => setMobileMenuOpen(false)}
