@@ -1,19 +1,30 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+export const supabase = createClientComponentClient({
+  supabaseUrl,
+  supabaseKey: supabaseAnonKey,
+})
+
+// Helper function to ensure authentication
+export const getAuthenticatedSupabase = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw new Error('Authentication required')
+  }
+  return supabase
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+// Helper function to require authentication
+export const requireAuth = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw new Error('Authentication required')
   }
-})
+  return session
+}
 
 // Also export as default for compatibility
 export default supabase

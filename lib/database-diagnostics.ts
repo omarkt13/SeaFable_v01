@@ -11,9 +11,9 @@ export async function runDatabaseDiagnostics() {
   // Test 1: Authentication (non-blocking for landing page)
   try {
     const {
-      data: { user },
+      data: { session },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getSession()
 
     if (authError) {
       diagnostics.results.push({
@@ -22,12 +22,12 @@ export async function runDatabaseDiagnostics() {
         message: `Auth error: ${authError.message}`,
         details: authError
       })
-    } else if (user) {
+    } else if (session?.user) {
       diagnostics.results.push({
         test: 'Authentication',
         status: 'pass',
-        message: `User authenticated: ${user.email}`,
-        details: { userId: user.id, userType: user.user_metadata?.user_type }
+        message: `User authenticated: ${session.user.email}`,
+        details: { userId: session.user.id, userType: session.user.user_metadata?.user_type }
       })
     } else {
       diagnostics.results.push({

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
+import { requireAuth } from './supabase'
 import { createClient as createServerClient } from "@/lib/supabase/server"
 
 // Connection pool management
@@ -838,8 +839,11 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
 }
 
 export async function getHostDashboardData(userId: string) {
+  const supabase = createClient()
+
   try {
-    const supabase = createClient()
+    // Require authentication
+    await requireAuth()
 
     // For business users, try both user_id and id mapping
     let businessProfile = null
@@ -1052,6 +1056,7 @@ export async function createBooking(bookingData: {
   dietary_requirements?: string[]
 }) {
   try {
+    ```text
     const { data, error } = await supabase
       .from("bookings")
       .insert([
@@ -1203,6 +1208,9 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
 // Helper function to get user profile
 export async function getUserProfile(userId: string) {
   const supabase = createClient()
+
+  // Require authentication
+  await requireAuth()
 
   try {
     const { data, error } = await supabase

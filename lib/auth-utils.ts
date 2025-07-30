@@ -30,15 +30,18 @@ export async function getCurrentUser() {
 }
 
 export async function getSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
-  if (error) {
-    console.error("Error getting session:", error)
+  const supabase = createClientComponentClient()
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error('Error getting session:', error)
+      return null
+    }
+    return session
+  } catch (error) {
+    console.error('Error in getSession:', error)
     return null
   }
-  return session
 }
 
 export async function signOut() {

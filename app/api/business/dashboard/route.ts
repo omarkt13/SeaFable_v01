@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
@@ -11,7 +10,7 @@ const DashboardRequestSchema = z.object({
 // Response error handler
 function handleError(error: unknown, context: string) {
   console.error(`Dashboard API Error in ${context}:`, error)
-  
+
   if (error instanceof Error) {
     return NextResponse.json(
       { 
@@ -23,7 +22,7 @@ function handleError(error: unknown, context: string) {
       { status: 500 }
     )
   }
-  
+
   return NextResponse.json(
     { 
       success: false, 
@@ -39,21 +38,21 @@ function handleError(error: unknown, context: string) {
 function validateDashboardData(data: any) {
   const requiredFields = ['businessProfile', 'overview', 'recentBookings', 'upcomingBookings']
   const missingFields = requiredFields.filter(field => !data[field])
-  
+
   if (missingFields.length > 0) {
     throw new Error(`Missing required dashboard data: ${missingFields.join(', ')}`)
   }
-  
+
   return true
 }
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
@@ -80,23 +79,23 @@ export async function GET(request: NextRequest) {
     const fetchWithRetry = async <T>(operation: () => Promise<T>, context: string): Promise<T> => {
       let lastError: Error | null = null
       const maxRetries = 3
-      
+
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           return await operation()
         } catch (error) {
           lastError = error as Error
           console.warn(`${context} failed (attempt ${attempt}/${maxRetries}):`, error)
-          
+
           if (attempt === maxRetries) {
             throw lastError
           }
-          
+
           // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)))
         }
       }
-      
+
       throw lastError
     }
 
@@ -110,7 +109,7 @@ export async function GET(request: NextRequest) {
 
       if (error) throw new Error(`Business profile fetch failed: ${error.message}`)
       if (!data) throw new Error("Business profile not found")
-      
+
       return data
     }, "Business profile fetch")
 
@@ -152,16 +151,16 @@ export async function GET(request: NextRequest) {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
-    
+
     const completedBookings = bookings.filter(b => 
       b.booking_status === "completed" || b.booking_status === "confirmed"
     )
-    
+
     const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.total_price || 0), 0)
     const activeBookings = bookings.filter(b => 
       b.booking_status === "confirmed" || b.booking_status === "pending"
     ).length
-    
+
     const averageRating = experiences.length > 0
       ? experiences.reduce((sum, exp) => sum + (exp.rating || 0), 0) / experiences.length
       : 0
