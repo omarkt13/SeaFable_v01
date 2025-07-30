@@ -1,4 +1,3 @@
-
 // Database diagnostics and health check utilities
 import { createClient } from './supabase/client'
 

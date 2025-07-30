@@ -120,15 +120,15 @@ class PreBuildChecker {
   checkEnvironmentFiles() {
     this.log('Checking environment configuration...');
     
-    const envFiles = ['.env.local', '.env', '.env.example'];
+    const envFiles = ['.env', '.env.example'];
     envFiles.forEach(file => {
       if (fs.existsSync(file)) {
         this.log(`Environment file exists: ${file}`, 'success');
       }
     });
 
-    if (!fs.existsSync('.env.local') && !fs.existsSync('.env')) {
-      this.log('No environment files found - consider creating .env.local', 'warning');
+    if (!fs.existsSync('.env')) {
+      this.log('No environment files found - use Replit Secrets for environment variables', 'warning');
     }
   }
 
