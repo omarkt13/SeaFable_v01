@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBusinessProfile(null)
     } finally {
       setIsLoading(false)
-      console.log('fetchUserAndProfiles finished. User:', currentUser?.id, 'User Type:', userTypeFromMetadata)
+      console.log('fetchUserAndProfiles finished. User:', currentUser?.id, 'User Type:', currentUser?.user_metadata?.user_type || null)
     }
   }
 
