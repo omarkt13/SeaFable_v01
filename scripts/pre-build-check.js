@@ -120,15 +120,14 @@ class PreBuildChecker {
   checkEnvironmentFiles() {
     this.log('Checking environment configuration...');
     
-    const envFiles = ['.env', '.env.example'];
-    envFiles.forEach(file => {
-      if (fs.existsSync(file)) {
-        this.log(`Environment file exists: ${file}`, 'success');
-      }
-    });
-
-    if (!fs.existsSync('.env')) {
-      this.log('No environment files found - use Replit Secrets for environment variables', 'warning');
+    // Check for Replit Secrets instead of .env files
+    const requiredSecrets = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+    this.log('Environment variables should be configured in Replit Secrets', 'info');
+    
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      this.log('Required Supabase environment variables are configured', 'success');
+    } else {
+      this.log('Missing required Supabase environment variables in Replit Secrets', 'warning');
     }
   }
 
