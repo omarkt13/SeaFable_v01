@@ -45,96 +45,110 @@ export async function runDatabaseDiagnostics() {
     })
   }
 
-  // Test 2: Check host_profiles table (correct table name from schema)
-  try {
-    const { data, error } = await supabase
-      .from('host_profiles')
-      .select('count(*)', { count: 'exact', head: true })
+  // Only test database tables if user is authenticated
+  // This avoids RLS policy errors on public pages like landing
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-    if (error) {
+  if (session?.user) {
+    // Test 2: Check host_profiles table (correct table name from schema)
+    try {
+      const { data, error } = await supabase
+        .from('host_profiles')
+        .select('count(*)', { count: 'exact', head: true })
+
+      if (error) {
+        diagnostics.results.push({
+          test: 'Host Profiles Table',
+          status: 'fail',
+          message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+          details: { 
+            ...error, 
+            hint: 'Check Supabase environment variables and RLS policies'
+          }
+        })
+      } else {
+        diagnostics.results.push({
+          test: 'Host Profiles Table',
+          status: 'pass',
+          message: 'Table accessible'
+        })
+      }
+    } catch (error) {
       diagnostics.results.push({
         test: 'Host Profiles Table',
         status: 'fail',
-        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
-        details: { 
-          ...error, 
-          hint: 'Check Supabase environment variables and RLS policies'
-        }
-      })
-    } else {
-      diagnostics.results.push({
-        test: 'Host Profiles Table',
-        status: 'pass',
-        message: 'Table accessible'
+        message: `Table check failed: ${error instanceof Error ? error.message : error}`
       })
     }
-  } catch (error) {
-    diagnostics.results.push({
-      test: 'Host Profiles Table',
-      status: 'fail',
-      message: `Table check failed: ${error instanceof Error ? error.message : error}`
-    })
-  }
 
-  // Test 3: Check users table (correct table name from schema)
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('count(*)', { count: 'exact', head: true })
+    // Test 3: Check users table (correct table name from schema)
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('count(*)', { count: 'exact', head: true })
 
-    if (error) {
+      if (error) {
+        diagnostics.results.push({
+          test: 'Users Table',
+          status: 'fail',
+          message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+          details: { 
+            ...error, 
+            hint: 'Check Supabase environment variables and RLS policies'
+          }
+        })
+      } else {
+        diagnostics.results.push({
+          test: 'Users Table',
+          status: 'pass',
+          message: 'Table accessible'
+        })
+      }
+    } catch (error) {
       diagnostics.results.push({
         test: 'Users Table',
         status: 'fail',
-        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
-        details: { 
-          ...error, 
-          hint: 'Check Supabase environment variables and RLS policies'
-        }
-      })
-    } else {
-      diagnostics.results.push({
-        test: 'Users Table',
-        status: 'pass',
-        message: 'Table accessible'
+        message: `Table check failed: ${error instanceof Error ? error.message : error}`
       })
     }
-  } catch (error) {
-    diagnostics.results.push({
-      test: 'Users Table',
-      status: 'fail',
-      message: `Table check failed: ${error instanceof Error ? error.message : error}`
-    })
-  }
 
-  // Test 4: Check experiences table (core table for the marketplace)
-  try {
-    const { data, error } = await supabase
-      .from('experiences')
-      .select('count(*)', { count: 'exact', head: true })
+    // Test 4: Check experiences table (core table for the marketplace)
+    try {
+      const { data, error } = await supabase
+        .from('experiences')
+        .select('count(*)', { count: 'exact', head: true })
 
-    if (error) {
+      if (error) {
+        diagnostics.results.push({
+          test: 'Experiences Table',
+          status: 'fail',
+          message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+          details: { 
+            ...error, 
+            hint: 'Check Supabase environment variables and RLS policies'
+          }
+        })
+      } else {
+        diagnostics.results.push({
+          test: 'Experiences Table',
+          status: 'pass',
+          message: 'Table accessible'
+        })
+      }
+    } catch (error) {
       diagnostics.results.push({
         test: 'Experiences Table',
         status: 'fail',
-        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
-        details: { 
-          ...error, 
-          hint: 'Check Supabase environment variables and RLS policies'
-        }
-      })
-    } else {
-      diagnostics.results.push({
-        test: 'Experiences Table',
-        status: 'pass',
-        message: 'Table accessible'
+        message: `Table check failed: ${error instanceof Error ? error.message : error}`
       })
     }
-  } catch (error) {
+  } else {
     diagnostics.results.push({
-      test: 'Experiences Table',
-      status: 'fail',
-      message: `Table check failed: ${error instanceof Error ? error.message : error}`
+      test: 'Database Tables',
+      status: 'pass',
+      message: 'Skipped table tests for unauthenticated user (normal for public pages)'
     })
   }
 

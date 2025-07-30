@@ -6,8 +6,9 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { ToastProvider } from "@/components/ui/toast-provider"
 import { logDatabaseDiagnostics } from '@/lib/database-diagnostics'
 
-// Run database diagnostics in development
-if (process.env.NODE_ENV === 'development') {
+// Only run database diagnostics in development when DEBUG_DB is set
+// This prevents unnecessary auth/RLS errors on public pages like landing
+if (process.env.NODE_ENV === 'development' && process.env.DEBUG_DB === 'true') {
   logDatabaseDiagnostics()
 }
 
