@@ -83,6 +83,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Test critical tables
+    const testResults = await Promise.allSettled([
+      supabase.from('users').select('count').limit(1),
+      supabase.from('host_profiles').select('count').limit(1),
+      supabase.from('experiences').select('count').limit(1),
+      supabase.from('bookings').select('count').limit(1)
+    ])
+
     const summary = {
       total: tests.length,
       passed: tests.filter(t => t.status === 'PASSED').length,

@@ -58,57 +58,57 @@ export async function runDatabaseDiagnostics() {
     })
   }
 
-  // Test 2: Check business_profiles table
+  // Test host_profiles table access
   try {
     const { data, error } = await supabase
-      .from('business_profiles')
+      .from('host_profiles')
       .select('count(*)', { count: 'exact', head: true })
 
     if (error) {
       diagnostics.results.push({
-        test: 'Business Profiles Table',
+        test: 'Host Profiles Table',
         status: 'fail',
         message: `Table access error: ${error.message}`,
         details: error
       })
     } else {
       diagnostics.results.push({
-        test: 'Business Profiles Table',
+        test: 'Host Profiles Table',
         status: 'pass',
         message: 'Table accessible'
       })
     }
   } catch (error) {
     diagnostics.results.push({
-      test: 'Business Profiles Table',
+      test: 'Host Profiles Table',
       status: 'fail',
       message: `Table check failed: ${error instanceof Error ? error.message : error}`
     })
   }
 
-  // Test 3: Check customer_profiles table
+  // Test users table
   try {
     const { data, error } = await supabase
-      .from('customer_profiles')
+      .from('users')
       .select('count(*)', { count: 'exact', head: true })
 
     if (error) {
       diagnostics.results.push({
-        test: 'Customer Profiles Table',
+        test: 'Users Table',
         status: 'fail',
         message: `Table access error: ${error.message}`,
         details: error
       })
     } else {
       diagnostics.results.push({
-        test: 'Customer Profiles Table',
+        test: 'Users Table',
         status: 'pass',
         message: 'Table accessible'
       })
     }
   } catch (error) {
     diagnostics.results.push({
-      test: 'Customer Profiles Table',
+      test: 'Users Table',
       status: 'fail',
       message: `Table check failed: ${error instanceof Error ? error.message : error}`
     })

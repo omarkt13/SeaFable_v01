@@ -1094,8 +1094,8 @@ export async function testDatabaseConnection() {
 
 export async function testTableAccess() {
   const tables = [
-    "user_profiles",
-    "host_profiles",
+    "users",
+    "host_profiles", 
     "experiences",
     "bookings",
     "reviews",
@@ -1482,16 +1482,16 @@ export async function fetchBusinessProfile(userId: string) {
   const supabase = createClient()
 
   try {
-    console.log('Fetching business profile for user ID:', userId)
+    console.log('Fetching host profile for user ID:', userId)
 
     const { data, error } = await supabase
-      .from('business_profiles')
+      .from('host_profiles')
       .select('*')
       .eq('user_id', userId)
       .single()
 
     if (error) {
-      console.error('Error fetching business profile:', {
+      console.error('Error fetching host profile:', {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -1501,20 +1501,20 @@ export async function fetchBusinessProfile(userId: string) {
 
       // Handle specific error cases
       if (error.code === 'PGRST116') {
-        throw new Error(`Business profile not found for user ${userId}. Please complete your business profile setup.`)
+        throw new Error(`Host profile not found for user ${userId}. Please complete your business profile setup.`)
       } else if (error.code === '22P02') {
         throw new Error(`Invalid user ID format: ${userId}`)
       } else if (error.code === '42P01') {
-        throw new Error('Business profiles table does not exist. Please check database setup.')
+        throw new Error('Host profiles table does not exist. Please check database setup.')
       }
 
       throw new Error(`Database error: ${error.message}`)
     }
 
-    console.log('Business profile fetched successfully:', data)
+    console.log('Host profile fetched successfully:', data)
     return data
   } catch (error) {
-    console.error('Unexpected error fetching business profile:', {
+    console.error('Unexpected error fetching host profile:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       userId
