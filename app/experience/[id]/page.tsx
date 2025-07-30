@@ -161,42 +161,41 @@ export default function ExperienceDetailPage() {
 
     return experience.host_availability.filter((slot): slot is NonNullable<typeof slot> => 
       slot && 
-      slot.available_date && 
-      slot.max_capacity >= bookingData.guests && 
-      new Date(`${slot.available_date}T${slot.start_time}`) > new Date()
+      slot.date === bookingData.date &&
+      slot.available_capacity >= bookingData.guests && 
+      new Date(`${slot.date}T${slot.start_time}`) > new Date()
     ).sort((a, b) => a.start_time.localeCompare(b.start_time))
   }, [experience?.host_availability, bookingData.date, bookingData.guests])
 
   // Check availability when date or guests change
   useEffect(() => {
     const checkAvailability = async () => {
-      if (bookingData.date && bookingData.guests > 0) {
+      if (bookingData.date && bookingData.guests > 0 && experience?.id) {
         setIsLoadingAvailability(true)
         try {
-          // Simulate API delay for checking availability
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Import the availability helper
+          const { getExperienceAvailability } = await import('@/lib/availability')
+          
+          // Get real availability data from database
+          const result = await getExperienceAvailability(experience.id, bookingData.date, bookingData.date)
+          
+          if (result.success) {
+            // Filter slots that can accommodate the requested number of guests
+            const availableSlots = result.data.filter(slot => 
+              slot.available_capacity >= bookingData.guests &&
+              new Date(`${slot.date}T${slot.start_time}`) > new Date()
+            ).map(slot => ({
+              id: slot.id,
+              start_time: slot.start_time,
+              available_capacity: slot.available_capacity
+            }))
 
-          // For now, we'll simulate checking availability
-          // In a real app, you'd query the host_availability table
-          const selectedDate = new Date(bookingData.date + 'T00:00:00')
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
-
-          // Don't show slots for past dates
-          if (selectedDate < today) {
+            setAvailableTimeSlots(availableSlots)
+          } else {
+            console.error("Error fetching availability:", result.error)
             setAvailableTimeSlots([])
-            setIsLoadingAvailability(false)
-            return
+            setBookingError("Failed to check availability. Please try again.")
           }
-
-          const simulatedSlots = [
-            { id: 1, start_time: "09:00", available_capacity: experience?.max_guests || 0 },
-            { id: 2, start_time: "11:00", available_capacity: Math.max(0, (experience?.max_guests || 0) - 2) },
-            { id: 3, start_time: "14:00", available_capacity: experience?.max_guests || 0 },
-            { id: 4, start_time: "16:00", available_capacity: Math.max(0, (experience?.max_guests || 0) - 1) },
-          ].filter((slot) => slot.available_capacity >= bookingData.guests)
-
-          setAvailableTimeSlots(simulatedSlots)
         } catch (error) {
           console.error("Error checking availability:", error)
           setAvailableTimeSlots([])
@@ -213,7 +212,7 @@ export default function ExperienceDetailPage() {
     // Add a small delay to prevent too many rapid requests
     const timeoutId = setTimeout(checkAvailability, 300)
     return () => clearTimeout(timeoutId)
-  }, [bookingData.date, bookingData.guests, experience?.max_guests])
+  }, [bookingData.date, bookingData.guests, experience?.id])
 
   if (isLoading) {
     return (
@@ -667,7 +666,7 @@ export default function ExperienceDetailPage() {
                                     <div className="flex justify-between items-center w-full">
                                       <span>{slot.start_time}</span>
                                       <span className="text-xs text-gray-500 ml-2">
-                                        ({slot.available_capacity} spots left)
+                                        ({slot.available_capacity} {slot.available_capacity === 1 ? 'spot' : 'spots'} left)
                                       </span>
                                     </div>
                                   </SelectItem>
@@ -680,6 +679,10 @@ export default function ExperienceDetailPage() {
                                 Time selected: {bookingData.time}
                               </p>
                             )}
+                            <p className="text-xs text-blue-600 flex items-center">
+                              <Info className="h-3 w-3 mr-1" />
+                              Showing {availableTimeSlots.length} available time{availableTimeSlots.length > 1 ? 's' : ''} for {bookingData.guests} guest{bookingData.guests > 1 ? 's' : ''}
+                            </p>
                           </div>
                         ) : (
                           <div className="text-center py-4">

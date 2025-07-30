@@ -27,7 +27,7 @@ export async function createBooking(bookingData: CreateBookingData) {
     const { data: availabilitySlot, error: fetchError } = await supabase
       .from("host_availability")
       .select("id, available_capacity")
-      .eq("host_profile_id", bookingData.host_id)
+      .eq("experience_id", bookingData.experience_id)
       .eq("date", bookingData.booking_date)
       .eq("start_time", bookingData.departure_time)
       .single()
@@ -126,7 +126,7 @@ export async function cancelBooking(bookingId: string) {
     const { data: availabilitySlot, error: fetchAvailabilityError } = await supabase
       .from("host_availability")
       .select("id, available_capacity")
-      .eq("host_profile_id", booking.host_id)
+      .eq("experience_id", booking.experience_id)
       .eq("date", booking.booking_date)
       .eq("start_time", booking.departure_time)
       .single()
