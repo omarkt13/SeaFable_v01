@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getHostDashboardData } from '@/lib/database'
@@ -9,7 +10,7 @@ export async function GET() {
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
       )
     }
@@ -18,22 +19,29 @@ export async function GET() {
     const userType = user.user_metadata?.user_type
     if (userType !== 'business') {
       return NextResponse.json(
-        { error: 'Business account required' },
+        { success: false, error: 'Business account required' },
         { status: 403 }
       )
     }
 
-    // Get dashboard data
-    const dashboardData = await getHostDashboardData(user.id)
+    // Get dashboard data using the fixed function
+    const dashboardResult = await getHostDashboardData(user.id)
+
+    if (!dashboardResult.success) {
+      return NextResponse.json({
+        success: false,
+        error: dashboardResult.error || 'Failed to fetch dashboard data'
+      }, { status: 500 })
+    }
 
     return NextResponse.json({
       success: true,
-      data: dashboardData
+      data: dashboardResult.data
     })
   } catch (error) {
     console.error('Dashboard API error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }

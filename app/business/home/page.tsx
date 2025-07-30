@@ -95,6 +95,36 @@ export default function BusinessHomePage() {
     setCurrentWeekStart(newDate)
   }
 
+  // Effect to fetch dashboard data
+  useEffect(() => {
+    if (!authLoading && user && userType === "business") {
+      fetchDashboardData()
+    }
+  }, [user, userType, authLoading])
+
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    if (!user || userType !== "business") return
+
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const result = await getHostDashboardData(user.id)
+      
+      if (result.success && result.data) {
+        setDashboardData(result.data)
+      } else {
+        setError(result.error || "Failed to load dashboard data")
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err)
+      setError("An unexpected error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Check and create profile if needed
   const ensureBusinessProfile = async () => {
     if (!user) return false

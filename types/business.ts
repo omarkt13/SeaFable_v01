@@ -1,234 +1,128 @@
-import type { User } from "@supabase/supabase-js"
-
-export type BusinessProfile = {
+export interface HostProfile {
   id: string
-  user_id?: string
+  user_id: string
   name: string
-  business_name?: string
-  contact_name?: string
   email?: string
   phone?: string
+  business_name?: string
   business_type?: string
   location?: string
   description?: string
-  bio?: string
   avatar_url?: string
-  years_experience?: number
-  certifications?: string[]
-  specialties?: string[]
-  rating?: number
-  total_reviews?: number
-  host_type: string
-  languages_spoken?: string[]
-  business_registration_id?: string
-  insurance_details?: string
+  website_url?: string
+  rating: number
+  total_reviews: number
   created_at: string
   updated_at: string
 }
 
-// Enhanced Experience type with activity expansion from v3
-export type Experience = {
-  id: string
-  host_id: string
-  business_id: string
-  title: string
-  description: string
-  location: string
-  price: number
-  duration: number // in minutes
-  itinerary?: ItineraryItem[]
-  
-  // New activity-specific fields from v3
-  activityType: 'sailing' | 'surfing' | 'kayaking' | 'diving' | 'jet-skiing' | 
-                'fishing' | 'whale-watching' | 'paddleboarding' | 'windsurfing' | 'snorkeling'
-  activitySpecificDetails: Record<string, any> // JSONB equivalent for activity-specific data
-  difficultyLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-  maxParticipants: number
-  minAge?: number
-  equipmentProvided: string[]
-  whatToBring: string[]
-  cancellationPolicy: string
-  weatherDependency: boolean
-  instantBooking: boolean
-  
-  // Enhanced metadata
-  tags: string[]
-  highlights: string[]
-  includedServices: string[]
-  excludedServices: string[]
-  
-  created_at: string
-  updated_at: string
-}
-
-export type ItineraryItem = {
-  id?: string // Optional for new items before saving
-  title: string
-  description: string
-  duration?: number // in minutes
-  order: number
-}
-
-export type AvailabilitySlot = {
-  id?: string // Optional for new slots before saving
-  available_date: string // YYYY-MM-DD
-  start_time: string // HH:MM
-  end_time: string // HH:MM
-  capacity: number
-  price_override?: number | null
-}
-
-export type Booking = {
-  id: string
-  experience_id: string
-  user_id: string
-  host_id: string
-  booking_date: string
-  departure_time?: string
-  number_of_guests: number
-  total_price: number
-  booking_status: "pending" | "confirmed" | "cancelled" | "completed"
-  special_requests?: string
-  dietary_requirements?: string[]
-  payment_status?: string
-  currency?: string
-  booked_at?: string
-  created_at: string
-  updated_at: string
-}
-
-// Enhanced TeamMember to support multiple host roles
-export type TeamMember = {
-  id: string
-  business_id: string
-  user_id: string
-  role: "admin" | "manager" | "staff"
-  created_at: string
-  updated_at: string
-  user?: User // Joined user data
-}
-
-// New HostProfile type (renamed from CaptainProfile)
-export type HostProfile = {
-  id: string
-  business_id: string
-  name: string
-  role: 'captain' | 'instructor' | 'guide' | 'operator'
-  specializations: string[]
-  certifications: string[]
-  yearsExperience: number
-  languages: string[]
-  bio: string
-  avatar_url?: string
-  contact_email?: string
-  phone_number?: string
-  emergency_contact?: string
-  created_at: string
-  updated_at: string
-}
-
-// New Equipment type
-export type Equipment = {
-  id: string
-  business_id: string
-  name: string
-  category: 'safety' | 'activity' | 'comfort' | 'navigation'
-  description: string
-  quantity: number
-  condition: 'excellent' | 'good' | 'fair' | 'needs_replacement'
-  last_maintenance?: string
-  created_at: string
-  updated_at: string
-}
-
-// New Certification type
-export type Certification = {
-  id: string
-  name: string
-  issuing_authority: string
-  description: string
-  validity_period?: number // in months
-  category: 'safety' | 'instruction' | 'navigation' | 'specialized'
-  created_at: string
-  updated_at: string
-}
-
-// Activity-specific data types
-export type SailingDetails = {
-  boatType: 'sailboat' | 'catamaran' | 'yacht' | 'dinghy'
-  boatLength: number // in feet
-  maxWindSpeed: number // in knots
-  sailingArea: string
-  licenseRequired: boolean
-}
-
-export type DivingDetails = {
-  diveType: 'scuba' | 'snorkeling' | 'freediving'
-  maxDepth: number // in meters
-  certificationRequired: boolean
-  equipmentIncluded: boolean
-  diveSites: string[]
-}
-
-export type SurfingDetails = {
-  surfType: 'beginner' | 'intermediate' | 'advanced'
-  boardType: 'longboard' | 'shortboard' | 'foam' | 'provided'
-  waveHeight: string
-  lessonIncluded: boolean
-}
-
-export type FishingDetails = {
-  fishingType: 'deep_sea' | 'inshore' | 'fly_fishing' | 'spearfishing'
-  targetSpecies: string[]
-  equipmentProvided: boolean
-  licenseIncluded: boolean
-  catchAndRelease: boolean
-}
-
-// FIXED HostAvailability type - matches what the code expects
-export type HostAvailability = {
-  id: string
-  host_id: string
-  business_id?: string
-  // These are the properties the code actually expects:
-  date: string  // YYYY-MM-DD (code expects this, not available_date)
-  available_date?: string // Keep for backward compatibility
-  start_time: string // HH:MM
-  end_time: string // HH:MM
-  available_capacity: number // Code expects this, not max_capacity
-  max_capacity?: number // Keep for backward compatibility
-  current_bookings?: number
-  price_override?: number
-  is_available?: boolean
-  weather_dependent?: boolean
-  is_recurring?: boolean
-  recurring_pattern?: any
-  notes?: string
-  created_at: string
-  updated_at: string
-}
-
-// BusinessSettings type for business configuration
-export type BusinessSettings = {
-  id: string
-  business_id: string
+export interface BusinessSettings {
+  host_profile_id: string
   onboarding_completed: boolean
   marketplace_enabled: boolean
-  auto_booking_enabled: boolean
-  instant_booking_enabled: boolean
+  auto_accept_bookings: boolean
+  require_approval: boolean
+  booking_lead_time: number
   cancellation_policy: string
   refund_policy: string
-  contact_preferences: {
-    email: boolean
-    phone: boolean
-    sms: boolean
-  }
-  notification_settings: {
-    new_bookings: boolean
-    cancellations: boolean
-    reviews: boolean
-    payments: boolean
-  }
+  terms_and_conditions?: string
+  privacy_policy?: string
+  notifications_enabled: boolean
+  email_notifications: boolean
+  sms_notifications: boolean
+  calendar_sync_enabled: boolean
+  calendar_provider?: string
+  calendar_url?: string
+  payment_methods: string[]
+  default_currency: string
+  tax_rate?: number
+  stripe_account_id?: string
+  paypal_account?: string
   created_at: string
   updated_at: string
+}
+
+export interface HostAvailability {
+  id?: string
+  host_profile_id: string
+  experience_id?: string
+  date: string
+  startTime: string
+  endTime: string
+  availableCapacity: number
+  priceOverride?: number
+  notes?: string
+  weatherDependent?: boolean
+  isRecurring?: boolean
+  recurringPattern?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface BusinessDashboardData {
+  businessProfile: any
+  overview: {
+    totalRevenue: number
+    activeBookings: number
+    totalExperiences: number
+    averageRating: number
+    revenueGrowth: number
+    bookingGrowth: number
+  }
+  recentBookings: Array<{
+    id: string
+    customerName: string
+    experienceTitle: string
+    date: string
+    amount: number
+    guests: number
+    avatar: string
+    status: string
+  }>
+  upcomingBookings: Array<{
+    id: string
+    customerName: string
+    experienceTitle: string
+    date: string
+    time: string
+    guests: number
+    specialRequests: string
+    phone: string
+  }>
+  earnings: {
+    thisMonth: number
+    lastMonth: number
+    pending: number
+    nextPayout: { amount: number; date: string }
+    monthlyTrend: { month: string; revenue: number }[]
+  }
+  analytics: {
+    conversionRate: number
+    customerSatisfaction: number
+    repeatCustomerRate: number
+    marketplaceVsDirectRatio: number
+    metricsTrend: { name: string; value: number }[]
+  }
+  experiences: Array<{
+    id: string
+    title: string
+    status: "active" | "inactive"
+    bookings: number
+    revenue: number
+    rating: number
+  }>
+  recentActivity: { description: string; time: string; color: string }[]
+}
+
+export interface WeeklyBooking {
+  id: string
+  customerName: string
+  experienceTitle: string
+  time: string
+  duration: string
+  guests: number
+  status: 'confirmed' | 'pending' | 'cancelled'
+  phone?: string
+  email?: string
+  specialRequests?: string
 }

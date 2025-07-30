@@ -40,6 +40,8 @@ export default function BusinessDashboard() {
 
       try {
         setLoading(true)
+        setError(null)
+        
         const result = await getHostDashboardData(user.id)
         
         if (result.success && result.data) {
@@ -55,7 +57,7 @@ export default function BusinessDashboard() {
       }
     }
 
-    if (!authLoading) {
+    if (!authLoading && user && userType === "business") {
       fetchDashboardData()
     }
   }, [user, userType, authLoading])
