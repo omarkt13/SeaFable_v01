@@ -32,9 +32,9 @@ export async function runDatabaseDiagnostics() {
     } else {
       diagnostics.results.push({
         test: 'Authentication',
-        status: 'fail',
-        message: 'Auth session missing!',
-        details: 'No user currently logged in (normal for landing page)'
+        status: 'pass',
+        message: 'No active session (normal for landing page)',
+        details: 'Landing page access - authentication not required'
       })
     }
   } catch (error) {
@@ -55,8 +55,11 @@ export async function runDatabaseDiagnostics() {
       diagnostics.results.push({
         test: 'Host Profiles Table',
         status: 'fail',
-        message: `Table access error: ${error.message}`,
-        details: error
+        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+        details: { 
+          ...error, 
+          hint: 'Check Supabase environment variables and RLS policies'
+        }
       })
     } else {
       diagnostics.results.push({
@@ -83,8 +86,11 @@ export async function runDatabaseDiagnostics() {
       diagnostics.results.push({
         test: 'Users Table',
         status: 'fail',
-        message: `Table access error: ${error.message}`,
-        details: error
+        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+        details: { 
+          ...error, 
+          hint: 'Check Supabase environment variables and RLS policies'
+        }
       })
     } else {
       diagnostics.results.push({
@@ -111,8 +117,11 @@ export async function runDatabaseDiagnostics() {
       diagnostics.results.push({
         test: 'Experiences Table',
         status: 'fail',
-        message: `Table access error: ${error.message}`,
-        details: error
+        message: `Table access error: ${error.message || 'Connection or RLS policy issue'}`,
+        details: { 
+          ...error, 
+          hint: 'Check Supabase environment variables and RLS policies'
+        }
       })
     } else {
       diagnostics.results.push({
