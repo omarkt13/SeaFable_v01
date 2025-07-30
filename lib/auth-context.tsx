@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userTypeFromMetadata === 'business') {
         setUserType('business')
 
-        // Fetch business profile
+        // Fetch business profile with proper error handling
         const { data: businessData, error: businessError } = await supabase
           .from('host_profiles')
           .select(`
@@ -64,10 +64,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single()
 
         if (businessError) {
-          console.error('Error fetching host profile:', businessError)
-          // If profile doesn't exist, that's okay for business users
-          if (businessError.code !== 'PGRST116') {
-            console.error('Unexpected error:', businessError)
+          console.error('Error fetching business profile:', businessError)
+          if (businessError.code === 'PGRST116') {
+            // Profile doesn't exist, create a minimal one
+            setBusinessProfile({
+              id: currentUser.id,
+              user_id: currentUser.id,
+              name: currentUser.user_metadata?.business_name || currentUser.user_metadata?.contact_name || 'Business User',
+              email: currentUser.email || '',
+              business_name: currentUser.user_metadata?.business_name || '',
+              contact_name: currentUser.user_metadata?.contact_name || '',
+              host_type: 'business',
+              onboarding_completed: false,
+              marketplace_enabled: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
           }
         } else {
           // Flatten the business settings into the profile object
@@ -81,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUserType('customer')
 
-        // Fetch host profile for customers
+        // Fetch host profile for customers (optional)
         const { data: hostData, error: hostError } = await supabase
           .from('host_profiles')
           .select('*')
@@ -89,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single()
 
         if (hostError && hostError.code !== 'PGRST116') {
-          console.error('Error fetching host profile:', hostError)
+          console.error('Error fetching customer host profile:', hostError)
         } else if (hostData) {
           setHostProfile(hostData)
         }
@@ -98,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error in fetchUserAndProfiles:', error)
     } finally {
       setIsLoading(false)
-      console.log('fetchUserAndProfiles finished. User:', currentUser, 'User Type:', userType)
+      console.log('fetchUserAndProfiles finished. User:', currentUser?.id, 'User Type:', userTypeFromMetadata)
     }
   }
 

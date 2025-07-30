@@ -26,7 +26,10 @@ export default function BusinessLoginPage() {
 
       if (result.success) {
         console.log("Business login successful")
-        router.push("/business/home")
+        // Add a small delay to ensure auth state is properly set
+        setTimeout(() => {
+          router.push("/business/home")
+        }, 100)
       } else {
         setError(result.error || "Login failed")
       }

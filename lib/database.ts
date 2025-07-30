@@ -196,6 +196,8 @@ export interface Booking {
   }
 }
 
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+
 // Define dashboard data types
 export interface BusinessDashboardData {
   businessProfile: SupabaseHostProfile | null
@@ -250,6 +252,70 @@ export interface BusinessDashboardData {
     rating: number
   }>
   recentActivity: { description: string; time: string; color: string }[]
+}
+
+export async function getHostDashboardData(userId: string): Promise<BusinessDashboardData> {
+  try {
+    const supabase = createClientComponentClient()
+
+    // Get business profile with fallback
+    let businessProfile = null
+    const { data: profileData, error: profileError } = await supabase
+      .from('host_profiles')
+      .select(`
+        *,
+        host_business_settings (
+          onboarding_completed,
+          marketplace_enabled
+        )
+      `)
+      .eq('user_id', userId)
+      .single()
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error fetching business profile:', profileError)
+    } else if (profileData) {
+      businessProfile = {
+        ...profileData,
+        onboarding_completed: profileData.host_business_settings?.onboarding_completed || false,
+        marketplace_enabled: profileData.host_business_settings?.marketplace_enabled || false,
+      }
+    }
+
+    // Return mock data structure with proper defaults
+    return {
+      businessProfile,
+      overview: {
+        totalRevenue: 0,
+        activeBookings: 0,
+        totalExperiences: 0,
+        averageRating: 0,
+        revenueGrowth: 0,
+        bookingGrowth: 0
+      },
+      recentBookings: [],
+      upcomingBookings: [],
+      earnings: {
+        thisMonth: 0,
+        lastMonth: 0,
+        pending: 0,
+        nextPayout: { amount: 0, date: new Date().toISOString() },
+        monthlyTrend: []
+      },
+      analytics: {
+        conversionRate: 0,
+        customerSatisfaction: 0,
+        repeatCustomerRate: 0,
+        marketplaceVsDirectRatio: 0,
+        metricsTrend: []
+      },
+      experiences: [],
+      recentActivity: []
+    }
+  } catch (error) {
+    console.error('Error in getHostDashboardData:', error)
+    throw error
+  }
 }
 
 export async function signInUser(email: string, password: string) {
