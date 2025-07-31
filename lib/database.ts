@@ -257,6 +257,17 @@ export interface BusinessDashboardData {
 
 export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
   try {
+    // First ensure the business profile exists
+    const profileResult = await ensureBusinessProfile(userId)
+    
+    if (!profileResult.success) {
+      console.error("Failed to ensure business profile:", profileResult.error)
+      return {
+        success: false,
+        error: "Failed to set up business profile. Please contact support."
+      }
+    }
+
     const supabase = createClient()
 
     // Get business profile with comprehensive error handling
@@ -274,17 +285,10 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       .single()
 
     if (profileError) {
-      if (profileError.code === 'PGRST116') {
-        return {
-          success: false,
-          error: 'Business profile not found. Please complete your business registration first.'
-        }
-      } else {
-        console.error('Error fetching business profile:', profileError)
-        return {
-          success: false,
-          error: `Database error: ${profileError.message}`
-        }
+      console.error('Error fetching business profile after creation:', profileError)
+      return {
+        success: false,
+        error: `Database error: ${profileError.message}`
       }
     }
 
@@ -1558,19 +1562,7 @@ export async function getUserDashboardData(userEmail) {
     }
 }
 
-// Alias function for backward compatibility - redirects to getBusinessDashboardData
-export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
-    try {
-        const result = await getBusinessDashboardData(userId);
-        return result;
-    } catch (error) {
-        console.error('Error in getHostDashboardData:', error)
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
-        };
-    }
-}
+
 
 // Function to create business profile if it doesn't exist
 export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
