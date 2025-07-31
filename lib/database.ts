@@ -257,10 +257,10 @@ export interface BusinessDashboardData {
 export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
   try {
     console.log("=== Starting getHostDashboardData for user:", userId)
-    
+
     // First ensure the business profile exists
     const profileResult = await ensureBusinessProfile(userId)
-    
+
     if (!profileResult.success) {
       console.error("Failed to ensure business profile:", profileResult.error)
       return {
@@ -741,6 +741,9 @@ export async function getExperiences(filters?: any) {
         default:
           query = query.order("rating", { ascending: false }).order("total_bookings", { ascending: false })
           break
+        default:
+          query = query.order("rating", { ascending: false }).order("total_bookings", { ascending: false })
+          break
       }
     } else {
       query = query.order("created_at", { ascending: false })
@@ -1031,7 +1034,8 @@ export async function testDatabaseConnection() {
     }
 
     return { success: true, message: "Database connection successful" }
-  } catch (error: any) {
+  }```tool_code
+ catch (error: any) {
     return { success: false, error: "Network error occurred" }
   }
 }

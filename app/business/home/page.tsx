@@ -142,8 +142,27 @@ export default function BusinessHomePage() {
 
       if (error && error.code === 'PGRST116') {
         // Profile doesn't exist, create it
-        const { createBusinessProfileAfterConfirmation } = await import('@/app/actions/auth')
-        const result = await createBusinessProfileAfterConfirmation(user.id)
+        // Create basic host profile
+        const { error: createError } = await supabase
+          .from('host_profiles')
+          .insert({
+            id: user.id,
+            user_id: user.id,
+            name: user.email?.split('@')[0] || 'Business User',
+            business_name: user.email?.split('@')[0] || 'New Business',
+            contact_name: user.email?.split('@')[0] || 'Contact',
+            email: user.email || '',
+            host_type: 'business',
+            rating: 0,
+            total_reviews: 0
+          })
+          .single()
+
+        if (createError) {
+          console.error('Failed to create business profile:', createError)
+          setError("Failed to set up business profile. Please contact support.")
+          return false
+        }
 
         if (!result.success) {
           setError("Failed to set up business profile. Please contact support.")
