@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { getBusinessDashboardData } from '@/lib/database'
 import { createClient } from '@/lib/supabase/server'
@@ -31,6 +30,22 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Dashboard API: Fetching data for business user', { userId: user.id, email: user.email })
+
+    // First ensure the business profile exists
+    const { ensureBusinessProfile } = await import('@/lib/database')
+    const profileResult = await ensureBusinessProfile(user.id)
+
+    if (!profileResult.success) {
+      console.error("Failed to ensure business profile:", profileResult.error)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Failed to set up business profile. Please contact support.",
+          details: profileResult.error 
+        },
+        { status: 400 }
+      )
+    }
 
     // Get dashboard data
     const dashboardData = await getBusinessDashboardData(user.id)

@@ -1358,47 +1358,6 @@ export async function getBusinessDashboardData(businessId: string): Promise<{ su
   }
 }
 
-export interface Review {
-  id: string
-  booking_id: string
-  guest_email: string
-  rating: number
-  title: string
-  comment: string
-  created_at: string
-}
-
-export interface BusinessDashboardData {
-  overview: {
-    totalExperiences: number
-    totalBookings: number
-    upcomingBookings: number
-    totalRevenue: number
-    monthlyRevenue: number
-  }
-  experiences: any[]
-  recentBookings: any[]
-  upcomingBookings: any[]
-  analytics: {
-    totalViews: number
-    conversionRate: number
-    averageRating: number
-    responseTime: string
-  }
-  businessProfile: any
-  earnings: {
-    thisMonth: number
-    lastMonth: number
-    growth: number
-    pendingPayouts: number
-  }
-  recentActivity: Array<{
-    type: string
-    message: string
-    time: string
-  }>
-}
-
 export async function getWeeklyBookings() {
   const startOfWeek = new Date()
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
@@ -1542,6 +1501,7 @@ export async function fetchBusinessProfile(userId: string) {
     throw error
   }
 }
+
 // Get user dashboard data with proper error handling
 export async function getUserDashboardData(userEmail) {
     try {
@@ -1596,4 +1556,86 @@ export async function getUserDashboardData(userEmail) {
         console.error('Dashboard data error:', error);
         return { error: error.message };
     }
+}
+
+// Alias function for backward compatibility - redirects to getBusinessDashboardData
+export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
+    try {
+        const result = await getBusinessDashboardData(userId);
+        return result;
+    } catch (error) {
+        console.error('Error in getHostDashboardData:', error)
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+// Function to create business profile if it doesn't exist
+export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    console.log("Ensuring business profile exists for user:", userId)
+
+    // First check if profile already exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('host_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking for existing profile:', checkError)
+      return { success: false, error: checkError.message }
+    }
+
+    if (existingProfile) {
+      console.log('Business profile already exists:', existingProfile.id)
+      return { success: true, data: existingProfile }
+    }
+
+    // Get user info for profile creation
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { success: false, error: 'User not authenticated' }
+    }
+
+    // Create new business profile
+    const profileData = {
+      user_id: userId,
+      name: user.email?.split('@')[0] || 'Business User',
+      email: user.email,
+      host_type: 'business',
+      business_type: 'experience_provider',
+      rating: 0,
+      total_reviews: 0,
+      years_experience: 0,
+      certifications: [],
+      specialties: [],
+      languages_spoken: ['English'],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { data: newProfile, error: createError } = await supabase
+      .from('host_profiles')
+      .insert([profileData])
+      .select()
+      .single()
+
+    if (createError) {
+      console.error('Error creating business profile:', createError)
+      return { success: false, error: createError.message }
+    }
+
+    console.log('Created new business profile:', newProfile.id)
+    return { success: true, data: newProfile }
+
+  } catch (error) {
+    console.error('Unexpected error ensuring business profile:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
 }
