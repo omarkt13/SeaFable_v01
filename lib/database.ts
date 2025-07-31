@@ -274,7 +274,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
 
     // Use the profile from ensureBusinessProfile result
     const hostId = profileResult.data.id
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Get business profile with settings
     const { data: profileData, error: profileError } = await supabase
@@ -1579,7 +1579,7 @@ export async function getUserDashboardData(userEmail) {
 export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     console.log("=== Ensuring business profile exists for user:", userId)
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // First check if profile already exists
     const { data: existingProfile, error: checkError } = await supabase
