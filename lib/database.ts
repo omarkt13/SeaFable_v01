@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
 import { requireAuth } from './supabase'
-import { createClient as createServerClient } from "@/lib/supabase/server"
 import type { BusinessDashboardData } from "@/types/business"
 
 // Connection pool management
@@ -274,7 +273,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
 
     // Use the profile from ensureBusinessProfile result
     const hostId = profileResult.data.id
-    const supabase = createServerClient()
+    const supabase = createClient()
 
     // Get business profile with settings
     const { data: profileData, error: profileError } = await supabase
@@ -1579,7 +1578,7 @@ export async function getUserDashboardData(userEmail) {
 export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     console.log("=== Ensuring business profile exists for user:", userId)
-    const supabase = createServerClient()
+    const supabase = createClient()
 
     // First check if profile already exists
     const { data: existingProfile, error: checkError } = await supabase
@@ -1605,6 +1604,12 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
     if (userError || !user) {
       console.error('❌ User not authenticated:', userError?.message)
       return { success: false, error: 'User not authenticated' }
+    }
+
+    // Double-check that the userId matches the authenticated user
+    if (user.id !== userId) {
+      console.error('❌ User ID mismatch:', { provided: userId, authenticated: user.id })
+      return { success: false, error: 'Authentication mismatch' }
     }
 
     // Create new business profile with comprehensive data

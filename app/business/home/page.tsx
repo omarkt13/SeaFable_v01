@@ -102,7 +102,7 @@ export default function BusinessHomePage() {
     }
   }, [user, userType, authLoading])
 
-  // Fetch dashboard data
+  // Fetch dashboard data from API
   const fetchDashboardData = async () => {
     if (!user || userType !== "business") return
 
@@ -110,10 +110,11 @@ export default function BusinessHomePage() {
       setLoading(true)
       setError(null)
 
-      const result = await getHostDashboardData(user.id)
+      const response = await fetch('/api/business/dashboard')
+      const result = await response.json()
 
-      if (result.success && result.data) {
-        setDashboardData(result.data)
+      if (result.success) {
+        setDashboardData(result)
       } else {
         setError(result.error || "Failed to load dashboard data")
       }
