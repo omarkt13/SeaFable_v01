@@ -32,7 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { CustomerLayout } from "@/components/layouts/CustomerLayout"
 import { useAuth } from "@/lib/auth-context"
-import { getUserDashboardData, type Booking, type Review } from "@/lib/database"
+import { getUserBookings, getExperienceReviews, getUserProfile, type Booking, type Review } from "@/lib/database"
 import { CalendarDays, Camera } from "lucide-react"
 import { DatePicker } from "@/components/ui/date-picker"
 // Removed problematic Sidebar imports
@@ -911,34 +911,27 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (user?.email) {
+      if (user?.id) {
         try {
-          console.log("Fetching dashboard data for email:", user.email)
-          const dashboardData = await getUserDashboardData(user.email || user.id)
-
-          if (dashboardData.success && dashboardData.data) {
-            console.log("Dashboard data fetched successfully:", dashboardData.data)
-            setUserProfile(dashboardData.data.user || null)
-            setBookings(dashboardData.data.bookings || [])
-            setReviews(dashboardData.data.reviews || [])
-          } else {
-            console.error("Dashboard data fetch failed:", dashboardData.error)
-            // Set empty defaults to avoid loading forever
-            setUserProfile({
-              id: user.id,
-              email: user.email,
-              first_name: '',
-              last_name: '',
-              avatar_url: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            setBookings([])
-            setReviews([])
+          console.log("Fetching customer dashboard data for user:", user.id)
+          
+          // Fetch user profile
+          const profile = await getUserProfile(user.id)
+          if (profile) {
+            setUserProfile(profile)
           }
+
+          // Fetch user bookings
+          const bookingsResult = await getUserBookings(user.id)
+          if (bookingsResult.success) {
+            setBookings(bookingsResult.data || [])
+          }
+
+          // Reviews will be fetched separately as needed
+          setReviews([])
         } catch (error) {
           console.error("Error fetching dashboard data:", error)
-          // Set empty defaults on error
+          // Set default profile
           setUserProfile({
             id: user.id,
             email: user.email,
@@ -954,10 +947,10 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
       }
     }
 
-    if (user?.email) {
+    if (user?.id) {
       fetchDashboardData()
     }
-  }, [user?.email])
+  }, [user?.id])
 
   useEffect(() => {
     const resolveSearchParams = async () => {

@@ -109,9 +109,9 @@ export default function BusinessHomePage() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const result = await getHostDashboardData(user.id)
-      
+
       if (result.success && result.data) {
         setDashboardData(result.data)
       } else {
