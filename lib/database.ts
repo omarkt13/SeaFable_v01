@@ -257,6 +257,8 @@ export interface BusinessDashboardData {
 
 export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
   try {
+    console.log("=== Starting getHostDashboardData for user:", userId)
+    
     // First ensure the business profile exists
     const profileResult = await ensureBusinessProfile(userId)
     
@@ -268,10 +270,13 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       }
     }
 
+    console.log("Business profile ensured, profile ID:", profileResult.data?.id)
+
+    // Use the profile from ensureBusinessProfile result
+    const hostId = profileResult.data.id
     const supabase = createClient()
 
-    // Get business profile with comprehensive error handling
-    let businessProfile = null
+    // Get business profile with settings
     const { data: profileData, error: profileError } = await supabase
       .from('host_profiles')
       .select(`
@@ -281,26 +286,26 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
           marketplace_enabled
         )
       `)
-      .eq('user_id', userId)
+      .eq('id', hostId)
       .single()
 
     if (profileError) {
-      console.error('Error fetching business profile after creation:', profileError)
-      return {
-        success: false,
-        error: `Database error: ${profileError.message}`
+      console.error('Error fetching complete profile:', profileError)
+      // Use minimal profile data if query fails
+      const businessProfile = {
+        ...profileResult.data,
+        onboarding_completed: false,
+        marketplace_enabled: true,
+      }
+    } else {
+      var businessProfile = {
+        ...profileData,
+        onboarding_completed: profileData.host_business_settings?.onboarding_completed || false,
+        marketplace_enabled: profileData.host_business_settings?.marketplace_enabled || true,
       }
     }
 
-    businessProfile = {
-      ...profileData,
-      onboarding_completed: profileData.host_business_settings?.onboarding_completed || false,
-      marketplace_enabled: profileData.host_business_settings?.marketplace_enabled || false,
-    }
-
-    const hostId = profileData.id
-
-    // Get experiences with error handling
+    // Get experiences
     const { data: experiences, error: expError } = await supabase
       .from('experiences')
       .select('*')
@@ -310,7 +315,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       console.error('Experiences query error:', expError)
     }
 
-    // Get bookings with related data
+    // Get bookings
     const { data: bookings, error: bookingError } = await supabase
       .from('bookings')
       .select(`
@@ -347,6 +352,12 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
     // Calculate metrics with safe defaults
     const safeBookings = bookings || []
     const safeExperiences = experiences || []
+
+    console.log("Data summary:", {
+      profileId: hostId,
+      experienceCount: safeExperiences.length,
+      bookingCount: safeBookings.length
+    })
 
     const totalRevenue = safeBookings
       .filter(booking => booking.payment_status === 'succeeded')
@@ -398,7 +409,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
     }))
 
     const dashboardData: BusinessDashboardData = {
-      businessProfile,
+      businessProfile: businessProfile || profileResult.data,
       overview: {
         totalRevenue: Math.round(totalRevenue * 100) / 100,
         activeBookings,
@@ -406,8 +417,8 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
         averageRating: safeExperiences.length > 0 
           ? safeExperiences.reduce((sum, exp) => sum + (exp.rating || 0), 0) / safeExperiences.length
           : 0,
-        revenueGrowth: 0, // Calculate based on previous period data
-        bookingGrowth: 0 // Calculate based on previous period data
+        revenueGrowth: 0,
+        bookingGrowth: 0
       },
       recentBookings,
       upcomingBookings,
@@ -430,12 +441,12 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       },
       experiences: experiencesFormatted,
       recentActivity: [
-        { description: 'New booking received', time: '2 hours ago', color: 'bg-green-500' },
-        { description: '5-star review received', time: '1 day ago', color: 'bg-blue-500' },
-        { description: 'Experience updated', time: '3 days ago', color: 'bg-yellow-500' }
+        { description: 'Dashboard loaded successfully', time: 'Just now', color: 'bg-green-500' },
+        { description: 'Profile initialized', time: '1 minute ago', color: 'bg-blue-500' }
       ]
     }
 
+    console.log("=== Dashboard data created successfully")
     return {
       success: true,
       data: dashboardData
@@ -1567,7 +1578,8 @@ export async function getUserDashboardData(userEmail) {
 // Function to create business profile if it doesn't exist
 export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    console.log("Ensuring business profile exists for user:", userId)
+    console.log("=== Ensuring business profile exists for user:", userId)
+    const supabase = createClient()
 
     // First check if profile already exists
     const { data: existingProfile, error: checkError } = await supabase
@@ -1582,32 +1594,47 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
     }
 
     if (existingProfile) {
-      console.log('Business profile already exists:', existingProfile.id)
+      console.log('✅ Business profile already exists:', existingProfile.id)
       return { success: true, data: existingProfile }
     }
 
-    // Get user info for profile creation
+    console.log('⚠️ No business profile found, creating new one...')
+
+    // Get current authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
+      console.error('❌ User not authenticated:', userError?.message)
       return { success: false, error: 'User not authenticated' }
     }
 
-    // Create new business profile
+    // Create new business profile with comprehensive data
     const profileData = {
       user_id: userId,
-      name: user.email?.split('@')[0] || 'Business User',
+      name: user.user_metadata?.business_name || user.email?.split('@')[0] || 'Business User',
       email: user.email,
-      host_type: 'business',
+      contact_name: user.user_metadata?.contact_name || user.user_metadata?.full_name || 'Business Contact',
+      business_name: user.user_metadata?.business_name || 'SeaFable Business',
       business_type: 'experience_provider',
+      host_type: 'business',
+      location: user.user_metadata?.location || 'Location TBD',
+      phone: user.user_metadata?.phone || '',
+      bio: 'Welcome to our business! We provide amazing experiences.',
       rating: 0,
       total_reviews: 0,
-      years_experience: 0,
+      years_experience: 1,
       certifications: [],
       specialties: [],
       languages_spoken: ['English'],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
+
+    console.log('Creating profile with data:', {
+      user_id: profileData.user_id,
+      name: profileData.name,
+      email: profileData.email,
+      business_name: profileData.business_name
+    })
 
     const { data: newProfile, error: createError } = await supabase
       .from('host_profiles')
@@ -1616,15 +1643,37 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
       .single()
 
     if (createError) {
-      console.error('Error creating business profile:', createError)
-      return { success: false, error: createError.message }
+      console.error('❌ Error creating business profile:', createError)
+      return { success: false, error: `Failed to create profile: ${createError.message}` }
     }
 
-    console.log('Created new business profile:', newProfile.id)
+    console.log('✅ Created new business profile:', newProfile.id)
+
+    // Also create business settings entry
+    try {
+      const { error: settingsError } = await supabase
+        .from('host_business_settings')
+        .insert([{
+          host_profile_id: newProfile.id,
+          onboarding_completed: false,
+          marketplace_enabled: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+
+      if (settingsError) {
+        console.warn('⚠️ Could not create business settings:', settingsError.message)
+      } else {
+        console.log('✅ Created business settings for profile:', newProfile.id)
+      }
+    } catch (settingsErr) {
+      console.warn('⚠️ Business settings creation failed:', settingsErr)
+    }
+
     return { success: true, data: newProfile }
 
   } catch (error) {
-    console.error('Unexpected error ensuring business profile:', error)
+    console.error('❌ Unexpected error ensuring business profile:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'

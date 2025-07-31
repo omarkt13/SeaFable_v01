@@ -36,19 +36,36 @@ export default function BusinessDashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user || userType !== "business") return
+      if (!user || userType !== "business") {
+        console.log("Skipping dashboard fetch - no user or not business type:", { user: !!user, userType })
+        return
+      }
 
       try {
         setLoading(true)
         setError(null)
         
-        console.log("Fetching dashboard data for user:", user.id)
+        console.log("=== Fetching dashboard data for user:", user.id)
         
-        // Call the API endpoint instead of direct database function
-        const response = await fetch('/api/business/dashboard')
+        // Call the API endpoint
+        const response = await fetch('/api/business/dashboard', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("Dashboard API HTTP error:", response.status, errorText)
+          setError(`Server error: ${response.status}`)
+          return
+        }
+        
         const result = await response.json()
+        console.log("Dashboard API response:", { success: result.success, hasProfile: !!result.businessProfile })
         
-        if (result.success && response.ok) {
+        if (result.success) {
           // Transform API response to match expected dashboard data structure
           const transformedData = {
             businessProfile: result.businessProfile,
@@ -80,22 +97,26 @@ export default function BusinessDashboard() {
             recentActivity: result.recentActivity || []
           }
           
+          console.log("✅ Dashboard data loaded successfully")
           setDashboardData(transformedData)
         } else {
           const errorMessage = result.error || "Failed to load dashboard data"
-          console.error("Dashboard API error:", errorMessage, result.details)
+          console.error("❌ Dashboard API error:", errorMessage, result.details)
           setError(errorMessage)
         }
       } catch (err) {
-        console.error("Error fetching dashboard data:", err)
-        setError("Network error occurred while loading dashboard")
+        console.error("❌ Network error fetching dashboard data:", err)
+        setError("Network error occurred while loading dashboard. Please check your connection.")
       } finally {
         setLoading(false)
       }
     }
 
     if (!authLoading && user && userType === "business") {
+      console.log("Starting dashboard data fetch...")
       fetchDashboardData()
+    } else {
+      console.log("Waiting for auth or wrong user type:", { authLoading, user: !!user, userType })
     }
   }, [user, userType, authLoading])
 

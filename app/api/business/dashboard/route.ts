@@ -4,13 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('=== Dashboard API: Starting request')
     const supabase = createClient()
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      console.error('Dashboard API: Authentication failed', userError)
+      console.error('❌ Dashboard API: Authentication failed', userError?.message)
       return NextResponse.json({ 
         success: false, 
         error: 'Authentication required',
@@ -18,10 +19,16 @@ export async function GET(request: NextRequest) {
       }, { status: 401 })
     }
 
+    console.log('✅ User authenticated:', { 
+      userId: user.id, 
+      email: user.email,
+      userType: user.user_metadata?.user_type 
+    })
+
     // Verify user is business type
     const userType = user.user_metadata?.user_type
     if (userType !== 'business') {
-      console.error('Dashboard API: Non-business user attempted access', { userId: user.id, userType })
+      console.error('❌ Dashboard API: Non-business user attempted access', { userId: user.id, userType })
       return NextResponse.json({ 
         success: false, 
         error: 'Business access required',
@@ -29,39 +36,24 @@ export async function GET(request: NextRequest) {
       }, { status: 403 })
     }
 
-    console.log('Dashboard API: Fetching data for business user', { userId: user.id, email: user.email })
+    console.log('✅ Business user verified, fetching dashboard data...')
 
-    // First ensure the business profile exists
-    const { ensureBusinessProfile } = await import('@/lib/database')
-    const profileResult = await ensureBusinessProfile(user.id)
-
-    if (!profileResult.success) {
-      console.error("Failed to ensure business profile:", profileResult.error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Failed to set up business profile. Please contact support.",
-          details: profileResult.error 
-        },
-        { status: 400 }
-      )
-    }
-
-    // Get dashboard data
-    const dashboardData = await getBusinessDashboardData(user.id)
+    // Get dashboard data using the main function
+    const dashboardData = await getHostDashboardData(user.id)
 
     if (!dashboardData.success) {
-      console.error('Dashboard API: Data fetch failed', dashboardData.error)
+      console.error('❌ Dashboard API: Data fetch failed', dashboardData.error)
       return NextResponse.json({ 
         success: false, 
-        error: dashboardData.error,
-        details: dashboardData.details || 'Failed to fetch dashboard data'
+        error: dashboardData.error || 'Failed to fetch dashboard data',
+        details: 'Check server logs for more details'
       }, { status: 500 })
     }
 
-    console.log('Dashboard API: Successfully fetched data', { 
+    console.log('✅ Dashboard API: Successfully fetched data', { 
       userId: user.id, 
       hasBusinessProfile: !!dashboardData.data?.businessProfile,
+      profileName: dashboardData.data?.businessProfile?.name,
       experienceCount: dashboardData.data?.experiences?.length || 0,
       bookingCount: dashboardData.data?.recentBookings?.length || 0
     })
@@ -78,7 +70,7 @@ export async function GET(request: NextRequest) {
       recentActivity: dashboardData.data?.recentActivity || []
     })
   } catch (error) {
-    console.error('Dashboard API: Unexpected error', error)
+    console.error('❌ Dashboard API: Unexpected error', error)
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error',
