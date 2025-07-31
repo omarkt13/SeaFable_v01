@@ -34,6 +34,7 @@ import { CustomerLayout } from "@/components/layouts/CustomerLayout"
 import { useAuth } from "@/lib/auth-context"
 import { getUserDashboardData, type Booking, type Review } from "@/lib/database"
 import { CalendarDays, Camera } from "lucide-react"
+import { DatePicker } from "@/components/ui/date-picker"
 // Removed problematic Sidebar imports
 import { signOutAndRedirect } from "@/lib/auth-utils"
 import type { UserProfile } from "@/types/auth"

@@ -39,6 +39,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getExperiences, type Experience } from "@/lib/database"
 import Link from "next/link"
 import { ErrorBoundary } from "@/components/error-boundary" // ✅ FIXED: Added ErrorBoundary import
+import { DatePicker } from "@/components/ui/date-picker"
 
 // Enhanced search filters
 const initialFilters = {
@@ -660,15 +661,12 @@ export default function EnhancedExperiencesSearchPage() {
                   />
                 </div>
 
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="date"
-                    value={filters.date}
-                    onChange={(e) => handleFilterChange("date", e.target.value)}
-                    className="pl-10 h-11"
-                  />
-                </div>
+                <DatePicker
+                  date={filters.date ? new Date(filters.date + 'T00:00:00') : undefined}
+                  onDateChange={(date) => handleFilterChange("date", date ? date.toISOString().split('T')[0] : '')}
+                  placeholder="When?"
+                  className="h-11"
+                />
 
                 <div className="relative">
                   <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />

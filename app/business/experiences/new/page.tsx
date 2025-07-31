@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   X,
   ChevronRight,
@@ -616,6 +617,37 @@ export default function NewExperiencePage() {
                 placeholder="Any specific age-related requirements or restrictions"
                 rows={2}
               />
+            </div>
+
+            <div>
+              <Label>Default Availability Schedule</Label>
+              <p className="text-sm text-gray-600 mb-3">
+                Set your default available dates and times. You can customize specific dates later.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startDate">Available From</Label>
+                  <DatePicker
+                    date={undefined}
+                    onDateChange={(date) => {
+                      // Add to availability slots if needed
+                      console.log('Start date selected:', date)
+                    }}
+                    placeholder="Select start date"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate">Available Until</Label>
+                  <DatePicker
+                    date={undefined}
+                    onDateChange={(date) => {
+                      // Add to availability slots if needed
+                      console.log('End date selected:', date)
+                    }}
+                    placeholder="Select end date"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )
