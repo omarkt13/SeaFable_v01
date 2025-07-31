@@ -4,8 +4,22 @@ const nextConfig = {
   experimental: {
     allowedDevOrigins: [
       'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev',
-      'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev:5000'
-    ]
+      'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev:5000',
+      'stable-omarkt13s-projects.vercel.app',
+      'v0-sea-fable-cursor-v1.vercel.app',
+      'seafable.com',
+      'www.seafable.com'
+    ],
+    serverActions: {
+      allowedOrigins: [
+        'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev',
+        'aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev:5000',
+        'stable-omarkt13s-projects.vercel.app',
+        'v0-sea-fable-cursor-v1.vercel.app',
+        'seafable.com',
+        'www.seafable.com'
+      ]
+    }
   },
   async headers() {
     return [
@@ -23,6 +37,10 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Headers',
             value: 'Content-Type, Authorization',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
         ],
       },
