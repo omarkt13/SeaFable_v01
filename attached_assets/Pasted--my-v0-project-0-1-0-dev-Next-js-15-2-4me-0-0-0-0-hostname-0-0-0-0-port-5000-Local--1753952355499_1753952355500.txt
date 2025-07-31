@@ -1,0 +1,126 @@
+
+> my-v0-project@0.1.0 dev
+   ▲ Next.js 15.2.4me 0.0.0.0 --hostname 0.0.0.0 --port 5000
+   - Local:        http://localhost:5000
+   - Network:      http://0.0.0.0:5000
+   - Experiments (use with caution):
+     · allowedDevOrigins
+
+ ✓ Starting...
+ ✓ Ready in 1424ms
+ ○ Compiling / ...
+ ✓ Compiled / in 7.6s (1395 modules)
+ GET / 200 in 8208ms
+ ✓ Compiled in 1530ms (587 modules)
+ ⚠ Cross origin request detected from aa5013de-d2f6-4676-a706-adf28b112eda-00-2fk2lkifgnk3d.spock.replit.dev to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ○ Compiling /business/login ...
+ ✓ Compiled /business/login in 1184ms (1389 modules)
+ GET /business/login 200 in 1363ms
+ ○ Compiling /business/home ...
+ ⨯ ./lib/supabase/server.ts
+Error:   × You're importing a component that needs "next/headers". That only works in a Server Component which is not supported in the pages/ directory. Read more: https://nextjs.org/docs/app/building-
+  │ your-application/rendering/server-components
+  │ 
+  │ 
+   ╭─[/home/runner/workspace/lib/supabase/server.ts:2:1]
+ 1 │ import { createServerClient } from "@supabase/ssr"
+ 2 │ import { cookies } from "next/headers"
+   · ──────────────────────────────────────
+ 3 │ 
+ 4 │ export function createClient() {
+ 5 │   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+   ╰────
+
+Import trace for requested module:
+./lib/supabase/server.ts
+./lib/database.ts
+./app/business/home/page.tsx
+ ⨯ ./lib/supabase/server.ts
+Error:   × You're importing a component that needs "next/headers". That only works in a Server Component which is not supported in the pages/ directory. Read more: https://nextjs.org/docs/app/building-
+  │ your-application/rendering/server-components
+  │ 
+  │ 
+   ╭─[/home/runner/workspace/lib/supabase/server.ts:2:1]
+ 1 │ import { createServerClient } from "@supabase/ssr"
+ 2 │ import { cookies } from "next/headers"
+   · ──────────────────────────────────────
+ 3 │ 
+ 4 │ export function createClient() {
+ 5 │   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+   ╰────
+
+Import trace for requested module:
+./lib/supabase/server.ts
+./lib/database.ts
+./app/business/home/page.tsx
+ ⨯ ./lib/supabase/server.ts
+Error:   × You're importing a component that needs "next/headers". That only works in a Server Component which is not supported in the pages/ directory. Read more: https://nextjs.org/docs/app/building-
+  │ your-application/rendering/server-components
+  │ 
+  │ 
+   ╭─[/home/runner/workspace/lib/supabase/server.ts:2:1]
+ 1 │ import { createServerClient } from "@supabase/ssr"
+ 2 │ import { cookies } from "next/headers"
+   · ──────────────────────────────────────
+ 3 │ 
+ 4 │ export function createClient() {
+ 5 │   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+   ╰────
+
+Import trace for requested module:
+./lib/supabase/server.ts
+./lib/database.ts
+./app/business/home/page.tsx
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+ GET /business/home 500 in 9602ms
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+ GET /business/home 500 in 16ms
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+ GET /business/home 500 in 77ms
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/home/runner/workspace/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/home/runner/workspace/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (/home/runner/workspace/node_modules/next/src/server/render.tsx:1263:19)
+ GET /business/home 500 in 408ms
