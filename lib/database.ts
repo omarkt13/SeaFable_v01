@@ -1554,3 +1554,72 @@ export async function fetchBusinessProfile(userId: string) {
     throw error
   }
 }
+// Get user dashboard data with proper error handling
+export async function getUserDashboardData(userEmail) {
+    try {
+        const supabase = createClient();
+
+        // Get user by email
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user) {
+            return { error: "User not found" };
+        }
+
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+            .from('customer_profiles')
+            .select('*')
+            .eq('user_id', userData.user.id)
+            .single();
+
+        if (profileError) {
+            return { error: "Profile not found" };
+        }
+
+        // Get user bookings
+        const { data: bookings, error: bookingsError } = await supabase
+            .from('bookings')
+            .select(`
+                id,
+                status,
+                guest_count,
+                total_amount,
+                booking_date,
+                experiences (
+                    id,
+                    title,
+                    location,
+                    host_profiles (
+                        business_name
+                    )
+                )
+            `)
+            .eq('user_id', userData.user.id)
+            .order('booking_date', { ascending: false });
+
+        return {
+            user: userData.user,
+            profile,
+            bookings: bookings || [],
+            totalBookings: bookings?.length || 0,
+            upcomingBookings: bookings?.filter(b => new Date(b.booking_date) > new Date()).length || 0
+        };
+    } catch (error) {
+        console.error('Dashboard data error:', error);
+        return { error: error.message };
+    }
+}
+export async function getHostDashboardData(userId) {
+    try {
+        const result = await getBusinessDashboardData(userId);
+        return result;
+    } catch (error) {
+        console.error('Host dashboard error:', error);
+        return { 
+            error: error.message,
+            stats: { totalBookings: 0, revenue: 0, experiences: 0, rating: 0 },
+            bookings: [],
+            experiences: []
+        };
+    }
+}
