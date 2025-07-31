@@ -1175,18 +1175,6 @@ export async function getUserProfile(userId: string) {
     return null
   }
 }
-export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
-  try {
-    const result = await getBusinessDashboardData(userId)
-    return result
-  } catch (error) {
-    console.error("Error in getHostDashboardData:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
-    }
-  }
-}
 
 export async function getBusinessDashboardData(businessId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string; details?: string }> {
   try {
@@ -1607,19 +1595,5 @@ export async function getUserDashboardData(userEmail) {
     } catch (error) {
         console.error('Dashboard data error:', error);
         return { error: error.message };
-    }
-}
-export async function getHostDashboardData(userId) {
-    try {
-        const result = await getBusinessDashboardData(userId);
-        return result;
-    } catch (error) {
-        console.error('Host dashboard error:', error);
-        return { 
-            error: error.message,
-            stats: { totalBookings: 0, revenue: 0, experiences: 0, rating: 0 },
-            bookings: [],
-            experiences: []
-        };
     }
 }
