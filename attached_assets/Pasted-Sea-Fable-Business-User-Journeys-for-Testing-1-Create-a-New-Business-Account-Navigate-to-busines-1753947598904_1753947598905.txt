@@ -1,0 +1,120 @@
+Sea Fable Business User Journeys (for Testing)
+
+1. Create a New Business Account
+Navigate to business onboarding
+Sign up via email / social / mobile
+Verify email / phone
+Set up profile (business name, location, logo, type)
+Accept terms
+Land on business dashboard
+
+
+Test for: form validation, duplicate accounts, social login, partial progress save
+
+2. Create a New Listing (Experience)
+Click “Add New Experience”
+Add:
+Title & description
+Type/category/tags
+Location (manual or map pin)
+Price (in local currency)
+Dates & availability
+Media (upload photos/videos)
+Duration, group size, skill level, language
+Cancellation policy
+
+
+Link social media (optional)
+Link Google Maps (optional)
+Use AI assistant (optional: suggest title/description or fill based on template)
+Save draft / Publish / Schedule
+
+
+Test for: incomplete inputs, AI autofill, save draft, multiple currency formats, long titles, image upload limits
+
+3. Edit/Manage Existing Listings
+From “Experiences” section:
+Edit any field (title, location, description, dates, media, tags)
+Add/remove availability
+Duplicate listing
+Pause, publish, delete
+
+
+Test for: version control, unsaved changes, publish delay, invalid dates
+
+4. Media Management
+Upload new media (drag & drop, mobile upload)
+Delete existing media
+Reorder media
+Tag images (optional)
+
+
+Test for: max size, unsupported formats, upload error recovery
+
+5. Calendar & Date Management
+Add custom availability
+Remove single dates or ranges
+Set recurring availability
+Block out dates
+Link to external calendar (Google, iCal, etc.)
+
+
+Test for: timezones, overlapping dates, pricing per date, blocked vs available states
+
+6. Client Management & Messaging
+View list of past/potential clients
+Filter by experience/date
+Send direct messages
+Auto replies / quick responses
+Mark favorites / flag problem clients
+
+
+Test for: message notifications, reply delays, client tagging, spam protection
+
+7. Bookings & Payments
+View upcoming/past bookings
+Accept/decline (if needed)
+Auto-confirm flow
+View payment status
+Issue refund / partial refund
+Export bookings (CSV)
+
+
+Test for: booking limits, payment error handling, edge cases (cancelled, expired)
+
+8. Finance & Sales Tracking
+View earnings dashboard
+See per-listing sales breakdown
+Filter by date, location
+View payout history
+Link bank/paypal
+Download reports
+
+
+Test for: currency mismatches, timezone in reports, payout schedule rules
+
+9. Integrations
+Link/unlink:
+
+
+Google Maps (location accuracy)
+Social (FB/IG/TikTok)
+Calendar 
+CRM tools (optional)
+
+
+Check sync status
+
+
+Test for: unlinking, permission errors, stale data
+
+10. Account Settings & Profile
+Edit business profile
+Upload logo/cover
+Change email, password, contact info
+Notification settings
+Business type or niche
+Delete account
+
+
+Test for: password reset, email update, delete confirmation
