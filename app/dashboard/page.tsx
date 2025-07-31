@@ -913,8 +913,8 @@ const DashboardPage = ({ searchParams }: DashboardPageProps) => {
       if (user?.email) {
         try {
           console.log("Fetching dashboard data for email:", user.email)
-          const dashboardData = await getUserDashboardData(user.email)
-          
+          const dashboardData = await getUserDashboardData(user.email || user.id)
+
           if (dashboardData.success && dashboardData.data) {
             console.log("Dashboard data fetched successfully:", dashboardData.data)
             setUserProfile(dashboardData.data.user || null)

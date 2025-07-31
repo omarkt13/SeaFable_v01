@@ -1038,34 +1038,6 @@ export async function getUserDashboardData(userId: string): Promise<{ success: b
   }
 }
 
-export async function getHostDashboardData(userId: string) {
-  try {
-    console.log("getHostDashboardData called for userId:", userId)
-    
-    // Use getBusinessDashboardData which has proper error handling
-    const result = await getBusinessDashboardData(userId)
-    
-    if (!result.success) {
-      return {
-        success: false,
-        error: result.error,
-        details: result.details
-      }
-    }
-
-    return {
-      success: true,
-      data: result.data
-    }
-  } catch (error) {
-    console.error("Error in getHostDashboardData:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
-    }
-  }
-}
-
 // Get user dashboard data with proper error handling
 export async function getUserDashboardData(userEmail: string): Promise<{ success: boolean; data?: { user: any, bookings: any[], reviews: any[] }; error?: string }> {
   try {
@@ -1409,7 +1381,20 @@ export async function getUserProfile(userId: string) {
     return null
   }
 }
-export async function getBusinessDashboardData(businessId: string): Promise<{ success: boolean; data?: any; error?: string; details?: string }> {
+export async function getHostDashboardData(userId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string }> {
+  try {
+    const result = await getBusinessDashboardData(userId)
+    return result
+  } catch (error) {
+    console.error("Error in getHostDashboardData:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    }
+  }
+}
+
+export async function getBusinessDashboardData(businessId: string): Promise<{ success: boolean; data?: BusinessDashboardData; error?: string; details?: string }> {
   try {
     console.log("Fetching business dashboard data for:", businessId)
 
@@ -1508,33 +1493,79 @@ export async function getBusinessDashboardData(businessId: string): Promise<{ su
       responseTime: "2 hours"
     }
 
+    const dashboardData: BusinessDashboardData = {
+      businessProfile,
+      overview: {
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        activeBookings: upcomingBookings.length,
+        totalExperiences,
+        averageRating: safeExperiences.length > 0 
+          ? safeExperiences.reduce((sum, exp) => sum + (exp.rating || 0), 0) / safeExperiences.length
+          : 0,
+        revenueGrowth: 0,
+        bookingGrowth: 0
+      },
+      recentBookings: recentBookings.map(booking => ({
+        id: booking.id,
+        customerName: booking.users ? 
+          `${booking.users.first_name || ''} ${booking.users.last_name || ''}`.trim() || 'Unknown Customer'
+          : 'Unknown Customer',
+        experienceTitle: booking.experiences?.title || 'Unknown Experience',
+        date: new Date(booking.booked_at).toLocaleDateString(),
+        amount: booking.total_price || 0,
+        guests: booking.number_of_guests || 1,
+        avatar: '',
+        status: booking.booking_status || 'pending'
+      })),
+      upcomingBookings: upcomingBookings.slice(0, 5).map(booking => ({
+        id: booking.id,
+        customerName: booking.users ? 
+          `${booking.users.first_name || ''} ${booking.users.last_name || ''}`.trim() || 'Unknown Customer'
+          : 'Unknown Customer',
+        experienceTitle: booking.experiences?.title || 'Unknown Experience',
+        date: new Date(booking.booking_date).toLocaleDateString(),
+        time: booking.departure_time || '09:00',
+        guests: booking.number_of_guests || 1,
+        specialRequests: '',
+        phone: ''
+      })),
+      earnings: {
+        thisMonth: Math.round(totalRevenue * 0.3),
+        lastMonth: Math.round(totalRevenue * 0.25),
+        pending: Math.round(totalRevenue * 0.1),
+        nextPayout: { 
+          amount: Math.round(totalRevenue * 0.1), 
+          date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        monthlyTrend: []
+      },
+      analytics: {
+        conversionRate: analytics.conversionRate,
+        customerSatisfaction: 0,
+        repeatCustomerRate: 0,
+        marketplaceVsDirectRatio: 0,
+        metricsTrend: []
+      },
+      experiences: safeExperiences.map(exp => ({
+        id: exp.id,
+        title: exp.title || 'Untitled Experience',
+        status: exp.is_active ? 'active' : 'inactive' as 'active' | 'inactive',
+        bookings: safeBookings.filter(b => b.experience_id === exp.id).length,
+        revenue: safeBookings
+          .filter(b => b.experience_id === exp.id && b.payment_status === 'succeeded')
+          .reduce((sum, b) => sum + (b.total_price || 0), 0),
+        rating: exp.rating || 0
+      })),
+      recentActivity: [
+        { description: 'New booking received', time: '2 hours ago', color: 'bg-green-500' },
+        { description: '5-star review received', time: '1 day ago', color: 'bg-blue-500' },
+        { description: 'Experience updated', time: '3 days ago', color: 'bg-yellow-500' }
+      ]
+    }
+
     return {
       success: true,
-      data: {
-        overview: {
-          totalExperiences,
-          totalBookings,
-          upcomingBookings: upcomingBookings.length,
-          totalRevenue,
-          monthlyRevenue: Math.round(totalRevenue * 0.3),
-        },
-        experiences: safeExperiences,
-        recentBookings: recentBookings,
-        upcomingBookings: upcomingBookings.slice(0, 5),
-        analytics,
-        businessProfile,
-        earnings: {
-          thisMonth: Math.round(totalRevenue * 0.3),
-          lastMonth: Math.round(totalRevenue * 0.25),
-          growth: 20,
-          pendingPayouts: Math.round(totalRevenue * 0.1)
-        },
-        recentActivity: [
-          { type: "booking", message: "New booking received", time: "2 hours ago" },
-          { type: "review", message: "5-star review received", time: "1 day ago" },
-          { type: "experience", message: "Experience updated", time: "3 days ago" }
-        ]
-      }
+      data: dashboardData
     }
   } catch (error) {
     console.error("Error in getBusinessDashboardData:", error)
