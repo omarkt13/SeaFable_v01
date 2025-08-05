@@ -11,7 +11,10 @@ let supabaseClient: ReturnType<typeof createClient> | null = null
 
 function getSupabaseClient() {
   if (!supabaseClient) {
-    supabaseClient = createClient()
+    supabaseClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
   }
   return supabaseClient
 }
@@ -272,7 +275,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
 
     // Use the profile from ensureBusinessProfile result
     const hostId = profileResult.data.id
-    const supabase = createClient()
+    const supabase = getSupabaseClient()
 
     // Get business profile with settings
     const { data: profileData, error: profileError } = await supabase
@@ -1146,7 +1149,7 @@ export async function updateBusinessProfile(userId: string, updates: Partial<Bus
 
 // Helper function to get user profile
 export async function getUserProfile(userId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   // Require authentication
   await requireAuth()
@@ -1519,7 +1522,7 @@ export async function fetchBusinessProfile(userId: string) {
 // Get user dashboard data with proper error handling
 export async function getUserDashboardData(userEmail) {
     try {
-        const supabase = createClient();
+        const supabase = getSupabaseClient();
 
         // Get user by email
         const { data, error } = await supabase.auth.getUser();
@@ -1599,7 +1602,7 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
     // Use service role client for profile creation to bypass RLS
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
     // Create new business profile with service role

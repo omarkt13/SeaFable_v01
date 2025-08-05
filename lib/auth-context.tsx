@@ -133,48 +133,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Get initial session
-    const getInitialSession = async () => {
-      console.log('Getting initial session...')
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) {
-          console.error('Error getting session:', error)
+    const initializeAuth = async () => {
+      console.log("Getting initial session...")
+
+      let sessionResult = null
+      let attempts = 0
+      const maxAttempts = 3
+
+      // Retry session retrieval
+      while (!sessionResult && attempts < maxAttempts) {
+        attempts++
+        try {
+          const { data: { session }, error } = await authUtilsSignOut.auth.getSession()
+          if (error) {
+            console.error(`Session error (attempt ${attempts}):`, error)
+          } else {
+            sessionResult = session
+          }
+        } catch (err) {
+          console.error(`Session retrieval error (attempt ${attempts}):`, err)
         }
-        console.log('Initial getSession result:', session?.user || null, '(attempt 1)')
-        await fetchUserAndProfiles(session?.user || null)
-      } catch (error) {
-        console.error('Error in getInitialSession:', error)
+
+        if (!sessionResult && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+
+      console.log(`Initial getSession result:`, sessionResult, `(attempt ${attempts})`)
+
+      if (sessionResult?.user) {
+        await fetchUserAndProfiles(sessionResult.user)
+      } else {
         setIsLoading(false)
       }
     }
 
-    getInitialSession()
+    initializeAuth()
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth state change listener
+    const { data: { subscription } } = authUtilsSignOut.auth.onAuthStateChange(async (event, session) => {
       console.log('onAuthStateChange event:', event, 'Session user:', session?.user || null)
 
-      // Handle specific events
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await fetchUserAndProfiles(session.user)
+      } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setUserType(null)
-        setHostProfile(null)
-        setBusinessProfile(null)
         setIsLoading(false)
-        return
       }
-
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed, maintaining auth state')
-        // Don't refetch profiles on token refresh, just update user object
-        if (session?.user) {
-          setUser(session.user)
-        }
-        return
-      }
-
-      await fetchUserAndProfiles(session?.user || null)
     })
 
     return () => {
@@ -187,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
 
       // Clear any existing session first
-      await supabase.auth.signOut()
+      await authUtilsSignOut.auth.signOut()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -243,17 +249,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut()
+      const { signOut: signOutFunction } = await import('./auth-utils')
+      await signOutFunction()
       setUser(null)
       setUserType(null)
-      setHostProfile(null)
-      setBusinessProfile(null)
     } catch (error) {
-      console.error("Logout error:", error)
+      console.error('Sign out error:', error)
     }
-  }
+  }, [])
 
   const value = {
     user,

@@ -126,73 +126,11 @@ export default function BusinessHomePage(): JSX.Element {
     }
   }
 
-  // Check and create profile if needed
-  const ensureBusinessProfile = async () => {
-    if (!user) return false
-
-    try {
-      const supabase = createClient()
-
-      // Check if host profile exists
-      const { data: hostProfile, error } = await supabase
-        .from('host_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        // Create basic host profile
-        const { error: createError } = await supabase
-          .from('host_profiles')
-          .insert({
-            id: user.id,
-            user_id: user.id,
-            name: user.email?.split('@')[0] || 'Business User',
-            business_name: user.email?.split('@')[0] || 'New Business',
-            contact_name: user.email?.split('@')[0] || 'Contact',
-            email: user.email || '',
-            host_type: 'business',
-            rating: 0,
-            total_reviews: 0
-          })
-          .single()
-
-        if (createError) {
-          console.error('Failed to create business profile:', createError)
-          setError("Failed to set up business profile. Please contact support.")
-          return false
-        }
-
-        if (!result.success) {
-          setError("Failed to set up business profile. Please contact support.")
-          return false
-        }
-
-        // Refresh the page to load the new profile
-        window.location.reload()
-        return false
-      } else if (error) {
-        console.error("Error checking profile:", error)
-        setError("Error loading business profile")
-        return false
-      }
-
-      return true
-    } catch (error) {
-      console.error("Error ensuring profile:", error)
-      setError("Error setting up business profile")
-      return false
-    }
-  }
+  
 
   // Fetch weekly bookings
   const fetchWeeklyBookings = async () => {
     if (!user || userType !== "business") return
-
-    // Ensure profile exists first
-    const profileExists = await ensureBusinessProfile()
-    if (!profileExists) return
 
     try {
       setBookingsLoading(true)
@@ -255,31 +193,7 @@ export default function BusinessHomePage(): JSX.Element {
     }
   }
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user || userType !== "business") return
-
-      try {
-        setLoading(true)
-        const result = await getHostDashboardData(user.id)
-
-        if (result.success && result.data) {
-          setDashboardData(result.data)
-        } else {
-          setError(result.error || "Failed to load dashboard data")
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err)
-        setError("An unexpected error occurred")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (!authLoading && user && userType === "business") {
-      fetchDashboardData()
-    }
-  }, [user, userType, authLoading])
+  
 
   useEffect(() => {
     if (!authLoading && user && userType === "business") {
