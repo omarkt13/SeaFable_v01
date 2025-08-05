@@ -20,13 +20,11 @@ export function BusinessProtectedRoute({ children }: BusinessProtectedRouteProps
     // Add a small buffer to prevent redirect loops during auth state changes
     const redirectTimeout = setTimeout(() => {
       if (!isLoading && !user) {
-        console.log("BusinessProtectedRoute: Redirecting to login - no user");
         router.push("/business/login");
         return;
       }
 
       if (!isLoading && user && userType && userType !== "business") {
-        console.log("BusinessProtectedRoute: Redirecting to register - wrong user type:", userType);
         // Force logout of wrong user type for security
         const logout = async () => {
           await supabase.auth.signOut()

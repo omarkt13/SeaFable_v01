@@ -62,7 +62,7 @@ interface WeeklyBookings {
   [key: string]: WeeklyBooking[]
 }
 
-export default function BusinessHomePage() {
+export default function BusinessHomePage(): JSX.Element {
   const { user, userType, isLoading: authLoading } = useAuth()
   const [dashboardData, setDashboardData] = useState<BusinessDashboardData | null>(null)
   const [weeklyBookings, setWeeklyBookings] = useState<WeeklyBookings>({})

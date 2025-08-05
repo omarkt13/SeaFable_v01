@@ -30,7 +30,6 @@ export async function getCurrentUser() {
 }
 
 export async function getSession() {
-  const supabase = createClientComponentClient()
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {

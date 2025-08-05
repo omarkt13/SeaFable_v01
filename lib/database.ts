@@ -288,16 +288,17 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       .eq('id', hostId)
       .single()
 
+    let businessProfile;
     if (profileError) {
       console.error('Error fetching complete profile:', profileError)
       // Use minimal profile data if query fails
-      const businessProfile = {
+      businessProfile = {
         ...profileResult.data,
         onboarding_completed: false,
         marketplace_enabled: true,
       }
     } else {
-      var businessProfile = {
+      businessProfile = {
         ...profileData,
         onboarding_completed: profileData.host_business_settings?.onboarding_completed || false,
         marketplace_enabled: profileData.host_business_settings?.marketplace_enabled || true,
@@ -1584,7 +1585,7 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
     console.log("=== Ensuring business profile exists for user:", userId)
     const supabase = createClient()
 
-    // First check if profile already exists
+    // First check if profile already exists by user_id
     const { data: existingProfile, error: checkError } = await supabase
       .from('host_profiles')
       .select('*')
@@ -1599,6 +1600,18 @@ export async function ensureBusinessProfile(userId: string): Promise<{ success: 
     if (existingProfile) {
       console.log('✅ Business profile already exists:', existingProfile.id)
       return { success: true, data: existingProfile }
+    }
+
+    // Also check by id (for cases where user_id === id)
+    const { data: profileById, error: idError } = await supabase
+      .from('host_profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (!idError && profileById) {
+      console.log('✅ Business profile found by id:', profileById.id)
+      return { success: true, data: profileById }
     }
 
     console.log('⚠️ No business profile found, creating new one...')

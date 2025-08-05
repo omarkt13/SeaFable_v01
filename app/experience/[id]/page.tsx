@@ -161,10 +161,10 @@ export default function ExperienceDetailPage() {
   const filteredTimeSlots = useMemo(() => {
     if (!experience?.host_availability || !bookingData.date) return []
 
-    return experience.host_availability.filter((slot): slot is NonNullable<typeof slot> => 
-      slot && 
+    return experience.host_availability.filter((slot): slot is NonNullable<typeof slot> =>
+      slot &&
       slot.date === bookingData.date &&
-      slot.available_capacity >= bookingData.guests && 
+      slot.available_capacity >= bookingData.guests &&
       new Date(`${slot.date}T${slot.start_time}`) > new Date()
     ).sort((a, b) => a.start_time.localeCompare(b.start_time))
   }, [experience?.host_availability, bookingData.date, bookingData.guests])
@@ -177,13 +177,13 @@ export default function ExperienceDetailPage() {
         try {
           // Import the availability helper
           const { getExperienceAvailability } = await import('@/lib/availability')
-          
+
           // Get real availability data from database
           const result = await getExperienceAvailability(experience.id, bookingData.date, bookingData.date)
-          
+
           if (result.success) {
             // Filter slots that can accommodate the requested number of guests
-            const availableSlots = result.data.filter(slot => 
+            const availableSlots = result.data.filter(slot =>
               slot.available_capacity >= bookingData.guests &&
               new Date(`${slot.date}T${slot.start_time}`) > new Date()
             ).map(slot => ({
@@ -601,11 +601,11 @@ export default function ExperienceDetailPage() {
                           {bookingData.date && (
                             <p className="text-xs text-green-600 flex items-center">
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Date selected: {new Date(bookingData.date).toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
+                              Date selected: {new Date(bookingData.date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
                               })}
                             </p>
                           )}
