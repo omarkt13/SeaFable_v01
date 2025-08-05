@@ -64,7 +64,7 @@ export function DatePicker({
 
   // Helper function to handle date selection
   const handleDateSelect = (selectedDate: string) => {
-    const newDate = new Date(selectedDate + 'T00:00:00')
+    const newDate = new Date(selectedDate)
     onDateChange?.(newDate)
     setShowDatePicker(false)
   }
@@ -101,7 +101,7 @@ export function DatePicker({
       <div className="relative date-picker-container">
         <Input
           type="text"
-          value={date ? new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('en-US', { 
+          value={date ? date.toLocaleDateString('en-US', { 
             weekday: 'short', 
             month: 'short', 
             day: 'numeric',
@@ -132,7 +132,10 @@ export function DatePicker({
                     onClick={() => {
                       const optionDate = new Date()
                       optionDate.setDate(optionDate.getDate() + option.days)
-                      handleDateSelect(optionDate.toISOString().split('T')[0])
+                      const dateString = optionDate.getFullYear() + '-' + 
+                        String(optionDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(optionDate.getDate()).padStart(2, '0')
+                      handleDateSelect(dateString)
                     }}
                     className="px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-200"
                   >
@@ -180,7 +183,7 @@ export function DatePicker({
                 {getCalendarDays().map((day, index) => {
                   const isToday = day.date === new Date().toISOString().split('T')[0]
                   const isSelected = date && day.date === date.toISOString().split('T')[0]
-                  const isPast = new Date(day.date).getTime() < new Date().setHours(0, 0, 0, 0)
+                  const isPast = new Date(day.date + 'T00:00:00').getTime() < new Date().setHours(0, 0, 0, 0)
 
                   return (
                     <button

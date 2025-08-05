@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -35,11 +34,11 @@ export default function LandingPage() {
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    
+
     if (!validateSearch()) return
 
     setIsSearching(true)
-    
+
     try {
       // Simulate search delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -53,7 +52,7 @@ export default function LandingPage() {
     } catch (error) {
       console.error('Search error:', error)
     }
-    
+
     setIsSearching(false)
   }
 
@@ -222,8 +221,8 @@ export default function LandingPage() {
 
                 <DatePicker
                   date={searchData.date ? new Date(searchData.date + 'T00:00:00') : undefined}
-                  onDateChange={(date) => {
-                    setSearchData({ ...searchData, date: date ? date.toISOString().split('T')[0] : '' })
+                  onDateChange={(selectedDate: Date | undefined) => {
+                    setSearchData({ ...searchData, date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' })
                   }}
                   placeholder="When?"
                 />
