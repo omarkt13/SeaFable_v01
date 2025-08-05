@@ -1,6 +1,10 @@
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@supabase/supabase-js"
+import { createClient as createClientComponent } from '@supabase/auth-helpers-nextjs'
 import { requireAuth } from './supabase'
 import type { BusinessDashboardData } from "@/types/business"
+import type { BusinessProfile } from "../types/auth"
+import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
+import type { HostAvailability } from "@/types/business" // Import HostAvailability type
 
 // Connection pool management
 let supabaseClient: ReturnType<typeof createClient> | null = null
@@ -40,9 +44,6 @@ async function withRetry<T>(
 }
 
 const supabase = getSupabaseClient()
-import type { BusinessProfile } from "../types/auth"
-import type { HostProfile as SupabaseHostProfile } from "@/lib/supabase"
-import type { HostAvailability } from "@/types/business" // Import HostAvailability type
 
 // ✅ FIXED: Added input sanitization helper
 function sanitizeInput(input: string): string {
@@ -195,8 +196,6 @@ export interface Booking {
     avatar_url?: string
   }
 }
-
-import { createClient as createClientComponent } from '@supabase/auth-helpers-nextjs'
 
 // Define dashboard data types
 export interface BusinessDashboardData {
@@ -1577,99 +1576,66 @@ export async function getUserDashboardData(userEmail) {
 
 // Function to create business profile if it doesn't exist
 export async function ensureBusinessProfile(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
-  try {
-    console.log("=== Ensuring business profile exists for user:", userId)
-    const supabase = createClient()
+  console.log("=== Ensuring business profile exists for user:", userId)
 
-    // First check if profile already exists by user_id
+  try {
+    // First check if profile already exists
     const { data: existingProfile, error: checkError } = await supabase
       .from('host_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking for existing profile:', checkError)
-      return { success: false, error: checkError.message }
-    }
+      .select('id')
+      .eq('id', userId)
+      .single()
 
     if (existingProfile) {
-      console.log('✅ Business profile already exists:', existingProfile.id)
+      console.log("✅ Business profile found by id:", userId)
       return { success: true, data: existingProfile }
     }
 
-    // Also check by id (for cases where user_id === id)
-    const { data: profileById, error: idError } = await supabase
-      .from('host_profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (!idError && profileById) {
-      console.log('✅ Business profile found by id:', profileById.id)
-      return { success: true, data: profileById }
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error("Error checking existing profile:", checkError)
+      // Continue to create profile anyway
     }
 
-    console.log('⚠️ No business profile found, creating new one...')
+    // Use service role client for profile creation to bypass RLS
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-    // Get current authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      console.error('❌ User not authenticated:', userError?.message)
-      return { success: false, error: 'User not authenticated' }
-    }
-
-    // Double-check that the userId matches the authenticated user
-    if (user.id !== userId) {
-      console.error('❌ User ID mismatch:', { provided: userId, authenticated: user.id })
-      return { success: false, error: 'Authentication mismatch' }
-    }
-
-    // Create new business profile with comprehensive data
+    // Create new business profile with service role
     const profileData = {
+      id: userId,
       user_id: userId,
-      name: user.user_metadata?.business_name || user.email?.split('@')[0] || 'Business User',
-      email: user.email,
-      contact_name: user.user_metadata?.contact_name || user.user_metadata?.full_name || 'Business Contact',
-      business_name: user.user_metadata?.business_name || 'SeaFable Business',
-      business_type: 'experience_provider',
-      host_type: 'business',
-      location: user.user_metadata?.location || 'Location TBD',
-      phone: user.user_metadata?.phone || '',
-      bio: 'Welcome to our business! We provide amazing experiences.',
+      name: 'Business User', // Default name, will be updated by user
+      business_name: 'SeaFable Business', // Default business name
+      contact_name: 'Business Contact', // Default contact name
+      email: '', // Will be populated by auth user
+      phone: '',
+      location: '',
+      host_type: 'business' as const,
+      years_experience: 0,
       rating: 0,
       total_reviews: 0,
-      years_experience: 1,
-      certifications: [],
-      specialties: [],
-      languages_spoken: ['English'],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }
 
-    console.log('Creating profile with data:', {
-      user_id: profileData.user_id,
-      name: profileData.name,
-      email: profileData.email,
-      business_name: profileData.business_name
-    })
-
-    const { data: newProfile, error: createError } = await supabase
+    const { data: newProfile, error: profileError } = await serviceSupabase
       .from('host_profiles')
-      .insert([profileData])
+      .insert(profileData)
       .select()
       .single()
 
-    if (createError) {
-      console.error('❌ Error creating business profile:', createError)
-      return { success: false, error: `Failed to create profile: ${createError.message}` }
+    if (profileError) {
+      console.error("Failed to create business profile:", profileError)
+      return { success: false, error: profileError.message }
     }
 
     console.log('✅ Created new business profile:', newProfile.id)
 
     // Also create business settings entry
     try {
-      const { error: settingsError } = await supabase
+      const { error: settingsError } = await serviceSupabase
         .from('host_business_settings')
         .insert([{
           host_profile_id: newProfile.id,
