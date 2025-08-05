@@ -57,7 +57,7 @@ export function PublicNavigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sm:hidden relative overflow-visible">
+      <nav className="bg-white shadow-sm border-b border-gray-200 sm:hidden relative overflow-visible z-40">
         <div className="px-4 sm:px-6 relative">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -81,7 +81,7 @@ export function PublicNavigation() {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="fixed top-16 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-[9999] min-h-[200px]">
+            <div className="fixed top-16 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-50 min-h-[200px]">
               <div className="p-4 space-y-2">
                 {navigationLinks.map((link) => (
                   <Link

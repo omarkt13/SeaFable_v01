@@ -177,6 +177,7 @@ const BookingDatePicker = ({
         <div 
           ref={dropdownRef}
           className="absolute z-50 top-full mt-2 left-0 right-0 p-4 bg-white border border-gray-200 rounded-lg shadow-xl min-w-[350px] max-h-96 overflow-y-auto"
+          style={{ zIndex: 60 }}
         >
           {/* Quick Suggestions */}
           <div className="grid grid-cols-2 gap-2 mb-4">

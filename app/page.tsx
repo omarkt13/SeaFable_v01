@@ -122,7 +122,7 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 py-6">
+      <nav className="absolute top-0 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Anchor className="h-8 w-8 text-white" />
@@ -146,9 +146,9 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-teal-500 to-emerald-500 overflow-hidden min-h-screen flex items-center">
+      <section className="relative bg-gradient-to-br from-blue-600 via-teal-500 to-emerald-500 overflow-hidden min-h-screen flex items-center z-10">
         {/* Background decorative elements */}
-        <div className="absolute inset-0 opacity-10" aria-hidden="true">
+        <div className="absolute inset-0 opacity-10 z-0" aria-hidden="true">
           <Waves className="absolute top-20 left-10 h-32 w-32 text-white/20 animate-pulse" />
           <Ship className="absolute top-40 right-20 h-24 w-24 text-white/20 animate-bounce" />
           <Compass
@@ -170,7 +170,7 @@ export default function LandingPage() {
             </p>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl p-6 shadow-2xl max-w-5xl mx-auto mb-16">
+            <form onSubmit={handleSearch} className="relative bg-white rounded-2xl p-6 shadow-2xl max-w-5xl mx-auto mb-16 z-30">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="relative md:col-span-2">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
