@@ -11,12 +11,20 @@ export async function GET(request: NextRequest) {
     // Debug: Check cookies
     const cookieHeader = request.headers.get('cookie')
     console.log("🍪 Dashboard API: Cookie header exists:", !!cookieHeader)
+    console.log("🍪 Dashboard API: Cookies:", cookieHeader?.substring(0, 200) + "...")
     
-    // Get session from cookies (server-side auth)
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession()
+    // Get session from cookies (server-side auth) with retry logic
+    let session = null
+    let sessionError = null
+    
+    try {
+      const sessionResult = await supabase.auth.getSession()
+      session = sessionResult.data.session
+      sessionError = sessionResult.error
+    } catch (error) {
+      console.error("🔥 Session retrieval failed:", error)
+      sessionError = error
+    }
 
     console.log("🔐 Dashboard API: Session check result", {
       hasSession: !!session,

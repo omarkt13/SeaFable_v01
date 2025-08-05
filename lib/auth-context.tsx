@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setBusinessProfile(flattenedProfile)
         }
       } else {
-        setUserType('customer');
+        setUserType('customer')
 
         // Fetch host profile for customers (optional)
         const { data: hostData, error: hostError } = await supabase
