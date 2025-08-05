@@ -276,7 +276,7 @@ export default function BusinessHomePage(): JSX.Element {
       }
     }
 
-    if (!authLoading) {
+    if (!authLoading && user && userType === "business") {
       fetchDashboardData()
     }
   }, [user, userType, authLoading])

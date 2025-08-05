@@ -1032,8 +1032,7 @@ export async function testDatabaseConnection() {
     }
 
     return { success: true, message: "Database connection successful" }
-  }```tool_code
- catch (error: any) {
+  } catch (error: any) {
     return { success: false, error: "Network error occurred" }
   }
 }
@@ -1524,8 +1523,8 @@ export async function getUserDashboardData(userEmail) {
         const supabase = createClient();
 
         // Get user by email
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError || !userData.user) {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user) {
             return { error: "User not found" };
         }
 
@@ -1533,7 +1532,7 @@ export async function getUserDashboardData(userEmail) {
         const { data: profile, error: profileError } = await supabase
             .from('customer_profiles')
             .select('*')
-            .eq('user_id', userData.user.id)
+            .eq('user_id', data.user.id)
             .single();
 
         if (profileError) {
@@ -1558,11 +1557,11 @@ export async function getUserDashboardData(userEmail) {
                     )
                 )
             `)
-            .eq('user_id', userData.user.id)
+            .eq('user_id', data.user.id)
             .order('booking_date', { ascending: false });
 
         return {
-            user: userData.user,
+            user: data.user,
             profile,
             bookings: bookings || [],
             totalBookings: bookings?.length || 0,
