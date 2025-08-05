@@ -71,7 +71,7 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
         marketplace_enabled
       )
     `)
-    .eq("id", userId)  // Fixed: use id field for business users
+    .eq("user_id", userId)  // Fixed: use user_id field for business users
     .single()
 
   if (error) {

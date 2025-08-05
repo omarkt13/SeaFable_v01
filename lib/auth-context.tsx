@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react'
 import { useIsomorphicLayoutEffect } from '@/hooks/use-isomorphic-layout-effect'
 import { User } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
+
+const supabase = createClient()
 import { signOut as authUtilsSignOut } from './auth-utils'
 
 interface AuthContextType {
@@ -71,10 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single()
 
         if (businessError) {
-          console.error('Error fetching business profile:', businessError)
           if (businessError.code === 'PGRST116') {
             // Profile doesn't exist - this is expected for new users
-            // Don't try to create it here, let the onboarding process handle it
+            console.log('No business profile found for new user - this is normal')
             setBusinessProfile(null)
           } else {
             // Actual error occurred
@@ -133,13 +134,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let attempts = 0
       const maxAttempts = 3
 
-      // Retry session retrieval
+      // Retry session retrieval with exponential backoff
       while (!sessionResult && attempts < maxAttempts) {
         attempts++
         try {
           const { data: { session }, error } = await supabase.auth.getSession()
           if (error) {
             console.error(`Session error (attempt ${attempts}):`, error)
+            if (error.message.includes('Invalid JWT') || error.message.includes('expired')) {
+              // Clear invalid session
+              await supabase.auth.signOut()
+              break
+            }
           } else {
             sessionResult = session
           }
@@ -148,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (!sessionResult && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500))
+          await new Promise(resolve => setTimeout(resolve, 500 * attempts)) // exponential backoff
         }
       }
 
@@ -167,11 +173,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('onAuthStateChange event:', event, 'Session user:', session?.user || null)
 
+      // Prevent race conditions by checking if already processing
+      if (isLoading && event === 'SIGNED_IN') {
+        return
+      }
+
       if (event === 'SIGNED_IN' && session?.user) {
         await fetchUserAndProfiles(session.user)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setUserType(null)
+        setHostProfile(null)
+        setBusinessProfile(null)
         setIsLoading(false)
       }
     })
