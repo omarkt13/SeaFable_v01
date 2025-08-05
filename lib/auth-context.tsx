@@ -73,21 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (businessError) {
           console.error('Error fetching business profile:', businessError)
           if (businessError.code === 'PGRST116') {
-            // Profile doesn't exist, create a minimal one
-            setBusinessProfile({
-              id: currentUser.id,
-              user_id: currentUser.id,
-              name: currentUser.user_metadata?.business_name || currentUser.user_metadata?.contact_name || 'Business User',
-              email: currentUser.email || '',
-              business_name: currentUser.user_metadata?.business_name || '',
-              contact_name: currentUser.user_metadata?.contact_name || '',
-              host_type: 'business',
-              onboarding_completed: false,
-              marketplace_enabled: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
+            // Profile doesn't exist - this is expected for new users
+            // Don't try to create it here, let the onboarding process handle it
+            setBusinessProfile(null)
+          } else {
+            // Actual error occurred
+            console.error('Business profile fetch error:', businessError)
+            setBusinessProfile(null)
           }
+        }
         } else {
           // Flatten the business settings into the profile object
           const flattenedProfile = {
@@ -144,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       while (!sessionResult && attempts < maxAttempts) {
         attempts++
         try {
-          const { data: { session }, error } = await authUtilsSignOut.auth.getSession()
+          const { data: { session }, error } = await supabase.auth.getSession()
           if (error) {
             console.error(`Session error (attempt ${attempts}):`, error)
           } else {
@@ -171,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth()
 
     // Set up auth state change listener
-    const { data: { subscription } } = authUtilsSignOut.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('onAuthStateChange event:', event, 'Session user:', session?.user || null)
 
       if (event === 'SIGNED_IN' && session?.user) {
@@ -214,17 +208,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userTypeFromMetadata = data.user.user_metadata?.user_type
 
       if (!userTypeFromMetadata) {
-        await authUtilsSignOut()
+        await supabase.auth.signOut()
         return { success: false, error: "Account type not found. Please contact support." }
       }
 
       if (type === "business" && userTypeFromMetadata === "customer") {
-        await authUtilsSignOut()
+        await supabase.auth.signOut()
         return { success: false, error: "Customer accounts should use the customer login page." }
       }
 
       if (type === "customer" && userTypeFromMetadata === "business") {
-        await authUtilsSignOut()
+        await supabase.auth.signOut()
         return { success: false, error: "Business accounts should use the business login page." }
       }
 
@@ -251,10 +245,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      const { signOut: signOutFunction } = await import('./auth-utils')
-      await signOutFunction()
+      await supabase.auth.signOut()
       setUser(null)
       setUserType(null)
+      setHostProfile(null)
+      setBusinessProfile(null)
     } catch (error) {
       console.error('Sign out error:', error)
     }

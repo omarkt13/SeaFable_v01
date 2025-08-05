@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
-import { ErrorBoundary } from "@/components/error-boundary"
-import { ToastProvider } from "@/components/ui/toast-provider"
+import { AuthErrorBoundary } from "@/components/auth/AuthErrorBoundary"
+import { Toaster } from "@/components/ui/toaster"
 import { logDatabaseDiagnostics } from '@/lib/database-diagnostics'
 
 // Only run database diagnostics in development when DEBUG_DB is set
@@ -27,12 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <ErrorBoundary>
+        <AuthErrorBoundary>
           <AuthProvider>
-            <ToastProvider />
+            <Toaster />
             {children}
           </AuthProvider>
-        </ErrorBoundary>
+        </AuthErrorBoundary>
       </body>
     </html>
   )
