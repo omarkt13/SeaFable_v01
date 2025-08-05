@@ -1,0 +1,56 @@
+[14:57:34.166] Running build in Washington, D.C., USA (East) – iad1
+[14:57:34.166] Build machine configuration: 2 cores, 8 GB
+[14:57:34.185] Cloning github.com/omarkt13/SeaFable_v01 (Branch: main, Commit: 851cee1)
+[14:57:34.627] Cloning completed: 441.000ms
+[14:57:36.404] Restored build cache from previous deployment (2BboSZCJUXjr5fv4cDPURi2FyzUa)
+[14:57:41.521] Running "vercel build"
+[14:57:42.037] Vercel CLI 44.7.2
+[14:57:42.402] Installing dependencies...
+[14:57:44.062] 
+[14:57:44.063] up to date in 1s
+[14:57:44.063] 
+[14:57:44.063] 59 packages are looking for funding
+[14:57:44.063]   run `npm fund` for details
+[14:57:44.097] Detected Next.js version: 15.2.4
+[14:57:44.102] Running "npm run build"
+[14:57:44.218] 
+[14:57:44.218] > my-v0-project@0.1.0 build
+[14:57:44.218] > next build
+[14:57:44.218] 
+[14:57:44.968]    ▲ Next.js 15.2.4
+[14:57:44.970]    - Experiments (use with caution):
+[14:57:44.970]      · allowedDevOrigins
+[14:57:44.970] 
+[14:57:45.069]    Creating an optimized production build ...
+[14:58:04.728]  ⚠ Compiled with warnings
+[14:58:04.729] 
+[14:58:04.729] ./app/forgot-password/page.tsx
+[14:58:04.729] Attempted import error: 'sendPasswordResetEmail' is not exported from '@/app/actions/auth' (imported as 'sendPasswordResetEmail').
+[14:58:04.729] 
+[14:58:04.729] Import trace for requested module:
+[14:58:04.730] ./app/forgot-password/page.tsx
+[14:58:04.730] 
+[14:58:21.030]  ⚠ Compiled with warnings
+[14:58:21.030] 
+[14:58:21.030] ./app/forgot-password/page.tsx
+[14:58:21.030] Attempted import error: 'sendPasswordResetEmail' is not exported from '@/app/actions/auth' (imported as 'sendPasswordResetEmail').
+[14:58:21.030] 
+[14:58:21.030] Import trace for requested module:
+[14:58:21.030] ./app/forgot-password/page.tsx
+[14:58:21.030] 
+[14:58:21.084]  ✓ Compiled successfully
+[14:58:21.090]    Linting and checking validity of types ...
+[14:58:36.215] Failed to compile.
+[14:58:36.215] 
+[14:58:36.216] ./app/actions/auth.ts:19:65
+[14:58:36.216] Type error: Property 'auth' does not exist on type 'Promise<SupabaseClient<any, "public", any>>'.
+[14:58:36.216] 
+[14:58:36.216] [0m [90m 17 |[39m   [36mtry[39m {[0m
+[14:58:36.216] [0m [90m 18 |[39m     [90m// 1. Create auth user[39m[0m
+[14:58:36.218] [0m[31m[1m>[22m[39m[90m 19 |[39m     [36mconst[39m { data[33m:[39m authData[33m,[39m error[33m:[39m authError } [33m=[39m [36mawait[39m supabase[33m.[39mauth[33m.[39msignUp({[0m
+[14:58:36.218] [0m [90m    |[39m                                                                 [31m[1m^[22m[39m[0m
+[14:58:36.218] [0m [90m 20 |[39m       email[33m,[39m[0m
+[14:58:36.218] [0m [90m 21 |[39m       password[33m,[39m[0m
+[14:58:36.218] [0m [90m 22 |[39m       options[33m:[39m {[0m
+[14:58:36.249] Next.js build worker exited with code: 1 and signal: null
+[14:58:36.268] Error: Command "npm run build" exited with 1
