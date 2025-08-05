@@ -1,14 +1,9 @@
+
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon, ChevronRight } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
 
 interface DatePickerProps {
   date?: Date
@@ -25,60 +20,124 @@ export function DatePicker({
   className,
   disabled = false
 }: DatePickerProps) {
-  const [showDatePicker, setShowDatePicker] = React.useState(false)
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(date || null)
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [isOpen, setIsOpen] = React.useState(false)
 
-  // Helper function to get days until weekend
-  const getDaysUntilWeekend = () => {
-    const today = new Date()
-    const dayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
-    if (dayOfWeek === 0) return 6 // If today is Sunday, next Saturday is 6 days away
-    if (dayOfWeek === 6) return 0 // If today is Saturday, it's already weekend
-    return 6 - dayOfWeek // Days until Saturday
+  // Update selectedDate when date prop changes
+  React.useEffect(() => {
+    setSelectedDate(date || null)
+  }, [date])
+
+  // Get current date and calculate suggestions
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+
+  // Calculate this weekend (Saturday)
+  const thisWeekend = new Date(today)
+  const daysUntilSaturday = (6 - today.getDay()) % 7
+  if (daysUntilSaturday === 0 && today.getDay() !== 6) {
+    thisWeekend.setDate(today.getDate() + 7) // Next Saturday if today is Sunday
+  } else {
+    thisWeekend.setDate(today.getDate() + daysUntilSaturday)
   }
 
-  // Helper function to generate calendar days
-  const getCalendarDays = () => {
-    const year = currentMonth.getFullYear()
-    const monthIndex = currentMonth.getMonth()
+  // Calculate next weekend (next Saturday)
+  const nextWeekend = new Date(today)
+  nextWeekend.setDate(today.getDate() + daysUntilSaturday + 7)
 
-    const firstDay = new Date(year, monthIndex, 1)
-    const lastDay = new Date(year, monthIndex + 1, 0)
+  // Quick suggestion options
+  const suggestions = [
+    { label: 'Today', date: today, available: true },
+    { label: 'Tomorrow', date: tomorrow, available: true },
+    { label: 'This Weekend', date: thisWeekend, available: true },
+    { label: 'Next Weekend', date: nextWeekend, available: true },
+  ]
+
+  // Format date for display
+  const formatDate = (date: Date | null) => {
+    if (!date) return placeholder
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+    }
+    return date.toLocaleDateString('en-US', options)
+  }
+
+  // Generate calendar days
+  const generateCalendarDays = () => {
+    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+    const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
 
     const days = []
-    const current = new Date(startDate)
-
-    for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
-      days.push({
-        date: current.toISOString().split('T')[0],
-        day: current.getDate(),
-        inCurrentMonth: current.getMonth() === monthIndex
-      })
-      current.setDate(current.getDate() + 1)
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate)
+      date.setDate(startDate.getDate() + i)
+      days.push(date)
     }
-
     return days
   }
 
-  // Helper function to handle date selection
-  const handleDateSelect = (selectedDate: string) => {
-    const newDate = new Date(selectedDate)
-    onDateChange?.(newDate)
-    setShowDatePicker(false)
+  const calendarDays = generateCalendarDays()
+
+  // Check if date is selectable (not in the past)
+  const isSelectableDate = (date: Date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const checkDate = new Date(date)
+    checkDate.setHours(0, 0, 0, 0)
+    return checkDate >= today
   }
 
-  // Helper function to navigate to next month
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    const newMonth = new Date(currentMonth)
-    if (direction === 'prev') {
-      newMonth.setMonth(newMonth.getMonth() - 1)
-    } else {
-      newMonth.setMonth(newMonth.getMonth() + 1)
-    }
-    setCurrentMonth(newMonth)
+  // Check if date is selected
+  const isSelectedDate = (date: Date) => {
+    if (!selectedDate) return false
+    return date.toDateString() === selectedDate.toDateString()
   }
+
+  // Check if date is in current month
+  const isCurrentMonth = (date: Date) => {
+    return date.getMonth() === currentMonth.getMonth()
+  }
+
+  // Handle date selection
+  const handleDateSelect = (date: Date) => {
+    if (isSelectableDate(date)) {
+      setSelectedDate(date)
+      onDateChange?.(date)
+      setIsOpen(false)
+    }
+  }
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: { label: string; date: Date; available: boolean }) => {
+    if (suggestion.available) {
+      setSelectedDate(suggestion.date)
+      onDateChange?.(suggestion.date)
+      setIsOpen(false)
+    }
+  }
+
+  // Navigate months
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+  }
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ]
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   // Close date picker when clicking outside
   React.useEffect(() => {
@@ -86,140 +145,152 @@ export function DatePicker({
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element
-      if (showDatePicker && !target.closest('.date-picker-container')) {
-        setShowDatePicker(false)
+      if (isOpen && !target.closest('.date-picker-container')) {
+        setIsOpen(false)
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showDatePicker])
+  }, [isOpen])
 
   return (
     <div className={cn("relative", className)}>
-      <CalendarIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
       <div className="relative date-picker-container">
-        <Input
-          type="text"
-          value={date ? date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric',
-            year: 'numeric'
-          }) : ''}
-          readOnly
+        {/* Quick Suggestions */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {suggestions.map((suggestion, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleSuggestionClick(suggestion)}
+              disabled={!suggestion.available || disabled}
+              className={`p-3 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                suggestion.available && !disabled
+                  ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-700'
+                  : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+              } ${
+                selectedDate && suggestion.date.toDateString() === selectedDate.toDateString()
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : ''
+              }`}
+            >
+              <div className="font-semibold">{suggestion.label}</div>
+              <div className="text-xs mt-1">
+                {suggestion.available ? formatDate(suggestion.date) : 'Unavailable'}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected date display / Calendar trigger */}
+        <button
+          type="button"
+          onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          onClick={() => !disabled && setShowDatePicker(!showDatePicker)}
-          className="w-full pl-12 pr-4 py-4 h-auto border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-gray-700 cursor-pointer"
-          placeholder={placeholder}
-        />
-
-        {showDatePicker && (
-          <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4 w-80 sm:w-96">
-            {/* Quick Date Options */}
-            <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Quick select:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Today', days: 0 },
-                  { label: 'Tomorrow', days: 1 },
-                  { label: 'This Weekend', days: getDaysUntilWeekend() },
-                  { label: 'Next Week', days: 7 }
-                ].map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => {
-                      const optionDate = new Date()
-                      optionDate.setDate(optionDate.getDate() + option.days)
-                      const dateString = optionDate.getFullYear() + '-' + 
-                        String(optionDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                        String(optionDate.getDate()).padStart(2, '0')
-                      handleDateSelect(dateString)
-                    }}
-                    className="px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-200"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+          className="w-full p-3 border border-gray-300 rounded-lg text-left bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+              <span className={selectedDate ? 'text-gray-900' : 'text-gray-500'}>
+                {formatDate(selectedDate)}
+              </span>
             </div>
+            <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+          </div>
+        </button>
 
-            {/* Calendar Grid */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-900">
-                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </h3>
-                <div className="flex space-x-1">
-                  <button
-                    type="button"
-                    onClick={() => navigateMonth('prev')}
-                    className="p-1 hover:bg-gray-100 rounded"
-                  >
-                    <ChevronRight className="h-4 w-4 rotate-180" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateMonth('next')}
-                    className="p-1 hover:bg-gray-100 rounded"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Days of week header */}
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar days */}
-              <div className="grid grid-cols-7 gap-1">
-                {getCalendarDays().map((day, index) => {
-                  const isToday = day.date === new Date().toISOString().split('T')[0]
-                  const isSelected = date && day.date === date.toISOString().split('T')[0]
-                  const isPast = new Date(day.date + 'T00:00:00').getTime() < new Date().setHours(0, 0, 0, 0)
-
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => handleDateSelect(day.date)}
-                      disabled={isPast && day.inCurrentMonth}
-                      className={`
-                        p-2 text-sm rounded-lg transition-all duration-200 
-                        ${!day.inCurrentMonth 
-                          ? 'text-gray-300 cursor-not-allowed' 
-                          : isPast 
-                            ? 'text-gray-300 cursor-not-allowed' 
-                            : isSelected 
-                              ? 'bg-blue-600 text-white font-semibold' 
-                              : isToday 
-                                ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium hover:bg-blue-100' 
-                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        }
-                      `}
-                    >
-                      {day.day}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-gray-200">
+        {/* Calendar Dropdown */}
+        {isOpen && (
+          <div className="absolute z-50 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg w-full">
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
-                onClick={() => setShowDatePicker(false)}
-                className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                onClick={goToPreviousMonth}
+                className="p-1 hover:bg-gray-100 rounded"
               >
-                Close
+                <ChevronLeft className="h-5 w-5 text-gray-600" />
               </button>
+              <h3 className="font-semibold text-gray-900">
+                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+              </h3>
+              <button
+                type="button"
+                onClick={goToNextMonth}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <ChevronRight className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Day names */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {dayNames.map(day => (
+                <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((date, index) => {
+                const isSelectable = isSelectableDate(date)
+                const isSelected = isSelectedDate(date)
+                const isInCurrentMonth = isCurrentMonth(date)
+
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleDateSelect(date)}
+                    disabled={!isSelectable}
+                    className={`
+                      h-10 w-10 text-sm rounded-lg transition-all duration-150
+                      ${isSelected 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : isSelectable && isInCurrentMonth
+                        ? 'hover:bg-blue-50 text-gray-900'
+                        : isSelectable && !isInCurrentMonth
+                        ? 'hover:bg-gray-50 text-gray-400'
+                        : 'text-gray-300 cursor-not-allowed'
+                      }
+                      ${date.toDateString() === today.toDateString() && !isSelected
+                        ? 'bg-gray-100 font-semibold'
+                        : ''
+                      }
+                    `}
+                  >
+                    {date.getDate()}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate(today)
+                    onDateChange?.(today)
+                    setIsOpen(false)
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                >
+                  Today
+                </button>
+              </div>
             </div>
           </div>
         )}

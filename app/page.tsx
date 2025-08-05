@@ -224,10 +224,12 @@ export default function LandingPage() {
                     date={searchData.date ? new Date(searchData.date + 'T00:00:00') : undefined}
                     onDateChange={(selectedDate: Date | undefined) => {
                       setSearchData({ ...searchData, date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' })
+                      if (errors.date) setErrors({ ...errors, date: "" })
                     }}
                     placeholder="When?"
                     className="w-full"
                   />
+                  {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
                 </div>
 
                 <Button
