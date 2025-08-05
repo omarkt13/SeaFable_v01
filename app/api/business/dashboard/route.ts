@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   console.log("=== Dashboard API: Starting request")
 
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Debug: Check cookies
     const cookieHeader = request.headers.get('cookie')
