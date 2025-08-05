@@ -109,13 +109,13 @@ export async function createBusinessProfileAfterConfirmation(userId: string) {
   try {
     // Get user data from auth
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return { success: false, error: "User not found" }
     }
 
     const userData = user.user_metadata
-    
+
     // 1. Create host profile
     const { error: profileError } = await supabase
       .from("host_profiles")
@@ -157,5 +157,24 @@ export async function createBusinessProfileAfterConfirmation(userId: string) {
   } catch (error: any) {
     console.error("Profile creation error:", error)
     return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  const supabase = await createClient()
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/reset-password`,
+    })
+
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Password reset error:", error)
+    return { error: error instanceof Error ? error.message : "Failed to send reset email" }
   }
 }

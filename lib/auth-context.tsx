@@ -91,17 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
             }
             console.log('Business profile loaded successfully:', flattenedProfile.id)
-            setBusinessProfile(flattenedProfile)
-          } else {
-            console.log('No business profile data returned')
-            setBusinessProfile(null)
+            setBusinessProfile(flattenedProfile);
           }
         } catch (profileError) {
           console.error('Exception during business profile fetch:', profileError)
           setBusinessProfile(null)
         }
       } else {
-        setUserType('customer')
+        setUserType('customer');
 
         // Fetch host profile for customers (optional)
         const { data: hostData, error: hostError } = await supabase
