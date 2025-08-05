@@ -8,19 +8,32 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
 
-    // Get user from auth
+    // Debug: Check cookies
+    const cookieHeader = request.headers.get('cookie')
+    console.log("🍪 Dashboard API: Cookie header exists:", !!cookieHeader)
+    
+    // Get session from cookies (server-side auth)
     const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
 
-    if (userError || !user) {
-      console.log("❌ Dashboard API: Authentication failed", userError?.message || "No authenticated user!")
+    console.log("🔐 Dashboard API: Session check result", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      error: sessionError?.message
+    })
+
+    if (sessionError || !session?.user) {
+      console.log("❌ Dashboard API: Authentication failed", sessionError?.message || "Auth session missing!")
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       )
     }
+
+    const user = session.user
 
     console.log("✅ Dashboard API: User authenticated:", user.id)
 
