@@ -146,7 +146,7 @@ const BookingDatePicker = ({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full ${className}`} style={{ position: 'relative' }}>
       {/* Trigger Button */}
       <button
         ref={triggerRef}
@@ -176,7 +176,7 @@ const BookingDatePicker = ({
       {isOpen && (
         <div 
           ref={dropdownRef}
-          className="absolute z-50 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl w-full min-w-[350px] max-h-96 overflow-y-auto"
+          className="absolute z-50 top-full mt-2 left-0 right-0 p-4 bg-white border border-gray-200 rounded-lg shadow-xl min-w-[350px] max-h-96 overflow-y-auto"
         >
           {/* Quick Suggestions */}
           <div className="grid grid-cols-2 gap-2 mb-4">
