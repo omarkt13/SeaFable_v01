@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
     const cookieHeader = request.headers.get('cookie')
     console.log("🍪 Dashboard API: Cookie header exists:", !!cookieHeader)
     console.log("🍪 Dashboard API: Cookies:", cookieHeader?.substring(0, 200) + "...")
-    
+
     // Get session from cookies (server-side auth) with retry logic
     let session = null
     let sessionError = null
-    
+
     try {
       const sessionResult = await supabase.auth.getSession()
       session = sessionResult.data.session
@@ -42,8 +42,14 @@ export async function GET(request: NextRequest) {
     }
 
     const user = session.user
-
     console.log("✅ Dashboard API: User authenticated:", user.id)
+
+    // Validate user type
+    const userType = user.user_metadata?.user_type
+    if (userType !== 'business') {
+      console.log("❌ Dashboard API: Invalid user type:", userType)
+      return NextResponse.json({ error: "Business access required" }, { status: 403 })
+    }
 
     const dashboardData = await getHostDashboardData(user.id)
 

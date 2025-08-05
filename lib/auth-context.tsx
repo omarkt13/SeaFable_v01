@@ -60,36 +60,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserType('business')
 
         // Fetch business profile with proper error handling
-        const { data: businessData, error: businessError } = await supabase
-          .from('host_profiles')
-          .select(`
-            *,
-            host_business_settings (
-              onboarding_completed,
-              marketplace_enabled
-            )
-          `)
-          .eq('user_id', currentUser.id)
-          .single()
+        try {
+          const { data: businessData, error: businessError } = await supabase
+            .from('host_profiles')
+            .select(`
+              *,
+              host_business_settings (
+                onboarding_completed,
+                marketplace_enabled
+              )
+            `)
+            .eq('user_id', currentUser.id)
+            .single()
 
-        if (businessError) {
-          if (businessError.code === 'PGRST116') {
-            // Profile doesn't exist - this is expected for new users
-            console.log('No business profile found for new user - this is normal')
-            setBusinessProfile(null)
+          if (businessError) {
+            if (businessError.code === 'PGRST116') {
+              // Profile doesn't exist - this is expected for new users
+              console.log('No business profile found for user:', currentUser.id, '- this is normal for new users')
+              setBusinessProfile(null)
+            } else {
+              // Actual error occurred
+              console.error('Business profile fetch error:', businessError)
+              setBusinessProfile(null)
+            }
+          } else if (businessData) {
+            // Flatten the business settings into the profile object
+            const flattenedProfile = {
+              ...businessData,
+              onboarding_completed: businessData.host_business_settings?.onboarding_completed || false,
+              marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
+            }
+            console.log('Business profile loaded successfully:', flattenedProfile.id)
+            setBusinessProfile(flattenedProfile)
           } else {
-            // Actual error occurred
-            console.error('Business profile fetch error:', businessError)
+            console.log('No business profile data returned')
             setBusinessProfile(null)
           }
-        } else {
-          // Flatten the business settings into the profile object
-          const flattenedProfile = {
-            ...businessData,
-            onboarding_completed: businessData.host_business_settings?.onboarding_completed || false,
-            marketplace_enabled: businessData.host_business_settings?.marketplace_enabled || false,
-          }
-          setBusinessProfile(flattenedProfile)
+        } catch (profileError) {
+          console.error('Exception during business profile fetch:', profileError)
+          setBusinessProfile(null)
         }
       } else {
         setUserType('customer')
@@ -138,19 +147,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       while (!sessionResult && attempts < maxAttempts) {
         attempts++
         try {
-          const { data: { session }, error } = await supabase.auth.getSession()
-          if (error) {
-            console.error(`Session error (attempt ${attempts}):`, error)
-            if (error.message.includes('Invalid JWT') || error.message.includes('expired')) {
+          const sessionResponse = await supabase.auth.getSession()
+          if (sessionResponse.error) {
+            console.error(`Session error (attempt ${attempts}):`, sessionResponse.error)
+            if (sessionResponse.error.message?.includes('Invalid JWT') || sessionResponse.error.message?.includes('expired')) {
               // Clear invalid session
               await supabase.auth.signOut()
               break
             }
           } else {
-            sessionResult = session
+            sessionResult = sessionResponse.data?.session || null
           }
         } catch (err) {
           console.error(`Session retrieval error (attempt ${attempts}):`, err)
+          // If it's a syntax error, skip retries
+          if (err instanceof SyntaxError) {
+            console.error('Syntax error in session retrieval, stopping retries')
+            break
+          }
         }
 
         if (!sessionResult && attempts < maxAttempts) {
