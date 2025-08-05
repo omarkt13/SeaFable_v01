@@ -81,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Business profile fetch error:', businessError)
             setBusinessProfile(null)
           }
-        }
         } else {
           // Flatten the business settings into the profile object
           const flattenedProfile = {
