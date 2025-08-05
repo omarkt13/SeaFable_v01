@@ -261,20 +261,20 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
     console.log("=== Starting getHostDashboardData for user:", userId)
 
     // First ensure the business profile exists
-    const profileResult = await ensureBusinessProfile(userId)
+    const { data: profileResultData, error: profileResultError } = await ensureBusinessProfile(userId)
 
-    if (!profileResult.success) {
-      console.error("Failed to ensure business profile:", profileResult.error)
+    if (profileResultError) {
+      console.error("Failed to ensure business profile:", profileResultError)
       return {
         success: false,
         error: "Failed to set up business profile. Please contact support."
       }
     }
 
-    console.log("Business profile ensured, profile ID:", profileResult.data?.id)
+    console.log("Business profile ensured, profile ID:", profileResultData?.id)
 
     // Use the profile from ensureBusinessProfile result
-    const hostId = profileResult.data.id
+    const hostId = profileResultData.id
     const supabase = getSupabaseClient()
 
     // Get business profile with settings
@@ -295,7 +295,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
       console.error('Error fetching complete profile:', profileError)
       // Use minimal profile data if query fails
       businessProfile = {
-        ...profileResult.data,
+        ...profileResultData,
         onboarding_completed: false,
         marketplace_enabled: true,
       }
@@ -411,7 +411,7 @@ export async function getHostDashboardData(userId: string): Promise<{ success: b
     }))
 
     const dashboardData: BusinessDashboardData = {
-      businessProfile: businessProfile || profileResult.data,
+      businessProfile: businessProfile || profileResultData,
       overview: {
         totalRevenue: Math.round(totalRevenue * 100) / 100,
         activeBookings,
@@ -538,7 +538,7 @@ export async function createExperience(experienceData: ExperienceData) {
       return { success: false, error: "Host profile not found. Please complete business registration first." }
     }
 
-    // Prepare the experience data with proper host_id (the host_profile.id)
+    // Prepare the experience data with proper host_id (the host_profiles.id)
     const experienceInsertData = {
       host_id: hostProfile.id, // Use the host_profiles.id, not user_id
       title: experienceData.title,

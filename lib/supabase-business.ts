@@ -4,8 +4,8 @@ import type { BusinessSettings, HostAvailability } from "@/types/business"
 const supabase = createClient()
 
 export async function getHostProfile(userId: string) {
-  // Changed from .eq("user_id", userId) to .eq("id", userId)
-  const { data, error } = await supabase.from("host_profiles").select("*").eq("id", userId).maybeSingle()
+  // Use user_id to match against the auth user's ID
+  const { data, error } = await supabase.from("host_profiles").select("*").eq("user_id", userId).maybeSingle()
 
   if (error) throw error
   if (!data) throw new Error("Host profile not found for this user.")
