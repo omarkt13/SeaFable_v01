@@ -742,9 +742,6 @@ export async function getExperiences(filters?: any) {
         default:
           query = query.order("rating", { ascending: false }).order("total_bookings", { ascending: false })
           break
-        default:
-          query = query.order("rating", { ascending: false }).order("total_bookings", { ascending: false })
-          break
       }
     } else {
       query = query.order("created_at", { ascending: false })
