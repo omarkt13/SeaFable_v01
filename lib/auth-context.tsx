@@ -186,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
 
       // Clear any existing session first
-      await authUtilsSignOut.auth.signOut()
+      await authUtilsSignOut()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
