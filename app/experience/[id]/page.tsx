@@ -589,11 +589,12 @@ export default function ExperienceDetailPage() {
                             Select Date
                           </Label>
                           <DatePicker
-                            value={bookingData.date}
+                            value={bookingData.date ? new Date(bookingData.date + 'T00:00:00') : null}
                             onChange={(date) => {
-                              setBookingData({ ...bookingData, date: date || "", time: "" })
+                              setBookingData({ ...bookingData, date: date ? date.toISOString().split('T')[0] : "", time: "" })
                               setBookingError(null)
                             }}
+                            placeholder="Select Date"
                             className="w-full"
                           />
                           {bookingData.date && (

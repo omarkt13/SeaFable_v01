@@ -662,8 +662,8 @@ export default function EnhancedExperiencesSearchPage() {
                 </div>
 
                 <DatePicker
-                  date={filters.date ? new Date(filters.date + 'T00:00:00') : undefined}
-                  onDateChange={(date) => handleFilterChange("date", date ? date.toISOString().split('T')[0] : '')}
+                  value={filters.date ? new Date(filters.date + 'T00:00:00') : null}
+                  onChange={(date) => handleFilterChange("date", date ? date.toISOString().split('T')[0] : '')}
                   placeholder="When?"
                   className="h-11"
                 />

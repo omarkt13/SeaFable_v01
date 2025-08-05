@@ -221,8 +221,8 @@ export default function LandingPage() {
 
                 <div className="relative">
                   <DatePicker
-                    date={searchData.date ? new Date(searchData.date + 'T00:00:00') : undefined}
-                    onDateChange={(selectedDate: Date | undefined) => {
+                    value={searchData.date ? new Date(searchData.date + 'T00:00:00') : null}
+                    onChange={(selectedDate) => {
                       setSearchData(prev => ({ 
                         ...prev, 
                         date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' 
