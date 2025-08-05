@@ -41,7 +41,7 @@ import Link from "next/link"
 import { ErrorBoundary } from "@/components/error-boundary" // ✅ FIXED: Added ErrorBoundary import
 import { DatePicker } from "@/components/ui/date-picker"
 
-// Enhanced search filters
+// Enhanced search filtersrs
 const initialFilters = {
   search: "",
   location: "",

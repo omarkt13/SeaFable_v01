@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DatePickerProps {
@@ -23,6 +23,23 @@ export function DatePicker({
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(date || null)
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
   const [isOpen, setIsOpen] = React.useState(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+          triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // Update selectedDate when date prop changes
   React.useEffect(() => {
@@ -70,7 +87,6 @@ export function DatePicker({
   // Generate calendar days
   const generateCalendarDays = () => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-    const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
 
@@ -139,77 +155,75 @@ export function DatePicker({
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-  // Close date picker when clicking outside
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (isOpen && !target.closest('.date-picker-container')) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen])
-
   return (
     <div className={cn("relative", className)}>
-      <div className="relative date-picker-container">
-        {/* Quick Suggestions */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => handleSuggestionClick(suggestion)}
-              disabled={!suggestion.available || disabled}
-              className={`p-3 text-sm font-medium rounded-lg border transition-all duration-200 ${
-                suggestion.available && !disabled
-                  ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-700'
-                  : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-              } ${
-                selectedDate && suggestion.date.toDateString() === selectedDate.toDateString()
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : ''
-              }`}
-            >
-              <div className="font-semibold">{suggestion.label}</div>
-              <div className="text-xs mt-1">
-                {suggestion.available ? formatDate(suggestion.date) : 'Unavailable'}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Selected date display / Calendar trigger */}
+      {/* Date Picker Dropdown */}
+      <div className="relative">
+        {/* Dropdown Trigger */}
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className="w-full p-3 border border-gray-300 rounded-lg text-left bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className={`w-full p-3 border rounded-lg text-left bg-white transition-all duration-200 ${
+            disabled 
+              ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' 
+              : isOpen
+              ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20'
+              : 'border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+          }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Calendar className="h-5 w-5 text-gray-400 mr-3" />
               <span className={selectedDate ? 'text-gray-900' : 'text-gray-500'}>
-                {formatDate(selectedDate)}
+                {selectedDate ? formatDate(selectedDate) : placeholder}
               </span>
             </div>
-            <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+            <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+              isOpen ? 'rotate-180' : ''
+            }`} />
           </div>
         </button>
 
-        {/* Calendar Dropdown */}
+        {/* Dropdown Content */}
         {isOpen && (
-          <div className="absolute z-50 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg w-full">
+          <div 
+            ref={dropdownRef}
+            className="absolute z-50 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl w-full min-w-[320px] max-h-96 overflow-y-auto"
+          >
+            {/* Quick Suggestions */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  disabled={!suggestion.available}
+                  className={`p-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                    suggestion.available
+                      ? 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-700'
+                      : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                  } ${
+                    selectedDate && suggestion.date.toDateString() === selectedDate.toDateString()
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : ''
+                  }`}
+                >
+                  <div className="font-semibold text-xs">{suggestion.label}</div>
+                  <div className="text-xs mt-1">
+                    {suggestion.available ? formatDate(suggestion.date) : 'Unavailable'}
+                  </div>
+                </button>
+              ))}
+            </div>
+
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={goToPreviousMonth}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
               >
                 <ChevronLeft className="h-5 w-5 text-gray-600" />
               </button>
@@ -219,7 +233,7 @@ export function DatePicker({
               <button
                 type="button"
                 onClick={goToNextMonth}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
               >
                 <ChevronRight className="h-5 w-5 text-gray-600" />
               </button>
@@ -235,7 +249,7 @@ export function DatePicker({
             </div>
 
             {/* Calendar days */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 mb-4">
               {calendarDays.map((date, index) => {
                 const isSelectable = isSelectableDate(date)
                 const isSelected = isSelectedDate(date)
@@ -248,7 +262,7 @@ export function DatePicker({
                     onClick={() => handleDateSelect(date)}
                     disabled={!isSelectable}
                     className={`
-                      h-10 w-10 text-sm rounded-lg transition-all duration-150
+                      h-8 w-8 text-sm rounded-lg transition-all duration-150
                       ${isSelected 
                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                         : isSelectable && isInCurrentMonth
@@ -270,27 +284,25 @@ export function DatePicker({
             </div>
 
             {/* Footer */}
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <div className="flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDate(today)
-                    onDateChange?.(today)
-                    setIsOpen(false)
-                  }}
-                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                >
-                  Today
-                </button>
-              </div>
+            <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 rounded hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(today)
+                  onDateChange?.(today)
+                  setIsOpen(false)
+                }}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              >
+                Today
+              </button>
             </div>
           </div>
         )}

@@ -46,6 +46,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
 
 export default function ExperienceDetailPage() {
   const params = useParams()
@@ -587,15 +588,12 @@ export default function ExperienceDetailPage() {
                             <CalendarDays className="h-4 w-4 mr-1" />
                             Select Date
                           </Label>
-                          <Input
-                            id="date"
-                            type="date"
+                          <DatePicker
                             value={bookingData.date}
-                            onChange={(e) => {
-                              setBookingData({ ...bookingData, date: e.target.value, time: "" })
+                            onChange={(date) => {
+                              setBookingData({ ...bookingData, date: date || "", time: "" })
                               setBookingError(null)
                             }}
-                            min={new Date().toISOString().split("T")[0]}
                             className="w-full"
                           />
                           {bookingData.date && (

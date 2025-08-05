@@ -223,7 +223,10 @@ export default function LandingPage() {
                   <DatePicker
                     date={searchData.date ? new Date(searchData.date + 'T00:00:00') : undefined}
                     onDateChange={(selectedDate: Date | undefined) => {
-                      setSearchData({ ...searchData, date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' })
+                      setSearchData(prev => ({ 
+                        ...prev, 
+                        date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' 
+                      }))
                       if (errors.date) setErrors({ ...errors, date: "" })
                     }}
                     placeholder="When?"
